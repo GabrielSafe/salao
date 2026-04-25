@@ -304,12 +304,12 @@ export default function LoginPage() {
             borderRadius: 2,
           }} />
         </div>
-        <div style={{ width: '100%', maxWidth: 420, padding: '40px 48px', position: 'relative', zIndex: 1 }} className="login-form-content">
-          <div style={{ marginBottom: 32 }}>
+        <div style={{ width: '100%', maxWidth: 420, padding: '40px 48px', position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }} className="login-form-content">
+          <div style={{ marginBottom: 32, width: '100%' }}>
             <img
               src={logo}
               alt="Rápido Beauty"
-              style={{ width: '100%', maxWidth: 300, marginBottom: 36, display: 'block' }}
+              style={{ width: '100%', maxWidth: 300, marginBottom: 36, display: 'block', marginLeft: 'auto', marginRight: 'auto' }}
               className="login-logo"
             />
             <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 24, fontWeight: 700, color: 'var(--text)', marginBottom: 6, letterSpacing: '-0.5px' }}>
@@ -319,7 +319,7 @@ export default function LoginPage() {
               Entre com suas credenciais para acessar o sistema
             </p>
           </div>
-
+          <div style={{ width: '100%', textAlign: 'left' }}>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label className="label">E-mail</label>
@@ -378,6 +378,7 @@ export default function LoginPage() {
                 {tag}
               </span>
             ))}
+          </div>
           </div>
         </div>
       </div>
