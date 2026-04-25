@@ -1,7 +1,55 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Loader2, Zap } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Zap, Clock, Users, Star } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+
+const TAGLINES = [
+  { text: 'Atendimento imediato, sem espera',   icon: Zap },
+  { text: 'Serviços expresso para o seu tempo', icon: Clock },
+  { text: 'Equipe sempre disponível para você', icon: Users },
+  { text: 'Beleza rápida, resultado incrível',  icon: Star },
+];
+
+const STATS = [
+  { end: 1200, suffix: '+', label: 'Atendimentos' },
+  { end: 98,   suffix: '%', label: 'Satisfação' },
+  { end: 0,    suffix: 'min', label: 'Tempo de espera' },
+];
+
+function useCountUp(end, duration = 1500) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (end === 0) { setCount(0); return; }
+    let start = 0;
+    const step = end / (duration / 16);
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= end) { setCount(end); clearInterval(timer); }
+      else setCount(Math.floor(start));
+    }, 16);
+    return () => clearInterval(timer);
+  }, [end, duration]);
+  return count;
+}
+
+function StatCounter({ stat, delay }) {
+  const [started, setStarted] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setStarted(true), delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+  const count = useCountUp(started ? stat.end : 0);
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ fontSize: 28, fontWeight: 800, fontFamily: "'Poppins', sans-serif", color: '#FFFFFF', lineHeight: 1 }}>
+        {count}{stat.suffix}
+      </div>
+      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+        {stat.label}
+      </div>
+    </div>
+  );
+}
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -10,6 +58,20 @@ export default function LoginPage() {
   const [showSenha, setShowSenha] = useState(false);
   const [erro, setErro] = useState('');
   const [loading, setLoading] = useState(false);
+  const [taglineIdx, setTaglineIdx] = useState(0);
+  const [taglineVisible, setTaglineVisible] = useState(true);
+
+  // Rotação das taglines
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTaglineVisible(false);
+      setTimeout(() => {
+        setTaglineIdx((i) => (i + 1) % TAGLINES.length);
+        setTaglineVisible(true);
+      }, 500);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -27,62 +89,122 @@ export default function LoginPage() {
     }
   }
 
-  return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      background: 'linear-gradient(135deg, #1B2A4A 0%, #2D1B4E 50%, #1B2A4A 100%)',
-      overflow: 'hidden',
-    }}>
-      {/* Lado esquerdo — 50% */}
-      <div style={{
-        flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        padding: '48px', position: 'relative',
-      }} className="login-left">
-        {/* Círculo decorativo */}
-        <div style={{ position: 'absolute', top: -100, left: -100, width: 400, height: 400, borderRadius: '50%', background: 'rgba(212,23,138,0.08)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: -80, right: -60, width: 300, height: 300, borderRadius: '50%', background: 'rgba(232,93,4,0.06)', pointerEvents: 'none' }} />
+  const TaglineIcon = TAGLINES[taglineIdx].icon;
 
-        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 400 }}>
-          {/* Logo texto */}
-          <div style={{ marginBottom: 32 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
-              <Zap size={32} fill="#D4178A" color="#D4178A" />
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', overflow: 'hidden' }}>
+
+      {/* ── Lado esquerdo — navy animado ── */}
+      <div style={{
+        flex: 1,
+        background: 'linear-gradient(135deg, #1B2A4A 0%, #2D1B4E 60%, #1B2A4A 100%)',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        padding: '48px', position: 'relative', overflow: 'hidden',
+      }} className="login-left">
+
+        {/* Orbs flutuantes */}
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+          <div style={{
+            position: 'absolute', width: 420, height: 420, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(212,23,138,0.18) 0%, transparent 70%)',
+            top: '-10%', left: '-10%',
+            animation: 'orbFloat1 8s ease-in-out infinite',
+          }} />
+          <div style={{
+            position: 'absolute', width: 320, height: 320, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(232,93,4,0.14) 0%, transparent 70%)',
+            bottom: '-5%', right: '5%',
+            animation: 'orbFloat2 10s ease-in-out infinite',
+          }} />
+          <div style={{
+            position: 'absolute', width: 200, height: 200, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(212,23,138,0.10) 0%, transparent 70%)',
+            top: '50%', right: '-5%',
+            animation: 'orbFloat3 7s ease-in-out infinite',
+          }} />
+        </div>
+
+        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 420, width: '100%' }}>
+
+          {/* Logo */}
+          <div style={{ marginBottom: 40 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 56, height: 56, background: 'linear-gradient(135deg, #E85D04, #D4178A)', borderRadius: 16, marginBottom: 16, boxShadow: '0 8px 32px rgba(212,23,138,0.4)' }}>
+              <Zap size={28} color="#FFFFFF" fill="#FFFFFF" />
             </div>
-            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 48, fontWeight: 800, lineHeight: 1.1, letterSpacing: '-1px' }}>
-              <span style={{ color: '#FFFFFF' }}>RÁPIDO</span><br />
-              <span style={{ background: 'linear-gradient(135deg, #E85D04, #D4178A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>BEAUTY</span>
-            </div>
-            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 10, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-              Salão de Beleza Veloz
+            <div style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 800, lineHeight: 1, letterSpacing: '-1px' }}>
+              <div style={{ fontSize: 44, color: '#FFFFFF' }}>RÁPIDO</div>
+              <div style={{ fontSize: 44, background: 'linear-gradient(135deg, #E85D04, #D4178A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>BEAUTY</div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {['Atendimento Imediato', 'Expresso', 'Sem Filas'].map((item) => (
-              <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'linear-gradient(135deg, #E85D04, #D4178A)', flexShrink: 0 }} />
-                <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 14 }}>{item}</span>
+          {/* Tagline rotativa */}
+          <div style={{
+            height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 40,
+          }}>
+            <div style={{
+              opacity: taglineVisible ? 1 : 0,
+              transform: taglineVisible ? 'translateY(0)' : 'translateY(8px)',
+              transition: 'opacity 0.5s ease, transform 0.5s ease',
+              display: 'flex', alignItems: 'center', gap: 10,
+            }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <TaglineIcon size={16} color="rgba(255,255,255,0.8)" />
+              </div>
+              <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>
+                {TAGLINES[taglineIdx].text}
+              </span>
+            </div>
+          </div>
+
+          {/* Indicadores de tagline */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 48 }}>
+            {TAGLINES.map((_, i) => (
+              <div key={i} style={{
+                width: i === taglineIdx ? 20 : 6,
+                height: 6, borderRadius: 3,
+                background: i === taglineIdx
+                  ? 'linear-gradient(90deg, #E85D04, #D4178A)'
+                  : 'rgba(255,255,255,0.2)',
+                transition: 'all 0.4s ease',
+              }} />
+            ))}
+          </div>
+
+          {/* Contadores */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 1, background: 'rgba(255,255,255,0.06)',
+            borderRadius: 16, overflow: 'hidden',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}>
+            {STATS.map((s, i) => (
+              <div key={i} style={{ padding: '20px 12px', background: 'rgba(255,255,255,0.03)' }}>
+                <StatCounter stat={s} delay={i * 200} />
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Lado direito — 50% */}
+      {/* ── Lado direito — formulário ── */}
       <div style={{
         flex: 1,
         background: '#FFFFFF',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
         padding: '48px 40px',
-        boxShadow: '-20px 0 60px rgba(0,0,0,0.2)',
+        boxShadow: '-20px 0 60px rgba(0,0,0,0.15)',
       }}>
-        <div style={{ width: '100%', maxWidth: 340 }}>
-          <div style={{ marginBottom: 32 }}>
-            <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 24, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>
+        <div style={{ width: '100%', maxWidth: 360 }}>
+          <div style={{ marginBottom: 36 }}>
+            <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 26, fontWeight: 700, color: 'var(--text)', marginBottom: 8, letterSpacing: '-0.5px' }}>
               Bem-vinda de volta
             </h1>
-            <p style={{ fontSize: 14, color: 'var(--text-2)' }}>Entre com suas credenciais para acessar</p>
+            <p style={{ fontSize: 14, color: 'var(--text-2)', lineHeight: 1.5 }}>
+              Entre com suas credenciais para acessar o sistema
+            </p>
           </div>
 
           <form onSubmit={handleSubmit}>
@@ -99,7 +221,7 @@ export default function LoginPage() {
               />
             </div>
 
-            <div className="form-group" style={{ marginBottom: erro ? 12 : 24 }}>
+            <div className="form-group" style={{ marginBottom: erro ? 12 : 28 }}>
               <label className="label">Senha</label>
               <div style={{ position: 'relative' }}>
                 <input
@@ -125,17 +247,38 @@ export default function LoginPage() {
             {erro && <div className="alert-error" style={{ marginBottom: 16, fontSize: 13 }}>{erro}</div>}
 
             <button className="btn btn-primary btn-lg" type="submit" style={{ width: '100%' }} disabled={loading}>
-              {loading ? <><Loader2 size={16} style={{ animation: 'spin 0.7s linear infinite' }} /> Entrando...</> : 'Entrar'}
+              {loading
+                ? <><Loader2 size={16} style={{ animation: 'spin 0.7s linear infinite' }} /> Entrando...</>
+                : 'Entrar'}
             </button>
           </form>
 
-          <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-3)', marginTop: 24 }}>
-            Sistema de atendimento inteligente
-          </p>
+          <div style={{ marginTop: 32, padding: '16px', background: 'var(--bg)', borderRadius: 10, border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 8 }}>
+              Atendimento Imediato · Expresso · Sem Filas
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-3)', lineHeight: 1.5 }}>
+              Sistema exclusivo para equipe Rápido Beauty
+            </div>
+          </div>
         </div>
       </div>
 
       <style>{`
+        @keyframes orbFloat1 {
+          0%,100% { transform: translate(0, 0) scale(1); }
+          33%      { transform: translate(40px, -30px) scale(1.08); }
+          66%      { transform: translate(-25px, 20px) scale(0.94); }
+        }
+        @keyframes orbFloat2 {
+          0%,100% { transform: translate(0, 0) scale(1); }
+          33%      { transform: translate(-35px, 25px) scale(1.06); }
+          66%      { transform: translate(30px, -20px) scale(0.96); }
+        }
+        @keyframes orbFloat3 {
+          0%,100% { transform: translate(0, 0) scale(1); }
+          50%      { transform: translate(-20px, -30px) scale(1.1); }
+        }
         @media (max-width: 768px) {
           .login-left { display: none !important; }
         }
