@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Routes, Route, NavLink, useNavigate } from 'react-router-dom';
+import { Routes, Route, NavLink } from 'react-router-dom';
 import { LayoutDashboard, ClipboardPlus, Users, BarChart3, LogOut, Scissors, Menu, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import DashboardTab from './tabs/DashboardTab';
@@ -8,9 +8,9 @@ import FuncionariasTab from './tabs/FuncionariasTab';
 import RelatorioTab from './tabs/RelatorioTab';
 
 const TABS = [
-  { path: '', label: 'Dashboard',    Icon: LayoutDashboard },
+  { path: '',             label: 'Dashboard',    Icon: LayoutDashboard },
   { path: 'comanda',      label: 'Nova Comanda', Icon: ClipboardPlus },
-  { path: 'funcionarias', label: 'Equipe',       Icon: Users },
+  { path: 'funcionarias', label: 'Equipe',        Icon: Users },
   { path: 'relatorio',    label: 'Relatório',    Icon: BarChart3 },
 ];
 
@@ -19,88 +19,106 @@ export default function AdminPage() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
 
-      {/* ── Sidebar desktop ── */}
-      <aside className="sidebar" style={{ display: 'flex' }}>
-        {/* Logo */}
-        <div className="sidebar-logo">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 36, height: 36, background: 'var(--accent)', borderRadius: 10,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            }}>
-              <Scissors size={20} color="#0A0A0A" strokeWidth={2.5} />
+      {/* ── Topbar ── */}
+      <header style={{
+        background: '#0D0D0D',
+        borderBottom: '1px solid var(--border)',
+        position: 'sticky', top: 0, zIndex: 30,
+      }}>
+        <div style={{
+          maxWidth: 1100, margin: '0 auto',
+          padding: '0 24px',
+          display: 'flex', alignItems: 'center', gap: 8, height: 56,
+        }}>
+          {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 24, flexShrink: 0 }}>
+            <div style={{ width: 30, height: 30, background: 'var(--accent)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Scissors size={16} color="#0A0A0A" strokeWidth={2.5} />
             </div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.2 }}>{usuario?.salao?.nome || 'Salão'}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-2)', marginTop: 2 }}>Gerenciamento</div>
-            </div>
+            <span style={{ fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap' }}>{usuario?.salao?.nome || 'Salão'}</span>
           </div>
-        </div>
 
-        {/* Nav */}
-        <nav className="sidebar-nav">
-          {TABS.map(({ path, label, Icon }) => (
-            <NavLink
-              key={path}
-              to={path === '' ? '/admin' : `/admin/${path}`}
-              end={path === ''}
-              className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
+          {/* Nav links — desktop */}
+          <nav style={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }} className="topnav-desktop">
+            {TABS.map(({ path, label, Icon }) => (
+              <NavLink
+                key={path}
+                to={path === '' ? '/admin' : `/admin/${path}`}
+                end={path === ''}
+                style={({ isActive }) => ({
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '6px 12px', borderRadius: 8,
+                  fontSize: 13, fontWeight: 500,
+                  color: isActive ? 'var(--accent)' : 'var(--text-2)',
+                  background: isActive ? 'var(--accent-dim)' : 'transparent',
+                  border: `1px solid ${isActive ? 'var(--accent-border)' : 'transparent'}`,
+                  textDecoration: 'none', whiteSpace: 'nowrap',
+                  transition: 'all 0.15s',
+                })}
+              >
+                <Icon size={14} />
+                {label}
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* User + logout */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} className="topnav-desktop">
+              <div style={{
+                width: 28, height: 28, borderRadius: '50%',
+                background: 'var(--accent-dim)', border: '1px solid var(--accent-border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 12, fontWeight: 700, color: 'var(--accent)',
+              }}>
+                {usuario?.nome?.[0]?.toUpperCase()}
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-2)' }}>{usuario?.nome}</span>
+            </div>
+            <button onClick={logout} className="btn btn-ghost btn-sm" style={{ gap: 6 }}>
+              <LogOut size={13} /> Sair
+            </button>
+            {/* Hamburger — mobile */}
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              style={{ background: 'none', color: 'var(--text-2)', padding: 4, display: 'none' }}
+              className="topnav-mobile"
             >
-              <Icon size={16} />
-              {label}
-            </NavLink>
-          ))}
-        </nav>
-
-        {/* Footer */}
-        <div className="sidebar-footer">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: '50%',
-              background: 'var(--bg-hover)', border: '1px solid var(--border-2)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 13, fontWeight: 600, color: 'var(--accent)', flexShrink: 0,
-            }}>
-              {usuario?.nome?.[0]?.toUpperCase()}
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{usuario?.nome}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-2)' }}>Admin</div>
-            </div>
+              {menuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
           </div>
-          <button
-            onClick={logout}
-            className="btn btn-ghost btn-sm"
-            style={{ width: '100%', justifyContent: 'flex-start', gap: 8 }}
-          >
-            <LogOut size={14} /> Sair
-          </button>
         </div>
-      </aside>
 
-      {/* ── Mobile header ── */}
-      <div style={{
-        display: 'none',
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 40,
-        background: '#0D0D0D', borderBottom: '1px solid var(--border)',
-        padding: '12px 16px', alignItems: 'center', justifyContent: 'space-between',
-      }} className="mobile-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 30, height: 30, background: 'var(--accent)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Scissors size={16} color="#0A0A0A" />
+        {/* Mobile dropdown menu */}
+        {menuOpen && (
+          <div style={{ borderTop: '1px solid var(--border)', padding: '10px 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {TABS.map(({ path, label, Icon }) => (
+              <NavLink
+                key={path}
+                to={path === '' ? '/admin' : `/admin/${path}`}
+                end={path === ''}
+                onClick={() => setMenuOpen(false)}
+                style={({ isActive }) => ({
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 12px', borderRadius: 8,
+                  fontSize: 14, fontWeight: 500,
+                  color: isActive ? 'var(--accent)' : 'var(--text-2)',
+                  background: isActive ? 'var(--accent-dim)' : 'transparent',
+                  textDecoration: 'none',
+                })}
+              >
+                <Icon size={16} /> {label}
+              </NavLink>
+            ))}
           </div>
-          <span style={{ fontWeight: 700, fontSize: 14 }}>{usuario?.salao?.nome}</span>
-        </div>
-        <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: 'none', color: 'var(--text-2)', padding: 4 }}>
-          {menuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      </div>
+        )}
+      </header>
 
-      {/* ── Main content ── */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflowX: 'hidden' }}>
-        <div style={{ flex: 1, padding: '28px 28px', maxWidth: 1000, width: '100%' }}>
+      {/* ── Conteúdo centrado ── */}
+      <main style={{ flex: 1 }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px' }}>
           <Routes>
             <Route index element={<DashboardTab />} />
             <Route path="comanda" element={<NovaComandaTab />} />
@@ -112,9 +130,8 @@ export default function AdminPage() {
 
       <style>{`
         @media (max-width: 768px) {
-          .sidebar { display: none !important; }
-          .mobile-header { display: flex !important; }
-          main > div { padding: 72px 16px 20px !important; }
+          .topnav-desktop { display: none !important; }
+          .topnav-mobile  { display: flex !important; }
         }
       `}</style>
     </div>
