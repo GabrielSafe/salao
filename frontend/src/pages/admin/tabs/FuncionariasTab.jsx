@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Plus, User, Scissors, Sparkles, Hand, Leaf, Loader2, Clock, CheckCircle2, Timer } from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useSocket } from '../../../hooks/useSocket';
 import api from '../../../services/api';
 
 const SERVICE_INFO = {
@@ -25,6 +27,7 @@ function StatusPill({ status }) {
 }
 
 export default function FuncionariasTab() {
+  const { usuario } = useAuth();
   const [funcionarias, setFuncionarias] = useState([]);
   const [mostrarForm, setMostrarForm] = useState(false);
   const [historico, setHistorico] = useState(null);
@@ -32,12 +35,15 @@ export default function FuncionariasTab() {
   const [erro, setErro] = useState('');
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => { carregar(); }, []);
-
-  async function carregar() {
+  const carregar = useCallback(async () => {
     const { data } = await api.get('/funcionarias');
     setFuncionarias(data);
-  }
+  }, []);
+
+  useEffect(() => { carregar(); }, [carregar]);
+
+  // Atualiza lista em tempo real quando estado do salão muda
+  useSocket(usuario?.salaoId, { onEstadoCompleto: carregar });
 
   function toggleEsp(esp) {
     setForm((f) => ({
