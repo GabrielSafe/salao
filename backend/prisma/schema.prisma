@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Salao {
+  id         String   @id @default(uuid())
+  nome       String
+  slug       String   @unique
+  ativo      Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  usuarios      Usuario[]
+  clientes      Cliente[]
+  funcionarias  Funcionaria[]
+  atendimentos  Atendimento[]
+  filaEntradas  FilaEntrada[]
+
+  @@map("saloes")
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+  FUNCIONARIA
+}
+
+model Usuario {
+  id        String   @id @default(uuid())
+  nome      String
+  email     String   @unique
+  senha     String
+  role      Role     @default(FUNCIONARIA)
+  ativo     Boolean  @default(true)
+  salaoId   String?  @map("salao_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  salao       Salao?       @relation(fields: [salaoId], references: [id])
+  funcionaria Funcionaria?
+
+  @@map("usuarios")
+}
+
+enum Especialidade {
+  CABELO
+  MAQUIAGEM
+  MAO
+  PE
+}
+
+enum StatusFuncionaria {
+  OFFLINE
+  ONLINE
+  EM_ATENDIMENTO
+}
+
+model Funcionaria {
+  id             String            @id @default(uuid())
+  usuarioId      String            @unique @map("usuario_id")
+  salaoId        String            @map("salao_id")
+  especialidades Especialidade[]
+  multiTarefas   Boolean           @default(false) @map("multi_tarefas")
+  status         StatusFuncionaria @default(OFFLINE)
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  usuario      Usuario       @relation(fields: [usuarioId], references: [id])
+  salao        Salao         @relation(fields: [salaoId], references: [id])
+  atendimentos Atendimento[]
+  filaEntradas FilaEntrada[]
+
+  @@map("funcionarias")
+}
+
+model Cliente {
+  id        String   @id @default(uuid())
+  nome      String
+  cpf       String?
+  telefone  String?
+  salaoId   String   @map("salao_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  salao        Salao         @relation(fields: [salaoId], references: [id])
+  atendimentos Atendimento[]
+
+  @@unique([cpf, salaoId])
+  @@map("clientes")
+}
+
+enum StatusAtendimento {
+  AGUARDANDO
+  EM_ATENDIMENTO
+  FINALIZADO
+  CANCELADO
+}
+
+model Atendimento {
+  id            String            @id @default(uuid())
+  clienteId     String            @map("cliente_id")
+  funcionariaId String?           @map("funcionaria_id")
+  salaoId       String            @map("salao_id")
+  tipoServico   Especialidade     @map("tipo_servico")
+  status        StatusAtendimento @default(AGUARDANDO)
+  numeroComanda Int               @map("numero_comanda")
+  iniciadoEm    DateTime?         @map("iniciado_em")
+  finalizadoEm  DateTime?         @map("finalizado_em")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  cliente     Cliente      @relation(fields: [clienteId], references: [id])
+  funcionaria Funcionaria? @relation(fields: [funcionariaId], references: [id])
+  salao       Salao        @relation(fields: [salaoId], references: [id])
+
+  @@map("atendimentos")
+}
+
+model FilaEntrada {
+  id            String        @id @default(uuid())
+  funcionariaId String        @map("funcionaria_id")
+  salaoId       String        @map("salao_id")
+  especialidade Especialidade
+  entradaEm     DateTime      @default(now()) @map("entrada_em")
+
+  funcionaria Funcionaria @relation(fields: [funcionariaId], references: [id])
+  salao       Salao       @relation(fields: [salaoId], references: [id])
+
+  @@unique([funcionariaId, especialidade])
+  @@map("fila_entradas")
+}
+
+model ContadorComanda {
+  salaoId  String @id @map("salao_id")
+  contador Int    @default(0)
+
+  @@map("contadores_comanda")
+}
