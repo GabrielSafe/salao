@@ -192,54 +192,58 @@ export default function LoginPage() {
       {/* ── Divisor de mechas SVG ── */}
       <div style={{
         position: 'absolute', left: '50%', top: 0, bottom: 0,
-        width: 100, transform: 'translateX(-50%)',
+        width: 60, transform: 'translateX(-50%)',
         zIndex: 20, pointerEvents: 'none',
       }} className="hair-divider">
-        <svg width="100" height="100%" viewBox="0 0 100 900"
+        <svg width="60" height="100%" viewBox="0 0 60 900"
           preserveAspectRatio="none"
           xmlns="http://www.w3.org/2000/svg"
           style={{ display: 'block', height: '100%' }}
         >
           <defs>
             <linearGradient id="hg1" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%"   stopColor="#E85D04" stopOpacity="0.9" />
-              <stop offset="45%"  stopColor="#D4178A" stopOpacity="1"   />
-              <stop offset="100%" stopColor="#9B12B8" stopOpacity="0.7" />
+              <stop offset="0%"   stopColor="#E85D04" stopOpacity="1"   />
+              <stop offset="50%"  stopColor="#D4178A" stopOpacity="1"   />
+              <stop offset="100%" stopColor="#9B12B8" stopOpacity="0.8" />
             </linearGradient>
             <linearGradient id="hg2" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%"   stopColor="#E85D04" stopOpacity="0.5" />
-              <stop offset="50%"  stopColor="#D4178A" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#9B12B8" stopOpacity="0.4" />
+              <stop offset="0%"   stopColor="#E85D04" stopOpacity="0.6" />
+              <stop offset="50%"  stopColor="#D4178A" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#9B12B8" stopOpacity="0.5" />
             </linearGradient>
             <filter id="glow">
-              <feGaussianBlur stdDeviation="2.5" result="blur" />
-              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
             </filter>
           </defs>
 
-          {/* Mecha 1 — principal */}
-          <path
-            d="M 52 0 C 72 90 28 180 58 270 C 85 355 32 440 62 530 C 88 610 38 695 55 800 L 55 900"
-            stroke="url(#hg1)" strokeWidth="4" fill="none"
+          {/* Mecha 1 — principal, centrada no eixo 30 */}
+          <path className="hair-1"
+            d="M 30 0 C 42 80 18 170 33 255 C 46 338 20 425 35 510 C 48 592 22 678 32 760 L 30 900"
+            stroke="url(#hg1)" strokeWidth="3.5" fill="none"
             strokeLinecap="round" filter="url(#glow)"
+            strokeDasharray="1800" strokeDashoffset="1800"
           />
-          {/* Mecha 2 */}
-          <path
-            d="M 42 0 C 18 100 68 200 38 310 C 12 410 65 505 35 610 C 10 700 58 780 38 900"
-            stroke="url(#hg1)" strokeWidth="2.5" fill="none"
-            strokeLinecap="round" opacity="0.65"
+          {/* Mecha 2 — levemente à esquerda */}
+          <path className="hair-2"
+            d="M 26 0 C 14 90 40 185 22 275 C 8 355 36 445 18 535 C 4 615 30 700 15 800 L 12 900"
+            stroke="url(#hg1)" strokeWidth="2" fill="none"
+            strokeLinecap="round" opacity="0.75"
+            strokeDasharray="1800" strokeDashoffset="1800"
           />
-          {/* Mecha 3 — fina */}
-          <path
-            d="M 60 30 C 80 130 45 230 70 330 C 92 420 55 515 75 615 C 90 695 65 775 72 900"
+          {/* Mecha 3 — levemente à direita */}
+          <path className="hair-3"
+            d="M 34 0 C 48 95 24 190 42 280 C 56 362 30 452 46 542 C 58 622 36 708 48 800 L 48 900"
             stroke="url(#hg2)" strokeWidth="1.5" fill="none"
             strokeLinecap="round"
+            strokeDasharray="1800" strokeDashoffset="1800"
           />
           {/* Mecha 4 — bem fina */}
-          <path
-            d="M 35 60 C 12 160 55 265 28 370 C 5 462 50 555 22 660 C 2 740 42 820 25 900"
+          <path className="hair-4"
+            d="M 29 20 C 16 115 44 210 25 305 C 10 388 38 478 20 568 C 6 645 32 728 18 820 L 17 900"
             stroke="url(#hg2)" strokeWidth="1" fill="none"
-            strokeLinecap="round" opacity="0.5"
+            strokeLinecap="round" opacity="0.55"
+            strokeDasharray="1800" strokeDashoffset="1800"
           />
         </svg>
       </div>
@@ -383,6 +387,22 @@ export default function LoginPage() {
       </div>
 
       <style>{`
+        /* ── Animações das mechas ── */
+        .hair-1 { animation: drawHair 2.0s ease forwards, waveHair 4s ease-in-out 2s infinite; }
+        .hair-2 { animation: drawHair 2.3s ease 0.2s forwards, waveHair 5s ease-in-out 2.3s infinite; }
+        .hair-3 { animation: drawHair 2.6s ease 0.4s forwards, waveHair 4.5s ease-in-out 2.6s infinite; }
+        .hair-4 { animation: drawHair 2.8s ease 0.6s forwards, waveHair 6s ease-in-out 2.8s infinite; }
+
+        @keyframes drawHair {
+          from { stroke-dashoffset: 1800; }
+          to   { stroke-dashoffset: 0; }
+        }
+        @keyframes waveHair {
+          0%,100% { transform: scaleX(1)   translateX(0px); }
+          30%     { transform: scaleX(1.04) translateX(1px); }
+          70%     { transform: scaleX(0.97) translateX(-1px); }
+        }
+
         @keyframes iconFloat {
           0%,100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
           50%      { transform: translateY(-12px) rotate(var(--rot, 0deg)); }
