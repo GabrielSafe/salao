@@ -3,7 +3,6 @@ import { useParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import { Scissors, Sparkles, Hand, Leaf, Clock, CheckCircle2, XCircle, User } from 'lucide-react';
-import logo from '../../public/logo.png';
 
 const SERVICE_INFO = {
   CABELO:    { label: 'Cabelo',    Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.12)' },
@@ -65,7 +64,9 @@ export default function ComandaPage() {
       <div style={{ maxWidth: 480, margin: '0 auto', position: 'relative' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <img src={logo} alt="Rápido Beauty" style={{ height: 50, width: 'auto', margin: '0 auto 12px', display: 'block' }} />
+          <div style={{ width: 44, height: 44, background: 'linear-gradient(135deg, #E85D04, #D4178A)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', boxShadow: '0 4px 16px rgba(212,23,138,.3)' }}>
+            <Scissors size={20} color="#FFFFFF" strokeWidth={2.5} />
+          </div>
           <h1 style={{ fontSize: 18, fontWeight: 700 }}>{salao.nome}</h1>
           {clienteNome && <p style={{ color: 'var(--text-2)', fontSize: 14, marginTop: 4 }}>Olá, {clienteNome}!</p>}
         </div>

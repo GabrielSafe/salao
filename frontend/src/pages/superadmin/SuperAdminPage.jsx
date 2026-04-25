@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LogOut, Plus, ArrowLeft, Users, Zap, BarChart3, Globe, Loader2, CheckCircle2 } from 'lucide-react';
-import logo from '../../public/logo.png';
+import { LogOut, Plus, ArrowLeft, Users, Zap, BarChart3, Globe, Loader2, CheckCircle2, Scissors } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 
@@ -49,7 +48,9 @@ export default function SuperAdminPage() {
             <ArrowLeft size={14} /> Voltar
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <img src={logo} alt="Rápido Beauty" style={{ height: 26, width: 'auto', filter: 'brightness(0) invert(1)', opacity: 0.9 }} />
+            <div style={{ width: 28, height: 28, background: 'linear-gradient(135deg, #E85D04, #D4178A)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Scissors size={14} color="#FFFFFF" />
+            </div>
             <span style={{ fontWeight: 700, fontSize: 14 }}>Dashboard do Salão</span>
           </div>
           <button className="btn btn-ghost btn-sm" onClick={logout} style={{ gap: 6 }}>
@@ -99,7 +100,9 @@ export default function SuperAdminPage() {
       {/* Nav */}
       <nav style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src={logo} alt="Rápido Beauty" style={{ height: 30, width: 'auto', filter: 'brightness(0) invert(1)', opacity: 0.9 }} />
+          <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg, #E85D04, #D4178A)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Scissors size={16} color="#FFFFFF" strokeWidth={2.5} />
+          </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: 14 }}>Super Admin</div>
             <div style={{ fontSize: 11, color: 'var(--text-2)' }}>{usuario?.nome}</div>

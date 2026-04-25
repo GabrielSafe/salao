@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Zap } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import logo from '../../public/logo.png';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -45,13 +44,18 @@ export default function LoginPage() {
         <div style={{ position: 'absolute', bottom: -80, right: -60, width: 300, height: 300, borderRadius: '50%', background: 'rgba(232,93,4,0.06)', pointerEvents: 'none' }} />
 
         <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 400 }}>
-          {/* Logo */}
+          {/* Logo texto */}
           <div style={{ marginBottom: 32 }}>
-            <img
-              src={logo}
-              alt="Rápido Beauty"
-              style={{ width: 320, maxWidth: '100%', filter: 'brightness(0) invert(1)', opacity: 0.95 }}
-            />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+              <Zap size={32} fill="#D4178A" color="#D4178A" />
+            </div>
+            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 48, fontWeight: 800, lineHeight: 1.1, letterSpacing: '-1px' }}>
+              <span style={{ color: '#FFFFFF' }}>RÁPIDO</span><br />
+              <span style={{ background: 'linear-gradient(135deg, #E85D04, #D4178A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>BEAUTY</span>
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 10, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
+              Salão de Beleza Veloz
+            </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { LogOut, PlayCircle, PauseCircle, CheckCircle2, Scissors, Sparkles, Hand, Leaf, Clock } from 'lucide-react';
-import logo from '../../public/logo.png';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../hooks/useSocket';
 import api from '../../services/api';
@@ -82,7 +81,9 @@ export default function FuncionariaPage() {
         padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <img src={logo} alt="Rápido Beauty" style={{ height: 30, width: 'auto', filter: 'brightness(0) invert(1)', opacity: 0.9 }} />
+          <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg, #E85D04, #D4178A)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Scissors size={16} color="#FFFFFF" strokeWidth={2.5} />
+          </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: 14, color: '#FFFFFF' }}>{usuario?.nome}</div>
             <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 1 }}>
