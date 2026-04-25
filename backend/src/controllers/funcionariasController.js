@@ -26,7 +26,7 @@ async function criar(req, res) {
   const { nome, email, senha, especialidades, multiTarefas } = req.body;
   const salaoId = req.salaoId;
 
-  if (!nome || !email || !senha || !especialidades?.length) {
+  if (!nome || !email || !senha || (!multiTarefas && !especialidades?.length)) {
     return res.status(400).json({ erro: 'Nome, email, senha e especialidades são obrigatórios' });
   }
 
