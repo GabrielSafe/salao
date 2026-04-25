@@ -1,27 +1,26 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { ArrowRight, ArrowLeft, Scissors, Sparkles, Hand, Leaf, Check, Loader2 } from 'lucide-react';
 
 const SERVICOS = [
-  { id: 'CABELO', label: 'Cabelo', icon: '✂️', desc: 'Corte, escova, tintura' },
-  { id: 'MAQUIAGEM', label: 'Maquiagem', icon: '💄', desc: 'Make social, noiva' },
-  { id: 'MAO', label: 'Mão', icon: '💅', desc: 'Manicure, gel, nail art' },
-  { id: 'PE', label: 'Pé', icon: '🦶', desc: 'Pedicure, spa dos pés' },
+  { id: 'CABELO',    label: 'Cabelo',    desc: 'Corte, escova, tintura',  Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.12)' },
+  { id: 'MAQUIAGEM', label: 'Maquiagem', desc: 'Make social, noiva',      Icon: Sparkles, color: '#F472B6', bg: 'rgba(236,72,153,.12)' },
+  { id: 'MAO',       label: 'Mão',       desc: 'Manicure, gel, nail art', Icon: Hand,     color: '#FB923C', bg: 'rgba(251,146,60,.12)' },
+  { id: 'PE',        label: 'Pé',        desc: 'Pedicure, spa dos pés',   Icon: Leaf,     color: '#4ADE80', bg: 'rgba(34,197,94,.12)' },
 ];
 
 export default function ClientePage() {
   const { salaoSlug } = useParams();
   const navigate = useNavigate();
-  const [step, setStep] = useState('dados'); // dados | servicos | enviando
+  const [step, setStep] = useState('dados');
   const [form, setForm] = useState({ nome: '', cpf: '', telefone: '' });
   const [selecionados, setSelecionados] = useState([]);
   const [erro, setErro] = useState('');
   const [loading, setLoading] = useState(false);
 
   function toggleServico(id) {
-    setSelecionados((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
-    );
+    setSelecionados((prev) => prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]);
   }
 
   async function handleEnviar() {
@@ -45,102 +44,111 @@ export default function ClientePage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #fce4f3 0%, #f5f5f5 100%)', padding: '20px 16px' }}>
-      <div style={{ maxWidth: 480, margin: '0 auto' }}>
+    <div style={{
+      minHeight: '100vh',
+      background: 'var(--bg)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px 16px',
+    }}>
+      {/* Glow */}
+      <div style={{ position: 'fixed', top: '10%', left: '50%', transform: 'translateX(-50%)', width: 500, height: 300, background: 'radial-gradient(ellipse, rgba(245,197,24,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
+      <div style={{ width: '100%', maxWidth: 460, position: 'relative' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontSize: 48, marginBottom: 8 }}>💇‍♀️</div>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--rosa)' }}>Bem-vinda!</h1>
-          <p style={{ color: 'var(--texto-suave)', marginTop: 4 }}>Solicite seu atendimento abaixo</p>
+          <div style={{ width: 52, height: 52, background: 'var(--accent)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', boxShadow: '0 0 28px rgba(245,197,24,.25)' }}>
+            <Scissors size={24} color="#0A0A0A" strokeWidth={2.5} />
+          </div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.3px' }}>Bem-vinda!</h1>
+          <p style={{ color: 'var(--text-2)', marginTop: 5, fontSize: 14 }}>Solicite seu atendimento</p>
+        </div>
+
+        {/* Step indicator */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 24 }}>
+          {['dados', 'servicos'].map((s, i) => (
+            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 12, fontWeight: 700,
+                background: step === s || (s === 'dados' && step === 'servicos') ? 'var(--accent)' : 'var(--bg-elevated)',
+                color: step === s || (s === 'dados' && step === 'servicos') ? '#0A0A0A' : 'var(--text-3)',
+                border: '1px solid ' + (step === s ? 'var(--accent)' : 'var(--border-2)'),
+              }}>
+                {s === 'dados' && step === 'servicos' ? <Check size={12} /> : i + 1}
+              </div>
+              <span style={{ fontSize: 12, color: step === s ? 'var(--text)' : 'var(--text-3)', fontWeight: step === s ? 600 : 400 }}>
+                {s === 'dados' ? 'Seus dados' : 'Serviços'}
+              </span>
+              {i === 0 && <div style={{ width: 24, height: 1, background: 'var(--border-2)' }} />}
+            </div>
+          ))}
         </div>
 
         {/* Step: Dados */}
         {step === 'dados' && (
-          <div className="card">
-            <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20 }}>Seus dados</h2>
-
+          <div className="card" style={{ padding: '24px' }}>
+            <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 20 }}>Seus dados</h2>
             <div className="form-group">
               <label className="label">Nome completo *</label>
-              <input
-                className="input"
-                placeholder="Como posso te chamar?"
-                value={form.nome}
-                onChange={(e) => setForm({ ...form, nome: e.target.value })}
-              />
+              <input className="input" placeholder="Como posso te chamar?" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
             </div>
-
             <div className="form-group">
-              <label className="label">CPF <span style={{ color: 'var(--texto-suave)', fontWeight: 400 }}>(opcional — para agilizar próximas visitas)</span></label>
-              <input
-                className="input"
-                placeholder="000.000.000-00"
-                value={form.cpf}
-                onChange={(e) => setForm({ ...form, cpf: e.target.value })}
-              />
+              <label className="label">CPF <span style={{ color: 'var(--text-3)', textTransform: 'none', fontWeight: 400, fontSize: 11 }}>(opcional)</span></label>
+              <input className="input" placeholder="000.000.000-00" value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} />
             </div>
-
-            <div className="form-group">
-              <label className="label">Telefone <span style={{ color: 'var(--texto-suave)', fontWeight: 400 }}>(opcional)</span></label>
-              <input
-                className="input"
-                placeholder="(00) 00000-0000"
-                value={form.telefone}
-                onChange={(e) => setForm({ ...form, telefone: e.target.value })}
-              />
+            <div className="form-group" style={{ marginBottom: 20 }}>
+              <label className="label">Telefone <span style={{ color: 'var(--text-3)', textTransform: 'none', fontWeight: 400, fontSize: 11 }}>(opcional)</span></label>
+              <input className="input" placeholder="(00) 00000-0000" value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} />
             </div>
-
+            {erro && <div className="alert-error" style={{ marginBottom: 14, fontSize: 13 }}>{erro}</div>}
             <button
               className="btn btn-primary btn-lg"
               style={{ width: '100%' }}
-              onClick={() => { if (!form.nome.trim()) { setErro('Informe seu nome'); return; } setErro(''); setStep('servicos'); }}
+              onClick={() => {
+                if (!form.nome.trim()) { setErro('Informe seu nome'); return; }
+                setErro('');
+                setStep('servicos');
+              }}
             >
-              Continuar →
+              Continuar <ArrowRight size={16} />
             </button>
-            {erro && <p style={{ color: 'var(--vermelho)', fontSize: 13, marginTop: 10 }}>{erro}</p>}
           </div>
         )}
 
         {/* Step: Serviços */}
         {step === 'servicos' && (
-          <div className="card">
-            <button onClick={() => setStep('dados')} style={{ background: 'none', color: 'var(--texto-suave)', fontSize: 13, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 4 }}>
-              ← Voltar
+          <div className="card" style={{ padding: '24px' }}>
+            <button onClick={() => setStep('dados')} style={{ background: 'none', color: 'var(--text-2)', fontSize: 13, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer' }}>
+              <ArrowLeft size={14} /> Voltar
             </button>
-            <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>O que você deseja?</h2>
-            <p style={{ fontSize: 14, color: 'var(--texto-suave)', marginBottom: 20 }}>Olá, {form.nome}! Selecione os serviços:</p>
+            <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 4 }}>O que você deseja?</h2>
+            <p style={{ fontSize: 14, color: 'var(--text-2)', marginBottom: 20 }}>Olá, {form.nome}! Selecione os serviços:</p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
-              {SERVICOS.map((s) => {
-                const ativo = selecionados.includes(s.id);
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+              {SERVICOS.map(({ id, label, desc, Icon, color, bg }) => {
+                const ativo = selecionados.includes(id);
                 return (
-                  <button
-                    key={s.id}
-                    onClick={() => toggleServico(s.id)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 16,
-                      padding: '16px',
-                      borderRadius: 12,
-                      border: `2px solid ${ativo ? 'var(--rosa)' : 'var(--cinza-borda)'}`,
-                      background: ativo ? 'var(--rosa-claro)' : 'var(--branco)',
-                      transition: 'all 0.2s',
-                      textAlign: 'left',
-                    }}
-                  >
-                    <span style={{ fontSize: 32 }}>{s.icon}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, fontSize: 16 }}>{s.label}</div>
-                      <div style={{ fontSize: 13, color: 'var(--texto-suave)' }}>{s.desc}</div>
+                  <button key={id} onClick={() => toggleServico(id)} className={`service-btn${ativo ? ' active' : ''}`}>
+                    <div className="svc-icon" style={{ background: ativo ? bg : 'var(--bg-hover)', width: 44, height: 44, borderRadius: 12 }}>
+                      <Icon size={20} color={ativo ? color : 'var(--text-3)'} />
                     </div>
-                    {ativo && <span style={{ color: 'var(--rosa)', fontSize: 20 }}>✓</span>}
+                    <div style={{ flex: 1 }}>
+                      <div className="svc-name" style={{ fontSize: 15 }}>{label}</div>
+                      <div className="svc-desc">{desc}</div>
+                    </div>
+                    {ativo && (
+                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Check size={12} color="#0A0A0A" strokeWidth={3} />
+                      </div>
+                    )}
                   </button>
                 );
               })}
             </div>
 
-            {erro && <p style={{ color: 'var(--vermelho)', fontSize: 13, marginBottom: 12 }}>{erro}</p>}
+            {erro && <div className="alert-error" style={{ marginBottom: 14, fontSize: 13 }}>{erro}</div>}
 
             <button
               className="btn btn-primary btn-lg"
@@ -148,7 +156,10 @@ export default function ClientePage() {
               onClick={handleEnviar}
               disabled={loading || !selecionados.length}
             >
-              {loading ? 'Aguarde...' : `Confirmar ${selecionados.length > 0 ? `(${selecionados.length})` : ''}`}
+              {loading
+                ? <><Loader2 size={16} style={{ animation: 'spin .7s linear infinite' }} /> Aguarde...</>
+                : <>Confirmar {selecionados.length > 0 && `(${selecionados.length})`} <ArrowRight size={16} /></>
+              }
             </button>
           </div>
         )}

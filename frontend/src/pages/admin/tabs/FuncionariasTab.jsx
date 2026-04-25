@@ -1,9 +1,28 @@
 import { useState, useEffect } from 'react';
+import { ArrowLeft, Plus, User, Scissors, Sparkles, Hand, Leaf, Loader2, Clock, CheckCircle2, Timer } from 'lucide-react';
 import api from '../../../services/api';
 
-const SERVICO_INFO = { CABELO: { label: 'Cabelo', icon: '✂️' }, MAQUIAGEM: { label: 'Maquiagem', icon: '💄' }, MAO: { label: 'Mão', icon: '💅' }, PE: { label: 'Pé', icon: '🦶' } };
+const SERVICE_INFO = {
+  CABELO:    { label: 'Cabelo',    Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.12)' },
+  MAQUIAGEM: { label: 'Maquiagem', Icon: Sparkles, color: '#F472B6', bg: 'rgba(236,72,153,.12)' },
+  MAO:       { label: 'Mão',       Icon: Hand,     color: '#FB923C', bg: 'rgba(251,146,60,.12)' },
+  PE:        { label: 'Pé',        Icon: Leaf,     color: '#4ADE80', bg: 'rgba(34,197,94,.12)' },
+};
 const ESPECIALIDADES = ['CABELO', 'MAQUIAGEM', 'MAO', 'PE'];
-const STATUS_COR = { OFFLINE: '#9ca3af', ONLINE: 'var(--verde)', EM_ATENDIMENTO: 'var(--rosa)' };
+
+function StatusPill({ status }) {
+  const map = {
+    ONLINE:          { label: 'Online',     color: 'var(--success)', bg: 'var(--success-dim)' },
+    EM_ATENDIMENTO:  { label: 'Ocupada',    color: 'var(--accent)',  bg: 'var(--accent-dim)' },
+    OFFLINE:         { label: 'Offline',    color: 'var(--text-3)',  bg: 'rgba(255,255,255,.05)' },
+  };
+  const s = map[status] || map.OFFLINE;
+  return (
+    <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20, background: s.bg, color: s.color }}>
+      {s.label}
+    </span>
+  );
+}
 
 export default function FuncionariasTab() {
   const [funcionarias, setFuncionarias] = useState([]);
@@ -13,12 +32,12 @@ export default function FuncionariasTab() {
   const [erro, setErro] = useState('');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => { carregar(); }, []);
+
   async function carregar() {
     const { data } = await api.get('/funcionarias');
     setFuncionarias(data);
   }
-
-  useEffect(() => { carregar(); }, []);
 
   function toggleEsp(esp) {
     setForm((f) => ({
@@ -55,44 +74,58 @@ export default function FuncionariasTab() {
     const { funcionaria, estatisticas } = historico;
     return (
       <div>
-        <button className="btn btn-secondary" onClick={() => setHistorico(null)} style={{ marginBottom: 16 }}>← Voltar</button>
+        <button className="btn btn-ghost btn-sm" onClick={() => setHistorico(null)} style={{ marginBottom: 20, gap: 6 }}>
+          <ArrowLeft size={14} /> Voltar
+        </button>
+
         <div className="card" style={{ marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-            <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--rosa-claro)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>👩</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
+            <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--bg-elevated)', border: '1px solid var(--border-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700, color: 'var(--accent)' }}>
+              {funcionaria.usuario?.nome?.[0]?.toUpperCase()}
+            </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 18 }}>{funcionaria.usuario?.nome}</div>
-              <div style={{ color: 'var(--texto-suave)', fontSize: 13 }}>{funcionaria.usuario?.email}</div>
+              <div style={{ color: 'var(--text-2)', fontSize: 13, marginTop: 2 }}>{funcionaria.usuario?.email}</div>
             </div>
           </div>
           <div className="grid-3">
             {[
-              { label: 'Total', valor: estatisticas.totalAtendimentos },
-              { label: 'Finalizados', valor: estatisticas.finalizados },
-              { label: 'Tempo médio', valor: `${estatisticas.tempoMedioMinutos} min` },
-            ].map((s) => (
-              <div key={s.label} style={{ textAlign: 'center', padding: '12px', background: 'var(--cinza-bg)', borderRadius: 8 }}>
-                <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--rosa)' }}>{s.valor}</div>
-                <div style={{ fontSize: 12, color: 'var(--texto-suave)' }}>{s.label}</div>
+              { label: 'Total',      valor: estatisticas.totalAtendimentos, Icon: Clock,        color: 'var(--blue)' },
+              { label: 'Finalizados', valor: estatisticas.finalizados,       Icon: CheckCircle2, color: 'var(--success)' },
+              { label: 'Tempo médio', valor: `${estatisticas.tempoMedioMinutos}m`, Icon: Timer,  color: 'var(--accent)' },
+            ].map(({ label, valor, Icon, color }) => (
+              <div key={label} style={{ textAlign: 'center', padding: '16px 8px', background: 'var(--bg-elevated)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                <Icon size={20} color={color} style={{ marginBottom: 6 }} />
+                <div style={{ fontSize: 22, fontWeight: 700, color }}>{valor}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>{label}</div>
               </div>
             ))}
           </div>
         </div>
+
         <div className="card">
-          <h3 style={{ fontWeight: 700, marginBottom: 16, fontSize: 15 }}>Histórico de atendimentos</h3>
+          <h3 style={{ fontWeight: 700, marginBottom: 16, fontSize: 14, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Histórico</h3>
           {funcionaria.atendimentos.length === 0 ? (
-            <p style={{ color: 'var(--texto-suave)', fontSize: 14 }}>Nenhum atendimento registrado.</p>
+            <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-3)', fontSize: 13 }}>Nenhum atendimento registrado.</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {funcionaria.atendimentos.map((a) => (
-                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--cinza-bg)', borderRadius: 8 }}>
-                  <span style={{ fontSize: 20 }}>{SERVICO_INFO[a.tipoServico]?.icon}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>{a.cliente?.nome}</div>
-                    <div style={{ fontSize: 12, color: 'var(--texto-suave)' }}>{new Date(a.createdAt).toLocaleDateString('pt-BR')}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {funcionaria.atendimentos.map((a) => {
+                const info = SERVICE_INFO[a.tipoServico];
+                return (
+                  <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--bg-elevated)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                    {info && (
+                      <div style={{ width: 28, height: 28, borderRadius: 6, background: info.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <info.Icon size={13} color={info.color} />
+                      </div>
+                    )}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 500, fontSize: 13 }}>{a.cliente?.nome}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{new Date(a.createdAt).toLocaleDateString('pt-BR')}</div>
+                    </div>
+                    <span className={`badge badge-${a.status.toLowerCase()}`} style={{ fontSize: 10 }}>{a.status}</span>
                   </div>
-                  <span className={`badge badge-${a.status.toLowerCase()}`} style={{ fontSize: 11 }}>{a.status}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -108,13 +141,13 @@ export default function FuncionariasTab() {
           <p className="page-subtitle">{funcionarias.length} funcionária(s) cadastrada(s)</p>
         </div>
         <button className="btn btn-primary" onClick={() => setMostrarForm(!mostrarForm)}>
-          {mostrarForm ? 'Cancelar' : '+ Nova funcionária'}
+          {mostrarForm ? 'Cancelar' : <><Plus size={15} /> Nova funcionária</>}
         </button>
       </div>
 
       {mostrarForm && (
         <div className="card" style={{ marginBottom: 20 }}>
-          <h3 style={{ fontWeight: 700, marginBottom: 16, fontSize: 16 }}>Cadastrar funcionária</h3>
+          <h3 style={{ fontWeight: 700, marginBottom: 18, fontSize: 15 }}>Cadastrar funcionária</h3>
           <form onSubmit={handleCriar}>
             <div className="grid-2">
               <div className="form-group">
@@ -132,46 +165,72 @@ export default function FuncionariasTab() {
             </div>
             <div className="form-group">
               <label className="label">Especialidades</label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, fontSize: 14, cursor: 'pointer' }}>
-                <input type="checkbox" checked={form.multiTarefas} onChange={(e) => setForm({ ...form, multiTarefas: e.target.checked, especialidades: [] })} />
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 14, cursor: 'pointer', color: 'var(--text-2)' }}>
+                <input
+                  type="checkbox"
+                  checked={form.multiTarefas}
+                  onChange={(e) => setForm({ ...form, multiTarefas: e.target.checked, especialidades: [] })}
+                  style={{ accentColor: 'var(--accent)', width: 14, height: 14 }}
+                />
                 Multitarefas (todas as especialidades)
               </label>
               {!form.multiTarefas && (
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {ESPECIALIDADES.map((esp) => (
-                    <button key={esp} type="button" onClick={() => toggleEsp(esp)}
-                      style={{ padding: '6px 14px', borderRadius: 20, border: `2px solid ${form.especialidades.includes(esp) ? 'var(--rosa)' : 'var(--cinza-borda)'}`, background: form.especialidades.includes(esp) ? 'var(--rosa-claro)' : '#fff', fontSize: 13, fontWeight: 500 }}>
-                      {SERVICO_INFO[esp]?.icon} {SERVICO_INFO[esp]?.label}
-                    </button>
-                  ))}
+                  {ESPECIALIDADES.map((esp) => {
+                    const info = SERVICE_INFO[esp];
+                    const ativo = form.especialidades.includes(esp);
+                    return (
+                      <button key={esp} type="button" onClick={() => toggleEsp(esp)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, border: `1.5px solid ${ativo ? info.color : 'var(--border-2)'}`, background: ativo ? info.bg : 'var(--bg-elevated)', fontSize: 13, fontWeight: 500, color: ativo ? info.color : 'var(--text-2)', cursor: 'pointer', transition: 'all 0.15s' }}
+                      >
+                        <info.Icon size={13} /> {info.label}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
-            {erro && <div style={{ background: '#fee2e2', color: '#991b1b', padding: '8px 12px', borderRadius: 8, fontSize: 13, marginBottom: 12 }}>{erro}</div>}
-            <button className="btn btn-primary" type="submit" disabled={loading}>{loading ? 'Cadastrando...' : 'Cadastrar'}</button>
+            {erro && <div className="alert-error" style={{ marginBottom: 12, fontSize: 13 }}>{erro}</div>}
+            <button className="btn btn-primary" type="submit" disabled={loading}>
+              {loading ? <><Loader2 size={14} style={{ animation: 'spin .7s linear infinite' }} /> Cadastrando...</> : 'Cadastrar'}
+            </button>
           </form>
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {funcionarias.map((f) => (
-          <div key={f.id} className="card" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 10, height: 10, borderRadius: '50%', background: STATUS_COR[f.status], flexShrink: 0 }} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, fontSize: 15 }}>{f.usuario?.nome}</div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
-                {f.especialidades.map((esp) => (
-                  <span key={esp} className={`tag-servico tag-${esp}`}>{SERVICO_INFO[esp]?.icon} {SERVICO_INFO[esp]?.label}</span>
-                ))}
-                {f.multiTarefas && <span style={{ fontSize: 11, color: 'var(--texto-suave)' }}>· multitarefas</span>}
+          <div key={f.id} className="card" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px' }}>
+            <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--bg-elevated)', border: '1px solid var(--border-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: 'var(--accent)', fontSize: 15, flexShrink: 0 }}>
+              {f.usuario?.nome?.[0]?.toUpperCase()}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>{f.usuario?.nome}</div>
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 5 }}>
+                {f.especialidades.map((esp) => {
+                  const info = SERVICE_INFO[esp];
+                  if (!info) return null;
+                  return (
+                    <span key={esp} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 500, background: info.bg, color: info.color }}>
+                      <info.Icon size={10} /> {info.label}
+                    </span>
+                  );
+                })}
+                {f.multiTarefas && <span style={{ fontSize: 11, color: 'var(--text-3)', alignSelf: 'center' }}>multitarefas</span>}
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 12, color: STATUS_COR[f.status], fontWeight: 600 }}>{f.status}</div>
-              <button className="btn btn-secondary btn-sm" style={{ marginTop: 6 }} onClick={() => verHistorico(f.id)}>Ver histórico</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+              <StatusPill status={f.status} />
+              <button className="btn btn-ghost btn-sm" onClick={() => verHistorico(f.id)}>Histórico</button>
             </div>
           </div>
         ))}
+        {funcionarias.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-3)' }}>
+            <User size={32} style={{ marginBottom: 12, opacity: 0.3 }} />
+            <p style={{ fontSize: 14 }}>Nenhuma funcionária cadastrada</p>
+          </div>
+        )}
       </div>
     </div>
   );
