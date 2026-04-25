@@ -191,9 +191,10 @@ export default function LoginPage() {
 
       {/* ── Divisor de mechas SVG ── */}
       <div style={{
-        position: 'absolute',
-        left: 'calc(50% - 60px)',
-        top: 0, bottom: 0,
+        position: 'fixed',
+        left: 'calc(50vw - 60px)',
+        top: 0,
+        height: '100vh',
         width: 120,
         zIndex: 20, pointerEvents: 'none',
       }} className="hair-divider">
