@@ -304,12 +304,13 @@ export default function LoginPage() {
             borderRadius: 2,
           }} />
         </div>
-        <div style={{ width: '100%', maxWidth: 420, padding: '40px 48px', position: 'relative', zIndex: 1 }}>
+        <div style={{ width: '100%', maxWidth: 420, padding: '40px 48px', position: 'relative', zIndex: 1 }} className="login-form-content">
           <div style={{ marginBottom: 32 }}>
             <img
               src={logo}
               alt="Rápido Beauty"
-              style={{ width: '100%', maxWidth: 260, marginBottom: 36, display: 'block' }}
+              style={{ width: '100%', maxWidth: 300, marginBottom: 36, display: 'block' }}
+              className="login-logo"
             />
             <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 24, fontWeight: 700, color: 'var(--text)', marginBottom: 6, letterSpacing: '-0.5px' }}>
               Bem-vinda de volta
@@ -417,8 +418,19 @@ export default function LoginPage() {
           50%      { transform: translate(-20px, -30px) scale(1.1); }
         }
         @media (max-width: 768px) {
-          .login-left   { display: none !important; }
-          .hair-divider { display: none !important; }
+          .login-left        { display: none !important; }
+          .hair-divider      { display: none !important; }
+          .login-form-content {
+            padding: 32px 24px !important;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+          }
+          .login-form-content form,
+          .login-form-content .form-group,
+          .login-form-content .alert-error { width: 100%; text-align: left; }
+          .login-logo { max-width: 280px !important; margin-left: auto; margin-right: auto; }
         }
       `}</style>
     </div>
