@@ -36,7 +36,7 @@ function agruparPorComanda(atendimentos) {
   return Object.values(grupos).sort((a, b) => a.numero - b.numero);
 }
 
-function ComandaCard({ grupo, onAdicionarServico }) {
+function ComandaCard({ grupo }) {
   const [aberto, setAberto] = useState(false);
   const [adicionando, setAdicionando] = useState(false);
   const [selecionados, setSelecionados] = useState([]);
@@ -66,7 +66,7 @@ function ComandaCard({ grupo, onAdicionarServico }) {
       setSelecionados([]);
       setAdicionando(false);
       setTimeout(() => setMsg(''), 3000);
-      if (onAdicionarServico) onAdicionarServico();
+      // socket emite estado_completo automaticamente após adicionar
     } catch (err) {
       setMsg(err.response?.data?.erro || 'Erro ao adicionar');
     } finally {
@@ -283,7 +283,6 @@ export default function DashboardTab() {
                 <ComandaCard
                   key={grupo.numero}
                   grupo={grupo}
-                  onAdicionarServico={onEstadoCompleto}
                 />
               ))}
             </div>
