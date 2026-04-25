@@ -93,7 +93,7 @@ export default function LoginPage() {
   const TaglineIcon = TAGLINES[taglineIdx].icon;
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', overflow: 'hidden', position: 'relative' }}>
 
       {/* ── Lado esquerdo — navy animado ── */}
       <div style={{
@@ -187,6 +187,61 @@ export default function LoginPage() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* ── Divisor de mechas SVG ── */}
+      <div style={{
+        position: 'absolute', left: '50%', top: 0, bottom: 0,
+        width: 100, transform: 'translateX(-50%)',
+        zIndex: 20, pointerEvents: 'none',
+      }} className="hair-divider">
+        <svg width="100" height="100%" viewBox="0 0 100 900"
+          preserveAspectRatio="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ display: 'block', height: '100%' }}
+        >
+          <defs>
+            <linearGradient id="hg1" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%"   stopColor="#E85D04" stopOpacity="0.9" />
+              <stop offset="45%"  stopColor="#D4178A" stopOpacity="1"   />
+              <stop offset="100%" stopColor="#9B12B8" stopOpacity="0.7" />
+            </linearGradient>
+            <linearGradient id="hg2" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%"   stopColor="#E85D04" stopOpacity="0.5" />
+              <stop offset="50%"  stopColor="#D4178A" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#9B12B8" stopOpacity="0.4" />
+            </linearGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
+
+          {/* Mecha 1 — principal */}
+          <path
+            d="M 52 0 C 72 90 28 180 58 270 C 85 355 32 440 62 530 C 88 610 38 695 55 800 L 55 900"
+            stroke="url(#hg1)" strokeWidth="4" fill="none"
+            strokeLinecap="round" filter="url(#glow)"
+          />
+          {/* Mecha 2 */}
+          <path
+            d="M 42 0 C 18 100 68 200 38 310 C 12 410 65 505 35 610 C 10 700 58 780 38 900"
+            stroke="url(#hg1)" strokeWidth="2.5" fill="none"
+            strokeLinecap="round" opacity="0.65"
+          />
+          {/* Mecha 3 — fina */}
+          <path
+            d="M 60 30 C 80 130 45 230 70 330 C 92 420 55 515 75 615 C 90 695 65 775 72 900"
+            stroke="url(#hg2)" strokeWidth="1.5" fill="none"
+            strokeLinecap="round"
+          />
+          {/* Mecha 4 — bem fina */}
+          <path
+            d="M 35 60 C 12 160 55 265 28 370 C 5 462 50 555 22 660 C 2 740 42 820 25 900"
+            stroke="url(#hg2)" strokeWidth="1" fill="none"
+            strokeLinecap="round" opacity="0.5"
+          />
+        </svg>
       </div>
 
       {/* ── Lado direito — formulário ── */}
@@ -347,7 +402,8 @@ export default function LoginPage() {
           50%      { transform: translate(-20px, -30px) scale(1.1); }
         }
         @media (max-width: 768px) {
-          .login-left { display: none !important; }
+          .login-left   { display: none !important; }
+          .hair-divider { display: none !important; }
         }
       `}</style>
     </div>
