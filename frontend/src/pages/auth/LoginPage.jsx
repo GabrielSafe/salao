@@ -52,12 +52,29 @@ function StatCounter({ stat, delay }) {
   );
 }
 
+function FieldError({ msg }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 5,
+      marginTop: 6, fontSize: 12, color: 'var(--error)', fontWeight: 500,
+      animation: 'fadeInScale 0.2s ease',
+    }}>
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+        <circle cx="6.5" cy="6.5" r="6" stroke="currentColor" strokeWidth="1.2"/>
+        <path d="M6.5 4v3.5M6.5 9h.01" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+      </svg>
+      {msg}
+    </div>
+  );
+}
+
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', senha: '' });
   const [showSenha, setShowSenha] = useState(false);
   const [erro, setErro] = useState('');
+  const [fieldErros, setFieldErros] = useState({});
   const [loading, setLoading] = useState(false);
   const [taglineIdx, setTaglineIdx] = useState(0);
   const [taglineVisible, setTaglineVisible] = useState(true);
@@ -77,6 +94,16 @@ export default function LoginPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     setErro('');
+
+    // Validação customizada
+    const erros = {};
+    if (!form.email.trim()) erros.email = 'Informe seu e-mail';
+    else if (!/\S+@\S+\.\S+/.test(form.email)) erros.email = 'E-mail inválido';
+    if (!form.senha) erros.senha = 'Informe sua senha';
+    else if (form.senha.length < 4) erros.senha = 'Senha muito curta';
+
+    if (Object.keys(erros).length > 0) { setFieldErros(erros); return; }
+    setFieldErros({});
     setLoading(true);
     try {
       const usuario = await login(form.email, form.senha);
@@ -84,7 +111,7 @@ export default function LoginPage() {
       else if (usuario.role === 'ADMIN') navigate('/admin');
       else navigate('/funcionaria');
     } catch (err) {
-      setErro(err.response?.data?.erro || 'Credenciais inválidas');
+      setErro(err.response?.data?.erro || 'E-mail ou senha incorretos');
     } finally {
       setLoading(false);
     }
@@ -320,7 +347,7 @@ export default function LoginPage() {
             </p>
           </div>
           <div style={{ width: '100%', textAlign: 'left' }}>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             <div className="form-group">
               <label className="label">E-mail</label>
               <input
@@ -328,13 +355,14 @@ export default function LoginPage() {
                 type="email"
                 placeholder="seu@email.com"
                 value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                required
+                onChange={(e) => { setForm({ ...form, email: e.target.value }); setFieldErros((p) => ({ ...p, email: '' })); }}
                 autoComplete="email"
+                style={{ borderColor: fieldErros.email ? 'var(--error)' : undefined }}
               />
+              {fieldErros.email && <FieldError msg={fieldErros.email} />}
             </div>
 
-            <div className="form-group" style={{ marginBottom: erro ? 12 : 28 }}>
+            <div className="form-group" style={{ marginBottom: 20 }}>
               <label className="label">Senha</label>
               <div style={{ position: 'relative' }}>
                 <input
@@ -342,9 +370,8 @@ export default function LoginPage() {
                   type={showSenha ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={form.senha}
-                  onChange={(e) => setForm({ ...form, senha: e.target.value })}
-                  required
-                  style={{ paddingRight: 44 }}
+                  onChange={(e) => { setForm({ ...form, senha: e.target.value }); setFieldErros((p) => ({ ...p, senha: '' })); }}
+                  style={{ paddingRight: 44, borderColor: fieldErros.senha ? 'var(--error)' : undefined }}
                   autoComplete="current-password"
                 />
                 <button
@@ -355,9 +382,17 @@ export default function LoginPage() {
                   {showSenha ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
+              {fieldErros.senha && <FieldError msg={fieldErros.senha} />}
             </div>
 
-            {erro && <div className="alert-error" style={{ marginBottom: 16, fontSize: 13 }}>{erro}</div>}
+            {erro && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--error-dim)', border: '1px solid rgba(220,38,38,.2)', borderRadius: 8, padding: '10px 14px', marginBottom: 16 }}>
+                <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--error)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>!</span>
+                </div>
+                <span style={{ fontSize: 13, color: 'var(--error)', fontWeight: 500 }}>{erro}</span>
+              </div>
+            )}
 
             <button className="btn btn-primary btn-lg" type="submit" style={{ width: '100%' }} disabled={loading}>
               {loading
