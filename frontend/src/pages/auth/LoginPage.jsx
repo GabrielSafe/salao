@@ -101,10 +101,68 @@ export default function LoginPage() {
         background: 'linear-gradient(135deg, #1B2A4A 0%, #2D1B4E 60%, #1B2A4A 100%)',
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        padding: '48px', position: 'relative', overflow: 'hidden',
+        padding: '48px', position: 'relative',
+        overflow: 'visible',
       }} className="login-left">
 
-        {/* Orbs flutuantes */}
+        {/* ── Mechas SVG — ancoradas na borda direita (linha divisória exata) ── */}
+        <div style={{
+          position: 'absolute',
+          right: -60,       /* -60px = metade do SVG ultrapassa pra direita */
+          top: 0, bottom: 0,
+          width: 120,
+          zIndex: 20, pointerEvents: 'none',
+        }} className="hair-divider">
+          <svg width="120" height="100%" viewBox="0 0 120 900"
+            preserveAspectRatio="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ display: 'block', height: '100%' }}
+          >
+            <defs>
+              <linearGradient id="hg1" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%"   stopColor="#E85D04" stopOpacity="1"   />
+                <stop offset="50%"  stopColor="#D4178A" stopOpacity="1"   />
+                <stop offset="100%" stopColor="#9B12B8" stopOpacity="0.8" />
+              </linearGradient>
+              <linearGradient id="hg2" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%"   stopColor="#E85D04" stopOpacity="0.55" />
+                <stop offset="50%"  stopColor="#D4178A" stopOpacity="0.65" />
+                <stop offset="100%" stopColor="#9B12B8" stopOpacity="0.45" />
+              </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            {/* x=60 = centro do SVG = borda direita do lado esquerdo = linha divisória */}
+            <path className="hair-1"
+              d="M 60 0 C 76 85 44 175 63 260 C 80 342 48 430 66 515 C 82 596 50 682 62 765 L 60 900"
+              stroke="url(#hg1)" strokeWidth="3.5" fill="none"
+              strokeLinecap="round" filter="url(#glow)"
+              strokeDasharray="1800" strokeDashoffset="1800"
+            />
+            <path className="hair-2"
+              d="M 56 0 C 38 95 74 190 52 282 C 34 365 70 455 46 548 C 28 628 64 714 44 800 L 42 900"
+              stroke="url(#hg1)" strokeWidth="2.2" fill="none"
+              strokeLinecap="round" opacity="0.75"
+              strokeDasharray="1800" strokeDashoffset="1800"
+            />
+            <path className="hair-3"
+              d="M 64 0 C 82 90 48 185 70 275 C 88 358 54 448 74 535 C 90 616 60 702 76 788 L 78 900"
+              stroke="url(#hg2)" strokeWidth="1.8" fill="none"
+              strokeLinecap="round"
+              strokeDasharray="1800" strokeDashoffset="1800"
+            />
+            <path className="hair-4"
+              d="M 58 25 C 40 120 72 218 50 312 C 32 398 68 488 46 578 C 30 656 62 740 42 828 L 40 900"
+              stroke="url(#hg2)" strokeWidth="1.2" fill="none"
+              strokeLinecap="round" opacity="0.55"
+              strokeDasharray="1800" strokeDashoffset="1800"
+            />
+          </svg>
+        </div>
+
+        {/* Orbs flutuantes — em container clipado pra não vazar */}
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
           <div style={{
             position: 'absolute', width: 420, height: 420, borderRadius: '50%',
@@ -187,70 +245,6 @@ export default function LoginPage() {
             ))}
           </div>
         </div>
-      </div>
-
-      {/* ── Divisor de mechas SVG ── */}
-      <div style={{
-        position: 'fixed',
-        left: 'calc(50vw - 60px)',
-        top: 0,
-        height: '100vh',
-        width: 120,
-        zIndex: 20, pointerEvents: 'none',
-      }} className="hair-divider">
-        <svg width="120" height="100%" viewBox="0 0 120 900"
-          preserveAspectRatio="none"
-          xmlns="http://www.w3.org/2000/svg"
-          style={{ display: 'block', height: '100%' }}
-        >
-          <defs>
-            <linearGradient id="hg1" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%"   stopColor="#E85D04" stopOpacity="1"   />
-              <stop offset="50%"  stopColor="#D4178A" stopOpacity="1"   />
-              <stop offset="100%" stopColor="#9B12B8" stopOpacity="0.8" />
-            </linearGradient>
-            <linearGradient id="hg2" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%"   stopColor="#E85D04" stopOpacity="0.55" />
-              <stop offset="50%"  stopColor="#D4178A" stopOpacity="0.65" />
-              <stop offset="100%" stopColor="#9B12B8" stopOpacity="0.45" />
-            </linearGradient>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-          </defs>
-
-          {/* Todas centradas em x=60 (centro do container de 120px = linha divisória) */}
-
-          {/* Mecha 1 — principal */}
-          <path className="hair-1"
-            d="M 60 0 C 76 85 44 175 63 260 C 80 342 48 430 66 515 C 82 596 50 682 62 765 L 60 900"
-            stroke="url(#hg1)" strokeWidth="3.5" fill="none"
-            strokeLinecap="round" filter="url(#glow)"
-            strokeDasharray="1800" strokeDashoffset="1800"
-          />
-          {/* Mecha 2 — leve esquerda */}
-          <path className="hair-2"
-            d="M 56 0 C 38 95 74 190 52 282 C 34 365 70 455 46 548 C 28 628 64 714 44 800 L 42 900"
-            stroke="url(#hg1)" strokeWidth="2.2" fill="none"
-            strokeLinecap="round" opacity="0.75"
-            strokeDasharray="1800" strokeDashoffset="1800"
-          />
-          {/* Mecha 3 — leve direita */}
-          <path className="hair-3"
-            d="M 64 0 C 82 90 48 185 70 275 C 88 358 54 448 74 535 C 90 616 60 702 76 788 L 78 900"
-            stroke="url(#hg2)" strokeWidth="1.8" fill="none"
-            strokeLinecap="round"
-            strokeDasharray="1800" strokeDashoffset="1800"
-          />
-          {/* Mecha 4 — fina esquerda */}
-          <path className="hair-4"
-            d="M 58 25 C 40 120 72 218 50 312 C 32 398 68 488 46 578 C 30 656 62 740 42 828 L 40 900"
-            stroke="url(#hg2)" strokeWidth="1.2" fill="none"
-            strokeLinecap="round" opacity="0.55"
-            strokeDasharray="1800" strokeDashoffset="1800"
-          />
-        </svg>
       </div>
 
       {/* ── Lado direito — formulário ── */}
