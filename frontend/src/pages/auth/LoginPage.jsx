@@ -195,10 +195,10 @@ export default function LoginPage() {
         background: '#FFFFFF',
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        padding: '48px 40px',
         boxShadow: '-20px 0 60px rgba(0,0,0,0.15)',
         position: 'relative', overflow: 'hidden',
-      }}>
+        minHeight: '100vh',
+      }} className="login-form-side">
         {/* Decoração fundo branco */}
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
           {/* Orb canto superior direito */}
@@ -251,17 +251,17 @@ export default function LoginPage() {
             borderRadius: 2,
           }} />
         </div>
-        <div style={{ width: '100%', maxWidth: 360 }}>
-          <div style={{ marginBottom: 36 }}>
+        <div style={{ width: '100%', maxWidth: 400, position: 'relative', zIndex: 1, padding: '0 8px' }} className="login-form-inner">
+          <div style={{ marginBottom: 32 }}>
             <img
               src={logo}
               alt="Rápido Beauty"
-              style={{ width: 200, maxWidth: '100%', marginBottom: 28, display: 'block' }}
+              style={{ width: '100%', maxWidth: 240, marginBottom: 32, display: 'block' }}
             />
-            <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 22, fontWeight: 700, color: 'var(--text)', marginBottom: 6, letterSpacing: '-0.5px' }}>
+            <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 24, fontWeight: 700, color: 'var(--text)', marginBottom: 6, letterSpacing: '-0.5px' }}>
               Bem-vinda de volta
             </h1>
-            <p style={{ fontSize: 14, color: 'var(--text-2)', lineHeight: 1.5 }}>
+            <p style={{ fontSize: 14, color: 'var(--text-2)', lineHeight: 1.6 }}>
               Entre com suas credenciais para acessar o sistema
             </p>
           </div>
@@ -312,13 +312,18 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div style={{ marginTop: 32, padding: '16px', background: 'var(--bg)', borderRadius: 10, border: '1px solid var(--border)' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 8 }}>
-              Atendimento Imediato · Expresso · Sem Filas
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--text-3)', lineHeight: 1.5 }}>
-              Sistema exclusivo para equipe Rápido Beauty
-            </div>
+          <div style={{ marginTop: 28, display: 'flex', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
+            {['Atendimento Imediato', 'Expresso', 'Sem Filas'].map((tag) => (
+              <span key={tag} style={{
+                fontSize: 11, fontWeight: 600, color: '#D4178A',
+                background: 'rgba(212,23,138,0.08)',
+                border: '1px solid rgba(212,23,138,0.18)',
+                padding: '4px 10px', borderRadius: 20,
+                letterSpacing: '0.3px',
+              }}>
+                {tag}
+              </span>
+            ))}
           </div>
         </div>
       </div>
@@ -344,6 +349,11 @@ export default function LoginPage() {
         }
         @media (max-width: 768px) {
           .login-left { display: none !important; }
+          .login-form-side { padding: 32px 24px !important; }
+          .login-form-inner { max-width: 100% !important; }
+        }
+        @media (min-width: 769px) {
+          .login-form-side { padding: 48px 56px !important; }
         }
       `}</style>
     </div>
