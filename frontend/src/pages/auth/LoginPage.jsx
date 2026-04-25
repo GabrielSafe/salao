@@ -130,33 +130,33 @@ export default function LoginPage() {
                 <stop offset="100%" stopColor="#9B12B8" stopOpacity="0.45" />
               </linearGradient>
               <filter id="glow">
-                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feGaussianBlur stdDeviation="5" result="blur" />
                 <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
               </filter>
             </defs>
             {/* x=60 = centro do SVG = borda direita do lado esquerdo = linha divisória */}
             <path className="hair-1"
-              d="M 60 0 C 76 85 44 175 63 260 C 80 342 48 430 66 515 C 82 596 50 682 62 765 L 60 900"
-              stroke="url(#hg1)" strokeWidth="3.5" fill="none"
+              d="M 60 0 C 84 85 36 175 65 260 C 90 342 40 430 68 515 C 92 596 44 682 64 765 L 60 900"
+              stroke="url(#hg1)" strokeWidth="7" fill="none"
               strokeLinecap="round" filter="url(#glow)"
               strokeDasharray="1800" strokeDashoffset="1800"
             />
             <path className="hair-2"
-              d="M 56 0 C 38 95 74 190 52 282 C 34 365 70 455 46 548 C 28 628 64 714 44 800 L 42 900"
-              stroke="url(#hg1)" strokeWidth="2.2" fill="none"
-              strokeLinecap="round" opacity="0.75"
+              d="M 54 0 C 28 95 86 190 48 282 C 20 365 80 455 40 548 C 14 628 72 714 38 800 L 36 900"
+              stroke="url(#hg1)" strokeWidth="4.5" fill="none"
+              strokeLinecap="round" opacity="0.8"
               strokeDasharray="1800" strokeDashoffset="1800"
             />
             <path className="hair-3"
-              d="M 64 0 C 82 90 48 185 70 275 C 88 358 54 448 74 535 C 90 616 60 702 76 788 L 78 900"
-              stroke="url(#hg2)" strokeWidth="1.8" fill="none"
+              d="M 66 0 C 96 90 38 185 78 275 C 108 358 46 448 82 535 C 106 616 54 702 86 788 L 84 900"
+              stroke="url(#hg2)" strokeWidth="3.5" fill="none"
               strokeLinecap="round"
               strokeDasharray="1800" strokeDashoffset="1800"
             />
             <path className="hair-4"
-              d="M 58 25 C 40 120 72 218 50 312 C 32 398 68 488 46 578 C 30 656 62 740 42 828 L 40 900"
-              stroke="url(#hg2)" strokeWidth="1.2" fill="none"
-              strokeLinecap="round" opacity="0.55"
+              d="M 57 20 C 32 120 82 218 46 312 C 18 398 78 488 42 578 C 16 656 70 740 38 828 L 36 900"
+              stroke="url(#hg2)" strokeWidth="2.2" fill="none"
+              strokeLinecap="round" opacity="0.6"
               strokeDasharray="1800" strokeDashoffset="1800"
             />
           </svg>
