@@ -57,16 +57,19 @@ function ComandaCard({ grupo }) {
 
   async function handleAdicionar() {
     if (!selecionados.length) return;
+    // captura clienteId agora antes de qualquer re-render
+    const clienteId = grupo.clienteId;
+    const servicos = [...selecionados];
     setLoading(true);
     try {
-      for (const s of selecionados) {
-        await api.post('/atendimentos/adicionar', { clienteId: grupo.clienteId, tipoServico: s });
-      }
+      // envia todos ao mesmo tempo para evitar race condition com socket
+      await Promise.all(
+        servicos.map((s) => api.post('/atendimentos/adicionar', { clienteId, tipoServico: s }))
+      );
       setMsg('Serviço(s) adicionado(s)!');
       setSelecionados([]);
       setAdicionando(false);
       setTimeout(() => setMsg(''), 3000);
-      // socket emite estado_completo automaticamente após adicionar
     } catch (err) {
       setMsg(err.response?.data?.erro || 'Erro ao adicionar');
     } finally {
