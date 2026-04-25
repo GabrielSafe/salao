@@ -336,7 +336,7 @@ export default function LoginPage() {
             <img
               src={logo}
               alt="Rápido Beauty"
-              style={{ width: '100%', maxWidth: 300, marginBottom: 36, display: 'block', marginLeft: 'auto', marginRight: 'auto' }}
+              style={{ width: '100%', maxWidth: 300, marginBottom: 16, display: 'block', marginLeft: 'auto', marginRight: 'auto' }}
               className="login-logo"
             />
             <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 24, fontWeight: 700, color: 'var(--text)', marginBottom: 6, letterSpacing: '-0.5px' }}>
