@@ -225,6 +225,107 @@ function ComandaCard({ grupo }) {
   );
 }
 
+function EquipeAvatarBar({ funcionarias, atendimentos, filas }) {
+  const [hovered, setHovered] = useState(null);
+
+  const statusCfg = {
+    ONLINE:         { color: '#16A34A', bg: 'rgba(22,163,74,.1)',  ring: '#16A34A', label: 'Online' },
+    EM_ATENDIMENTO: { color: '#C9A84C', bg: 'rgba(201,168,76,.1)', ring: '#C9A84C', label: 'Ocupada' },
+    OFFLINE:        { color: '#AAAAAA', bg: 'rgba(0,0,0,.05)',     ring: '#CCCCCC', label: 'Offline' },
+  };
+
+  return (
+    <div>
+      {/* Barra de avatares */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingBottom: 16, borderBottom: '1px solid var(--border)', marginBottom: 16 }}>
+        {funcionarias.map((f, i) => {
+          const cfg = statusCfg[f.status] || statusCfg.OFFLINE;
+          const inicial = f.usuario?.nome?.[0]?.toUpperCase() || '?';
+          const primeiroNome = f.usuario?.nome?.split(' ')[0] || '';
+          const isHovered = hovered === f.id;
+
+          return (
+            <div
+              key={f.id}
+              className="animate-fade-scale"
+              style={{ animationDelay: `${i * 35}ms`, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, cursor: 'default' }}
+              onMouseEnter={() => setHovered(f.id)}
+              onMouseLeave={() => setHovered(null)}
+            >
+              {/* Tooltip */}
+              {isHovered && (() => {
+                const atend = atendimentos.find((a) => a.funcionariaId === f.id && a.status === 'EM_ATENDIMENTO');
+                const nFilas = filas.filter((fi) => fi.funcionariaId === f.id).length;
+                const detalhe = f.status === 'EM_ATENDIMENTO' && atend
+                  ? `Atendendo ${atend.cliente?.nome}`
+                  : f.status === 'ONLINE' && nFilas > 0
+                  ? `Na fila · ${nFilas} serviço${nFilas > 1 ? 's' : ''}`
+                  : cfg.label;
+                return (
+                  <div style={{
+                    position: 'absolute', bottom: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)',
+                    background: '#111', color: '#fff', fontSize: 11, fontWeight: 500, whiteSpace: 'nowrap',
+                    padding: '5px 9px', borderRadius: 7, zIndex: 50, boxShadow: '0 4px 12px rgba(0,0,0,.2)',
+                    pointerEvents: 'none',
+                  }}>
+                    <div style={{ fontWeight: 700, marginBottom: 1 }}>{f.usuario?.nome}</div>
+                    <div style={{ opacity: 0.8 }}>{detalhe}</div>
+                    {/* seta */}
+                    <div style={{ position: 'absolute', bottom: -4, left: '50%', transform: 'translateX(-50%)', width: 8, height: 8, background: '#111', rotate: '45deg' }} />
+                  </div>
+                );
+              })()}
+
+              {/* Avatar */}
+              <div style={{ position: 'relative', width: 46, height: 46 }}>
+                <div style={{
+                  width: 46, height: 46, borderRadius: '50%',
+                  background: cfg.bg,
+                  border: `2.5px solid ${cfg.ring}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 17, fontWeight: 700, color: cfg.color,
+                  transition: 'transform 0.15s, box-shadow 0.15s',
+                  transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+                  boxShadow: isHovered ? `0 4px 12px ${cfg.color}40` : 'none',
+                }}>
+                  {inicial}
+                </div>
+                {/* Status dot */}
+                <div style={{
+                  position: 'absolute', bottom: 1, right: 1,
+                  width: 12, height: 12, borderRadius: '50%',
+                  background: cfg.color,
+                  border: '2px solid white',
+                  ...(f.status !== 'OFFLINE' && { boxShadow: `0 0 0 2px ${cfg.color}30` }),
+                }} />
+              </div>
+
+              {/* Nome */}
+              <span style={{ fontSize: 11, fontWeight: 500, color: f.status === 'OFFLINE' ? 'var(--text-3)' : 'var(--text-2)', maxWidth: 52, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {primeiroNome}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Contadores rápidos */}
+      <div style={{ display: 'flex', gap: 16 }}>
+        {[
+          { label: 'Online',    count: funcionarias.filter((f) => f.status === 'ONLINE').length,         color: '#16A34A' },
+          { label: 'Ocupadas',  count: funcionarias.filter((f) => f.status === 'EM_ATENDIMENTO').length, color: '#C9A84C' },
+          { label: 'Offline',   count: funcionarias.filter((f) => f.status === 'OFFLINE').length,        color: '#AAAAAA' },
+        ].map(({ label, count, color }) => (
+          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />
+            <span style={{ fontSize: 12, color: 'var(--text-2)' }}>{count} {label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardTab() {
   const { usuario } = useAuth();
   const [estado, setEstado] = useState({ atendimentos: [], filas: [], funcionarias: [] });
@@ -282,48 +383,28 @@ export default function DashboardTab() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {grupos.map((grupo) => (
-                <ComandaCard
+              {grupos.map((grupo, i) => (
+                <div
                   key={grupo.numero}
-                  grupo={grupo}
-                />
+                  className="animate-slide-in"
+                  style={{ animationDelay: `${i * 40}ms` }}
+                >
+                  <ComandaCard grupo={grupo} />
+                </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Equipe */}
+        {/* Equipe — avatar bar */}
         <div className="card">
-          <h3 style={{ fontWeight: 700, marginBottom: 14, fontSize: 13, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Status da equipe
+          <h3 style={{ fontWeight: 700, marginBottom: 16, fontSize: 13, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            Equipe
           </h3>
           {estado.funcionarias.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-3)', fontSize: 13 }}>Nenhuma funcionária cadastrada</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {estado.funcionarias.map((f) => {
-                const atendAtual = estado.atendimentos.find((a) => a.funcionariaId === f.id && a.status === 'EM_ATENDIMENTO');
-                const nasFilas   = estado.filas.filter((fi) => fi.funcionariaId === f.id);
-                return (
-                  <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--bg-elevated)', borderRadius: 8, border: '1px solid var(--border)' }}>
-                    <StatusDot status={f.status} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, fontSize: 13 }}>{f.usuario?.nome}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 1 }}>
-                        {f.status === 'EM_ATENDIMENTO' && atendAtual
-                          ? `Atendendo ${atendAtual.cliente?.nome}`
-                          : f.status === 'ONLINE' && nasFilas.length > 0
-                          ? `Na fila (${nasFilas.length} serviço${nasFilas.length > 1 ? 's' : ''})`
-                          : f.status === 'OFFLINE' ? 'Offline' : 'Disponível'}
-                      </div>
-                    </div>
-                    <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: f.status === 'ONLINE' ? 'var(--success-dim)' : f.status === 'EM_ATENDIMENTO' ? 'var(--accent-dim)' : 'rgba(255,255,255,.06)', color: f.status === 'ONLINE' ? 'var(--success)' : f.status === 'EM_ATENDIMENTO' ? 'var(--accent)' : 'var(--text-3)' }}>
-                      {f.status === 'EM_ATENDIMENTO' ? 'Ocupada' : f.status === 'ONLINE' ? 'Online' : 'Offline'}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+            <EquipeAvatarBar funcionarias={estado.funcionarias} atendimentos={estado.atendimentos} filas={estado.filas} />
           )}
         </div>
       </div>
