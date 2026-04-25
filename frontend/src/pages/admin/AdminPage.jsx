@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Routes, Route, NavLink } from 'react-router-dom';
-import { LayoutDashboard, ClipboardPlus, Users, BarChart3, LogOut, Scissors, Menu, X } from 'lucide-react';
+import { LayoutDashboard, ClipboardPlus, Users, BarChart3, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import logo from '../../public/logo.png';
 import DashboardTab from './tabs/DashboardTab';
 import NovaComandaTab from './tabs/NovaComandaTab';
 import FuncionariasTab from './tabs/FuncionariasTab';
@@ -29,11 +30,8 @@ export default function AdminPage() {
           display: 'flex', alignItems: 'center', gap: 8, height: 56,
         }}>
           {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 24, flexShrink: 0 }}>
-            <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg, #E85D04, #D4178A)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Scissors size={16} color="#FFFFFF" strokeWidth={2.5} />
-            </div>
-            <span style={{ fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap' }}>{usuario?.salao?.nome || 'Salão'}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginRight: 24, flexShrink: 0 }}>
+            <img src={logo} alt="Rápido Beauty" style={{ height: 32, width: 'auto', filter: 'brightness(0) invert(1)', opacity: 0.9 }} />
           </div>
 
           {/* Nav links — desktop */}

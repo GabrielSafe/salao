@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Scissors, LogOut, Plus, ArrowLeft, Users, Zap, BarChart3, Globe, Loader2, CheckCircle2 } from 'lucide-react';
+import { LogOut, Plus, ArrowLeft, Users, Zap, BarChart3, Globe, Loader2, CheckCircle2 } from 'lucide-react';
+import logo from '../../public/logo.png';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 
@@ -48,9 +49,7 @@ export default function SuperAdminPage() {
             <ArrowLeft size={14} /> Voltar
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 28, height: 28, background: 'var(--accent)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Scissors size={14} color="#0A0A0A" />
-            </div>
+            <img src={logo} alt="Rápido Beauty" style={{ height: 26, width: 'auto', filter: 'brightness(0) invert(1)', opacity: 0.9 }} />
             <span style={{ fontWeight: 700, fontSize: 14 }}>Dashboard do Salão</span>
           </div>
           <button className="btn btn-ghost btn-sm" onClick={logout} style={{ gap: 6 }}>
@@ -100,9 +99,7 @@ export default function SuperAdminPage() {
       {/* Nav */}
       <nav style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, background: 'var(--accent)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Scissors size={16} color="#0A0A0A" strokeWidth={2.5} />
-          </div>
+          <img src={logo} alt="Rápido Beauty" style={{ height: 30, width: 'auto', filter: 'brightness(0) invert(1)', opacity: 0.9 }} />
           <div>
             <div style={{ fontWeight: 700, fontSize: 14 }}>Super Admin</div>
             <div style={{ fontSize: 11, color: 'var(--text-2)' }}>{usuario?.nome}</div>

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowRight, ArrowLeft, Scissors, Sparkles, Hand, Leaf, Check, Loader2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Sparkles, Hand, Leaf, Check, Loader2 } from 'lucide-react';
+import logo from '../../public/logo.png';
 
 const SERVICOS = [
   { id: 'CABELO',    label: 'Cabelo',    desc: 'Corte, escova, tintura',  Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.12)' },
@@ -58,9 +59,7 @@ export default function ClientePage() {
       <div style={{ width: '100%', maxWidth: 460, position: 'relative' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ width: 52, height: 52, background: 'linear-gradient(135deg, #E85D04, #D4178A)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', boxShadow: '0 4px 20px rgba(212,23,138,.3)' }}>
-            <Scissors size={24} color="#0A0A0A" strokeWidth={2.5} />
-          </div>
+          <img src={logo} alt="Rápido Beauty" style={{ height: 60, width: 'auto', margin: '0 auto 14px', display: 'block' }} />
           <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.3px' }}>Bem-vinda!</h1>
           <p style={{ color: 'var(--text-2)', marginTop: 5, fontSize: 14 }}>Solicite seu atendimento</p>
         </div>
