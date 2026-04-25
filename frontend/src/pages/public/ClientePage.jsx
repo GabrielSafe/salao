@@ -46,7 +46,7 @@ export default function ClientePage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'var(--bg)',
+      background: 'linear-gradient(160deg, #F4F3F1 0%, #EDE9E0 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',

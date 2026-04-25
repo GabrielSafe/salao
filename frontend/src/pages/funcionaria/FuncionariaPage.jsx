@@ -77,7 +77,7 @@ export default function FuncionariaPage() {
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       {/* Header */}
       <nav style={{
-        background: '#0D0D0D', borderBottom: '1px solid var(--border)',
+        background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)',
         padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -85,7 +85,7 @@ export default function FuncionariaPage() {
             <Scissors size={18} color="#0A0A0A" strokeWidth={2.5} />
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 14 }}>{usuario?.nome}</div>
+            <div style={{ fontWeight: 700, fontSize: 14, color: '#FFFFFF' }}>{usuario?.nome}</div>
             <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 1 }}>
               {statusFuncionaria === 'EM_ATENDIMENTO' ? (
                 <span style={{ color: 'var(--accent)' }}>Em atendimento</span>

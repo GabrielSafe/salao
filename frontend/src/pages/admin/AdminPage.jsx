@@ -22,11 +22,7 @@ export default function AdminPage() {
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
 
       {/* ── Topbar ── */}
-      <header style={{
-        background: '#0D0D0D',
-        borderBottom: '1px solid var(--border)',
-        position: 'sticky', top: 0, zIndex: 30,
-      }}>
+      <header className="navbar-dark" style={{ position: 'sticky', top: 0, zIndex: 30 }}>
         <div style={{
           maxWidth: 1100, margin: '0 auto',
           padding: '0 24px',
@@ -47,16 +43,7 @@ export default function AdminPage() {
                 key={path}
                 to={path === '' ? '/admin' : `/admin/${path}`}
                 end={path === ''}
-                style={({ isActive }) => ({
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  padding: '6px 12px', borderRadius: 8,
-                  fontSize: 13, fontWeight: 500,
-                  color: isActive ? 'var(--accent)' : 'var(--text-2)',
-                  background: isActive ? 'var(--accent-dim)' : 'transparent',
-                  border: `1px solid ${isActive ? 'var(--accent-border)' : 'transparent'}`,
-                  textDecoration: 'none', whiteSpace: 'nowrap',
-                  transition: 'all 0.15s',
-                })}
+                className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
               >
                 <Icon size={14} />
                 {label}
@@ -100,14 +87,7 @@ export default function AdminPage() {
                 to={path === '' ? '/admin' : `/admin/${path}`}
                 end={path === ''}
                 onClick={() => setMenuOpen(false)}
-                style={({ isActive }) => ({
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '10px 12px', borderRadius: 8,
-                  fontSize: 14, fontWeight: 500,
-                  color: isActive ? 'var(--accent)' : 'var(--text-2)',
-                  background: isActive ? 'var(--accent-dim)' : 'transparent',
-                  textDecoration: 'none',
-                })}
+                className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
               >
                 <Icon size={16} /> {label}
               </NavLink>

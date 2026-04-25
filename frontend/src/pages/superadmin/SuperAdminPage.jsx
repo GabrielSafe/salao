@@ -43,7 +43,7 @@ export default function SuperAdminPage() {
   if (detalhe) {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-        <nav style={{ background: '#0D0D0D', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <nav style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button className="btn btn-ghost btn-sm" onClick={() => setDetalhe(null)} style={{ gap: 6 }}>
             <ArrowLeft size={14} /> Voltar
           </button>
@@ -98,7 +98,7 @@ export default function SuperAdminPage() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       {/* Nav */}
-      <nav style={{ background: '#0D0D0D', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <nav style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 32, height: 32, background: 'var(--accent)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Scissors size={16} color="#0A0A0A" strokeWidth={2.5} />

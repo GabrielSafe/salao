@@ -33,14 +33,14 @@ export default function LoginPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'var(--bg)',
+      background: 'linear-gradient(160deg, #F4F3F1 0%, #EDE9E0 100%)',
       padding: '20px',
     }}>
       {/* Glow background */}
       <div style={{
         position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)',
         width: 600, height: 300,
-        background: 'radial-gradient(ellipse, rgba(245,197,24,0.06) 0%, transparent 70%)',
+        background: 'radial-gradient(ellipse, rgba(201,168,76,0.15) 0%, transparent 70%)',
         pointerEvents: 'none',
       }} />
 
@@ -53,7 +53,7 @@ export default function LoginPage() {
             borderRadius: 16,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 16px',
-            boxShadow: '0 0 32px rgba(245,197,24,0.3)',
+            boxShadow: 'var(--shadow-gold)',
           }}>
             <Scissors size={28} color="#0A0A0A" strokeWidth={2.5} />
           </div>

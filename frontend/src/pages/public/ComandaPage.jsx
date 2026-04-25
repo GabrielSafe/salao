@@ -46,7 +46,7 @@ export default function ComandaPage() {
 
   if (!dados) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #F4F3F1 0%, #EDE9E0 100%)' }}>
         <div className="spinner" />
       </div>
     );
@@ -57,7 +57,7 @@ export default function ComandaPage() {
   const clienteNome = atendimentos[0]?.cliente?.nome;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', padding: '20px 16px' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg, #F4F3F1 0%, #EDE9E0 100%)', padding: '20px 16px' }}>
       {/* Glow */}
       <div style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: 400, height: 200, background: 'radial-gradient(ellipse, rgba(245,197,24,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
