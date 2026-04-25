@@ -14,15 +14,15 @@ import FuncionariasTab from './tabs/FuncionariasTab';
 import RelatorioTab from './tabs/RelatorioTab';
 
 const NAV_ITEMS = [
-  { path: '',             label: 'Dashboard',     Icon: LayoutDashboard, implemented: true },
-  { path: 'comanda',      label: 'Nova Comanda',  Icon: ClipboardPlus,   implemented: true },
-  { path: 'funcionarias', label: 'Equipe',         Icon: Users,           implemented: true },
-  { path: 'relatorio',    label: 'Relatórios',    Icon: BarChart3,       implemented: true },
-  null, // divisor
-  { path: 'fila',         label: 'Fila de Espera', Icon: Clock,          implemented: false },
-  { path: 'atendimentos', label: 'Atendimentos',  Icon: Zap,             implemented: false },
-  { path: 'clientes',     label: 'Clientes',      Icon: UserCircle,      implemented: false },
-  { path: 'configuracoes',label: 'Configurações', Icon: Settings,        implemented: false },
+  { path: '',             label: 'Dashboard',      Icon: LayoutDashboard, implemented: true,  iconColor: '#D4178A', iconBg: 'rgba(212,23,138,.2)' },
+  { path: 'comanda',      label: 'Nova Comanda',   Icon: ClipboardPlus,   implemented: true,  iconColor: '#A78BFA', iconBg: 'rgba(167,139,250,.2)' },
+  { path: 'funcionarias', label: 'Equipe',          Icon: Users,           implemented: true,  iconColor: '#60A5FA', iconBg: 'rgba(96,165,250,.2)' },
+  { path: 'relatorio',    label: 'Relatórios',     Icon: BarChart3,       implemented: true,  iconColor: '#34D399', iconBg: 'rgba(52,211,153,.2)' },
+  null,
+  { path: 'fila',         label: 'Fila de Espera', Icon: Clock,           implemented: false, iconColor: '#FCD34D', iconBg: 'rgba(252,211,77,.15)' },
+  { path: 'atendimentos', label: 'Atendimentos',   Icon: Zap,             implemented: false, iconColor: '#FB923C', iconBg: 'rgba(251,146,60,.15)' },
+  { path: 'clientes',     label: 'Clientes',       Icon: UserCircle,      implemented: false, iconColor: '#67E8F9', iconBg: 'rgba(103,232,249,.15)' },
+  { path: 'configuracoes',label: 'Configurações',  Icon: Settings,        implemented: false, iconColor: '#9CA3AF', iconBg: 'rgba(156,163,175,.12)' },
 ];
 
 const SERVICE_INFO = {
@@ -167,12 +167,18 @@ export default function AdminPage() {
             {NAV_ITEMS.map((item, i) => {
               if (item === null) return <div key={i} style={{ height: 1, background: 'rgba(255,255,255,.05)', margin: '8px 6px' }} />;
               const { path, label, Icon, implemented } = item;
+              const { iconColor, iconBg } = item;
+
               if (!implemented) {
                 return (
-                  <div key={path} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 12px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#374151', cursor: 'not-allowed', userSelect: 'none' }}>
-                    <Icon size={15} />
-                    {label}
-                    <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 600, color: '#4B5563', background: 'rgba(255,255,255,.04)', padding: '1px 6px', borderRadius: 10 }}>Em breve</span>
+                  <div key={path} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', borderRadius: 9, cursor: 'not-allowed', userSelect: 'none', opacity: 0.4 }}>
+                    <div style={{ width: 30, height: 30, borderRadius: 8, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Icon size={15} color={iconColor} />
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: '#6B7280' }}>{label}</span>
+                    <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 600, color: '#4B5563', background: 'rgba(255,255,255,.04)', padding: '2px 6px', borderRadius: 8, border: '1px solid rgba(255,255,255,.06)' }}>
+                      Em breve
+                    </span>
                   </div>
                 );
               }
@@ -182,19 +188,33 @@ export default function AdminPage() {
                   to={path === '' ? '/admin' : `/admin/${path}`}
                   end={path === ''}
                   style={({ isActive }) => ({
-                    display: 'flex', alignItems: 'center', gap: 9,
-                    padding: '9px 12px', borderRadius: 8,
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '7px 10px', borderRadius: 9,
                     fontSize: 13, fontWeight: 500,
                     color: isActive ? '#fff' : '#8B949E',
-                    background: isActive ? 'linear-gradient(135deg, rgba(232,93,4,.25), rgba(212,23,138,.25))' : 'transparent',
-                    borderLeft: isActive ? '2px solid #D4178A' : '2px solid transparent',
+                    background: isActive ? 'rgba(255,255,255,.06)' : 'transparent',
                     textDecoration: 'none', transition: 'all .15s',
+                    border: isActive ? '1px solid rgba(255,255,255,.08)' : '1px solid transparent',
                   })}
+                  onMouseEnter={e => { if (!e.currentTarget.style.background.includes('rgba(255,255,255,.06)')) e.currentTarget.style.background = 'rgba(255,255,255,.04)'; }}
+                  onMouseLeave={e => { /* handled by NavLink */ }}
                 >
-                  <Icon size={15} />
-                  {label}
-                  {path === '' && totalAtivos > 0 && (
-                    <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: '#D4178A', background: 'rgba(212,23,138,.15)', padding: '1px 7px', borderRadius: 10 }}>{totalAtivos}</span>
+                  {({ isActive }) => (
+                    <>
+                      <div style={{
+                        width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                        background: isActive ? iconBg : 'rgba(255,255,255,.06)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'all .15s',
+                        boxShadow: isActive ? `0 2px 8px ${iconColor}30` : 'none',
+                      }}>
+                        <Icon size={15} color={isActive ? iconColor : '#6B7280'} />
+                      </div>
+                      <span style={{ flex: 1 }}>{label}</span>
+                      {path === '' && totalAtivos > 0 && (
+                        <span style={{ fontSize: 10, fontWeight: 700, color: iconColor, background: iconBg, padding: '2px 7px', borderRadius: 10 }}>{totalAtivos}</span>
+                      )}
+                    </>
                   )}
                 </NavLink>
               );
