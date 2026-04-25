@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Plus, User, Scissors, Sparkles, Hand, Leaf, Loader2, Clock, CheckCircle2, Timer } from 'lucide-react';
+import { ArrowLeft, Plus, User, Scissors, Sparkles, Hand, Leaf, Loader2, Clock, CheckCircle2, Timer, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSocket } from '../../../hooks/useSocket';
 import api from '../../../services/api';
@@ -23,6 +23,111 @@ function StatusPill({ status }) {
     <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20, background: s.bg, color: s.color }}>
       {s.label}
     </span>
+  );
+}
+
+function HistoricoAgrupado({ atendimentos }) {
+  const [abertos, setAbertos] = useState({});
+
+  function toggle(num) {
+    setAbertos((prev) => ({ ...prev, [num]: !prev[num] }));
+  }
+
+  // Agrupa por numeroComanda — cada visita é um grupo separado
+  const grupos = {};
+  atendimentos.forEach((a) => {
+    const k = a.numeroComanda;
+    if (!grupos[k]) grupos[k] = { numero: k, cliente: a.cliente, data: a.createdAt, itens: [] };
+    grupos[k].itens.push(a);
+  });
+  const lista = Object.values(grupos).sort((a, b) => new Date(b.data) - new Date(a.data));
+
+  if (lista.length === 0) {
+    return (
+      <div className="card">
+        <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-3)', fontSize: 13 }}>Nenhum atendimento registrado.</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card">
+      <h3 style={{ fontWeight: 700, marginBottom: 16, fontSize: 14, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        Histórico — {lista.length} visita{lista.length > 1 ? 's' : ''}
+      </h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {lista.map((grupo) => {
+          const aberto = abertos[grupo.numero];
+          const finalizados = grupo.itens.filter((i) => i.status === 'FINALIZADO').length;
+          const total = grupo.itens.length;
+          const tudo = finalizados === total;
+          const temAtivo = grupo.itens.some((i) => i.status === 'EM_ATENDIMENTO');
+
+          return (
+            <div key={grupo.numero} style={{ border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+              {/* Header */}
+              <button
+                onClick={() => toggle(grupo.numero)}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', background: 'var(--bg-elevated)', cursor: 'pointer', color: 'var(--text)', border: 'none' }}
+              >
+                {/* Ícones dos serviços */}
+                <div style={{ display: 'flex' }}>
+                  {grupo.itens.slice(0, 4).map((item, i) => {
+                    const info = SERVICE_INFO[item.tipoServico];
+                    if (!info) return null;
+                    return (
+                      <div key={item.id} style={{ width: 26, height: 26, borderRadius: 6, background: info.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: i > 0 ? -5 : 0, border: '2px solid var(--bg-elevated)' }}>
+                        <info.Icon size={12} color={info.color} />
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <div style={{ fontWeight: 600, fontSize: 13 }}>
+                    <span style={{ color: 'var(--accent)', marginRight: 6 }}>#{grupo.numero}</span>
+                    {grupo.cliente?.nome}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 1 }}>
+                    {new Date(grupo.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: tudo ? 'var(--success-dim)' : temAtivo ? 'var(--accent-dim)' : 'rgba(255,255,255,.06)', color: tudo ? 'var(--success)' : temAtivo ? 'var(--accent)' : 'var(--text-3)' }}>
+                    {finalizados}/{total}
+                  </span>
+                  {aberto
+                    ? <ChevronUp size={13} color="var(--text-3)" />
+                    : <ChevronDown size={13} color="var(--text-3)" />
+                  }
+                </div>
+              </button>
+
+              {/* Serviços expandidos */}
+              {aberto && (
+                <div style={{ padding: '10px 14px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 6, background: 'var(--bg-card)' }}>
+                  {grupo.itens.map((item) => {
+                    const info = SERVICE_INFO[item.tipoServico];
+                    return (
+                      <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', background: 'var(--bg-elevated)', borderRadius: 7 }}>
+                        {info && (
+                          <div style={{ width: 26, height: 26, borderRadius: 6, background: info.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <info.Icon size={12} color={info.color} />
+                          </div>
+                        )}
+                        <div style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{info?.label || item.tipoServico}</div>
+                        <span className={`badge badge-${item.status.toLowerCase()}`} style={{ fontSize: 10 }}>{item.status}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -109,32 +214,7 @@ export default function FuncionariasTab() {
           </div>
         </div>
 
-        <div className="card">
-          <h3 style={{ fontWeight: 700, marginBottom: 16, fontSize: 14, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Histórico</h3>
-          {funcionaria.atendimentos.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-3)', fontSize: 13 }}>Nenhum atendimento registrado.</div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {funcionaria.atendimentos.map((a) => {
-                const info = SERVICE_INFO[a.tipoServico];
-                return (
-                  <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--bg-elevated)', borderRadius: 8, border: '1px solid var(--border)' }}>
-                    {info && (
-                      <div style={{ width: 28, height: 28, borderRadius: 6, background: info.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <info.Icon size={13} color={info.color} />
-                      </div>
-                    )}
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 500, fontSize: 13 }}>{a.cliente?.nome}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{new Date(a.createdAt).toLocaleDateString('pt-BR')}</div>
-                    </div>
-                    <span className={`badge badge-${a.status.toLowerCase()}`} style={{ fontSize: 10 }}>{a.status}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        <HistoricoAgrupado atendimentos={funcionaria.atendimentos} />
       </div>
     );
   }
