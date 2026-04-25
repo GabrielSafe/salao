@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Loader2, Zap, Clock, Users, Star } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Zap, Clock, Users, Star, Scissors, Sparkles } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const TAGLINES = [
@@ -196,7 +196,60 @@ export default function LoginPage() {
         alignItems: 'center', justifyContent: 'center',
         padding: '48px 40px',
         boxShadow: '-20px 0 60px rgba(0,0,0,0.15)',
+        position: 'relative', overflow: 'hidden',
       }}>
+        {/* Decoração fundo branco */}
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+          {/* Orb canto superior direito */}
+          <div style={{
+            position: 'absolute', width: 380, height: 380, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(212,23,138,0.06) 0%, transparent 70%)',
+            top: '-15%', right: '-15%',
+            animation: 'orbFloat2 9s ease-in-out infinite',
+          }} />
+          {/* Orb canto inferior esquerdo */}
+          <div style={{
+            position: 'absolute', width: 300, height: 300, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(232,93,4,0.05) 0%, transparent 70%)',
+            bottom: '-10%', left: '-10%',
+            animation: 'orbFloat1 11s ease-in-out infinite',
+          }} />
+          {/* Orb centro */}
+          <div style={{
+            position: 'absolute', width: 200, height: 200, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(212,23,138,0.04) 0%, transparent 70%)',
+            top: '40%', right: '10%',
+            animation: 'orbFloat3 8s ease-in-out infinite',
+          }} />
+
+          {/* Ícones flutuantes de beleza */}
+          {[
+            { Icon: Scissors, top: '8%',  left: '8%',  size: 22, delay: '0s',   rot: '-15deg', opacity: 0.10 },
+            { Icon: Sparkles, top: '14%', right: '7%', size: 18, delay: '1.2s', rot: '20deg',  opacity: 0.09 },
+            { Icon: Star,     top: '72%', left: '5%',  size: 20, delay: '0.6s', rot: '-10deg', opacity: 0.08 },
+            { Icon: Clock,    top: '78%', right: '6%', size: 22, delay: '1.8s', rot: '12deg',  opacity: 0.09 },
+            { Icon: Zap,      top: '42%', left: '3%',  size: 16, delay: '2.4s', rot: '30deg',  opacity: 0.07 },
+            { Icon: Star,     top: '35%', right: '4%', size: 14, delay: '3.0s', rot: '-20deg', opacity: 0.06 },
+          ].map(({ Icon, top, left, right, size, delay, rot, opacity }, i) => (
+            <div key={i} style={{
+              position: 'absolute', top, left, right,
+              opacity,
+              transform: `rotate(${rot})`,
+              animation: `iconFloat 6s ease-in-out ${delay} infinite`,
+              color: '#D4178A',
+            }}>
+              <Icon size={size} />
+            </div>
+          ))}
+
+          {/* Linha decorativa lateral esquerda */}
+          <div style={{
+            position: 'absolute', left: 0, top: '20%', bottom: '20%',
+            width: 3,
+            background: 'linear-gradient(180deg, transparent, rgba(212,23,138,0.2), rgba(232,93,4,0.15), transparent)',
+            borderRadius: 2,
+          }} />
+        </div>
         <div style={{ width: '100%', maxWidth: 360 }}>
           <div style={{ marginBottom: 36 }}>
             <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 26, fontWeight: 700, color: 'var(--text)', marginBottom: 8, letterSpacing: '-0.5px' }}>
@@ -265,6 +318,10 @@ export default function LoginPage() {
       </div>
 
       <style>{`
+        @keyframes iconFloat {
+          0%,100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
+          50%      { transform: translateY(-12px) rotate(var(--rot, 0deg)); }
+        }
         @keyframes orbFloat1 {
           0%,100% { transform: translate(0, 0) scale(1); }
           33%      { transform: translate(40px, -30px) scale(1.08); }
