@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2, Zap, Clock, Users, Star, Scissors, Sparkles } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import logo from '../../public/logo.png';
 
 const TAGLINES = [
   { text: 'Atendimento imediato, sem espera',   icon: Zap },
@@ -252,7 +253,12 @@ export default function LoginPage() {
         </div>
         <div style={{ width: '100%', maxWidth: 360 }}>
           <div style={{ marginBottom: 36 }}>
-            <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 26, fontWeight: 700, color: 'var(--text)', marginBottom: 8, letterSpacing: '-0.5px' }}>
+            <img
+              src={logo}
+              alt="Rápido Beauty"
+              style={{ width: 200, maxWidth: '100%', marginBottom: 28, display: 'block' }}
+            />
+            <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 22, fontWeight: 700, color: 'var(--text)', marginBottom: 6, letterSpacing: '-0.5px' }}>
               Bem-vinda de volta
             </h1>
             <p style={{ fontSize: 14, color: 'var(--text-2)', lineHeight: 1.5 }}>
