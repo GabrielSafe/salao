@@ -45,7 +45,7 @@ function RightTeamPanel({ estado }) {
     const statusColor = f.status === 'EM_ATENDIMENTO' ? '#F59E0B' : f.status === 'ONLINE' ? '#10B981' : '#6B7280';
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', transition: 'background .15s', cursor: 'default', borderRadius: 8 }}
-        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,.04)'}
+        onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,.03)'}
         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
       >
         <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -55,10 +55,10 @@ function RightTeamPanel({ estado }) {
           <div style={{ position: 'absolute', bottom: 0, right: 0, width: 10, height: 10, borderRadius: '50%', background: statusColor, border: '1.5px solid #0D1117' }} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: f.status === 'OFFLINE' ? '#4B5563' : '#E6EDF3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: f.status === 'OFFLINE' ? '#9CA3AF' : '#1B2A4A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {f.usuario?.nome}
           </div>
-          <div style={{ fontSize: 11, color: f.status === 'OFFLINE' ? '#374151' : svcInfo?.color || '#6B7280', marginTop: 1 }}>
+          <div style={{ fontSize: 11, color: f.status === 'OFFLINE' ? '#D1D5DB' : svcInfo?.color || '#6B7280', marginTop: 1 }}>
             {svcInfo?.label || (f.status === 'ONLINE' ? 'Disponível' : 'Offline')}
           </div>
         </div>
@@ -72,15 +72,15 @@ function RightTeamPanel({ estado }) {
   }
 
   return (
-    <div style={{ width: 260, flexShrink: 0, background: '#161B22', borderLeft: '1px solid rgba(255,255,255,.07)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }} className="right-panel">
+    <div style={{ width: 260, flexShrink: 0, background: '#FFFFFF', borderLeft: '1px solid rgba(0,0,0,.08)', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '-4px 0 20px rgba(0,0,0,.04)' }} className="right-panel">
       {/* Header */}
-      <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid rgba(255,255,255,.07)' }}>
+      <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid rgba(0,0,0,.08)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#E6EDF3' }}>EQUIPE</div>
-            <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>{estado.funcionarias.length} funcionários</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#1B2A4A' }}>EQUIPE</div>
+            <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{estado.funcionarias.length} funcionários</div>
           </div>
-          <button style={{ fontSize: 11, fontWeight: 600, color: '#D4178A', background: 'rgba(212,23,138,.1)', border: '1px solid rgba(212,23,138,.2)', padding: '4px 10px', borderRadius: 20, cursor: 'pointer' }}>
+          <button style={{ fontSize: 11, fontWeight: 600, color: '#D4178A', background: 'rgba(212,23,138,.08)', border: '1px solid rgba(212,23,138,.2)', padding: '4px 10px', borderRadius: 20, cursor: 'pointer' }}>
             Ver todos
           </button>
         </div>
@@ -90,7 +90,7 @@ function RightTeamPanel({ estado }) {
         {/* Atendendo agora */}
         {atendendo.length > 0 && (
           <div style={{ marginTop: 12 }}>
-            <div style={{ padding: '4px 16px 8px', fontSize: 10, fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+            <div style={{ padding: '4px 16px 8px', fontSize: 10, fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
               Atendendo agora
             </div>
             {atendendo.map(f => <Avatar key={f.id} f={f} />)}
@@ -100,7 +100,7 @@ function RightTeamPanel({ estado }) {
         {/* Disponíveis */}
         {disponiveis.length > 0 && (
           <div style={{ marginTop: 12 }}>
-            <div style={{ padding: '4px 16px 8px', fontSize: 10, fontWeight: 700, color: '#10B981', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+            <div style={{ padding: '4px 16px 8px', fontSize: 10, fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
               Disponíveis
             </div>
             {disponiveis.map(f => <Avatar key={f.id} f={f} />)}
@@ -110,7 +110,7 @@ function RightTeamPanel({ estado }) {
         {/* Offline */}
         {offline.length > 0 && (
           <div style={{ marginTop: 12 }}>
-            <div style={{ padding: '4px 16px 8px', fontSize: 10, fontWeight: 700, color: '#4B5563', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+            <div style={{ padding: '4px 16px 8px', fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
               Offline
             </div>
             {offline.map(f => <Avatar key={f.id} f={f} />)}
@@ -118,7 +118,7 @@ function RightTeamPanel({ estado }) {
         )}
 
         {estado.funcionarias.length === 0 && (
-          <div style={{ padding: '32px 16px', textAlign: 'center', color: '#374151', fontSize: 13 }}>Nenhuma funcionária</div>
+          <div style={{ padding: '32px 16px', textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>Nenhuma funcionária</div>
         )}
       </div>
     </div>
@@ -136,7 +136,7 @@ export default function AdminPage() {
   const totalAtivos = estado.atendimentos.filter(a => ['AGUARDANDO', 'EM_ATENDIMENTO'].includes(a.status)).length;
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#0D1117', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#F4F3F1', overflow: 'hidden' }}>
 
       {/* ── Sidebar ── */}
       {sidebarOpen && (
@@ -306,7 +306,7 @@ export default function AdminPage() {
         </header>
 
         {/* Content + Right panel */}
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', background: '#F4F3F1' }}>
           <main style={{ flex: 1, overflow: 'auto', padding: '24px' }}>
             <Routes>
               <Route index element={<DashboardTab estado={estado} />} />

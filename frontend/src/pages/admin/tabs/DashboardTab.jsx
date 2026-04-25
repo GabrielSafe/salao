@@ -52,12 +52,12 @@ function agruparComandas(atendimentos) {
 function KpiCard({ label, valor, sub, Icon, color, bg }) {
   return (
     <div style={{
-      background: '#1C2128', border: '1px solid rgba(255,255,255,.08)',
+      background: '#FFFFFF', border: '1px solid rgba(0,0,0,.08)',
       borderRadius: 12, padding: '18px 20px',
       transition: 'border-color .2s',
     }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,.15)'}
-      onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,.08)'}
+      onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(0,0,0,.15)'}
+      onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(0,0,0,.08)'}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
         <div style={{ width: 36, height: 36, borderRadius: 9, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -82,16 +82,16 @@ function FilaColuna({ servico, atendimentos }) {
 
   return (
     <div style={{
-      background: '#1C2128', border: '1px solid rgba(255,255,255,.08)',
+      background: '#FFFFFF', border: '1px solid rgba(0,0,0,.08)',
       borderRadius: 12, overflow: 'hidden', flex: 1, minWidth: 0,
     }}>
       {/* Header */}
-      <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(0,0,0,.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 28, height: 28, borderRadius: 7, background: info.darkBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Icon size={14} color={info.color} />
           </div>
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#E6EDF3', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{info.label}</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: '#1B2A4A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{info.label}</span>
         </div>
         <span style={{ fontSize: 12, fontWeight: 700, color: info.color, background: info.darkBg, padding: '2px 8px', borderRadius: 20 }}>
           {aguardando.length} aguardando
@@ -101,20 +101,20 @@ function FilaColuna({ servico, atendimentos }) {
       {/* Lista */}
       <div style={{ padding: '8px 0' }}>
         {aguardando.length === 0 ? (
-          <div style={{ padding: '20px 16px', textAlign: 'center', color: '#374151', fontSize: 12 }}>
+          <div style={{ padding: '20px 16px', textAlign: 'center', color: '#6B7280', fontSize: 12 }}>
             Fila vazia
           </div>
         ) : (
           aguardando.slice(0, 4).map((a, idx) => (
             <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', transition: 'background .15s' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,.03)'}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,.02)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#6B7280', flexShrink: 0 }}>
+              <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(0,0,0,.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#6B7280', flexShrink: 0 }}>
                 {idx + 1}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 500, color: '#C9D1D9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {a.cliente?.nome}
                 </div>
               </div>
@@ -174,16 +174,16 @@ function ComandaRow({ grupo, estado }) {
   const duracaoTotal = tempoAtendimento(grupo.criadoEm);
 
   return (
-    <div style={{ border: '1px solid rgba(255,255,255,.07)', borderRadius: 10, overflow: 'hidden', marginBottom: 8 }}>
+    <div style={{ border: '1px solid rgba(0,0,0,.07)', borderRadius: 10, overflow: 'hidden', marginBottom: 8 }}>
       {/* Row principal */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: '#1C2128', cursor: 'pointer', transition: 'background .15s' }}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: '#FFFFFF', cursor: 'pointer', transition: 'background .15s' }}
         onClick={() => setAberto(!aberto)}
-        onMouseEnter={e => e.currentTarget.style.background = '#21262D'}
-        onMouseLeave={e => e.currentTarget.style.background = '#1C2128'}
+        onMouseEnter={e => e.currentTarget.style.background = '#F8F7F5'}
+        onMouseLeave={e => e.currentTarget.style.background = '#FFFFFF'}
       >
         {/* Avatar + comanda */}
         <div style={{ flexShrink: 0 }}>
-          <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(212,23,138,.3), rgba(232,93,4,.3))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#E6EDF3' }}>
+          <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(212,23,138,.3), rgba(232,93,4,.3))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#1B2A4A' }}>
             {grupo.cliente?.nome?.[0]?.toUpperCase()}
           </div>
         </div>
@@ -192,7 +192,7 @@ function ComandaRow({ grupo, estado }) {
         <div style={{ minWidth: 130, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: '#D4178A' }}>#{grupo.numero}</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#E6EDF3' }}>{grupo.cliente?.nome}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#1B2A4A' }}>{grupo.cliente?.nome}</span>
           </div>
           <div style={{ fontSize: 11, color: '#6B7280', marginTop: 1 }}>
             {grupo.itens.length} serviço{grupo.itens.length > 1 ? 's' : ''} · {new Date(grupo.criadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -207,11 +207,11 @@ function ComandaRow({ grupo, estado }) {
             const isAtivo = item.status === 'EM_ATENDIMENTO';
             return info ? (
               <div key={item.id} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 20, background: isAtivo ? info.bg : 'rgba(255,255,255,.06)', border: `1px solid ${isAtivo ? info.color + '40' : 'transparent'}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 20, background: isAtivo ? info.bg : 'rgba(0,0,0,.05)', border: `1px solid ${isAtivo ? info.color + '40' : 'transparent'}` }}>
                   <div style={{ width: 5, height: 5, borderRadius: '50%', background: isAtivo ? '#10B981' : '#F59E0B', flexShrink: 0 }} />
                   <span style={{ fontSize: 11, fontWeight: 600, color: isAtivo ? info.color : '#6B7280' }}>{info.label}</span>
                 </div>
-                {func && <div style={{ fontSize: 10, color: '#4B5563', textAlign: 'center', paddingLeft: 4 }}>↳ {func}</div>}
+                {func && <div style={{ fontSize: 10, color: '#9CA3AF', textAlign: 'center', paddingLeft: 4 }}>↳ {func}</div>}
               </div>
             ) : null;
           })}
@@ -228,7 +228,7 @@ function ComandaRow({ grupo, estado }) {
               <span style={{ fontSize: 11, color: '#6B7280' }}>{duracaoTotal}</span>
             </div>
           </div>
-          <button style={{ background: 'rgba(255,255,255,.06)', border: 'none', color: '#8B949E', padding: '6px', borderRadius: 6, display: 'flex', cursor: 'pointer' }}>
+          <button style={{ background: 'rgba(0,0,0,.05)', border: 'none', color: '#6B7280', padding: '6px', borderRadius: 6, display: 'flex', cursor: 'pointer' }}>
             {aberto ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
         </div>
@@ -236,18 +236,18 @@ function ComandaRow({ grupo, estado }) {
 
       {/* Expandido */}
       {aberto && (
-        <div style={{ padding: '12px 16px', background: '#161B22', borderTop: '1px solid rgba(255,255,255,.05)' }}>
+        <div style={{ padding: '12px 16px', background: '#F4F3F1', borderTop: '1px solid rgba(0,0,0,.04)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
             {grupo.itens.map(item => {
               const info = SERVICE_INFO[item.tipoServico];
               const isAtivo = item.status === 'EM_ATENDIMENTO';
               return info ? (
-                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(255,255,255,.03)', borderRadius: 8 }}>
+                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(0,0,0,.02)', borderRadius: 8 }}>
                   <div style={{ width: 26, height: 26, borderRadius: 7, background: info.darkBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <info.Icon size={12} color={info.color} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: '#C9D1D9' }}>{info.label}</div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: '#6B7280' }}>{info.label}</div>
                     {item.funcionaria && (
                       <div style={{ fontSize: 11, color: '#6B7280', marginTop: 1 }}>
                         {isAtivo ? 'com' : 'por'} {item.funcionaria.usuario?.nome}
@@ -266,9 +266,9 @@ function ComandaRow({ grupo, estado }) {
 
           {adicionando ? (
             <div style={{ background: 'rgba(212,23,138,.06)', border: '1px solid rgba(212,23,138,.15)', borderRadius: 8, padding: '10px 12px' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#8B949E', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Adicionar serviço</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Adicionar serviço</div>
               {servicosDisponiveis.length === 0 ? (
-                <span style={{ fontSize: 12, color: '#4B5563' }}>Todos os serviços já adicionados.</span>
+                <span style={{ fontSize: 12, color: '#9CA3AF' }}>Todos os serviços já adicionados.</span>
               ) : (
                 <>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
@@ -277,7 +277,7 @@ function ComandaRow({ grupo, estado }) {
                       const ativo = selecionados.includes(s);
                       return (
                         <button key={s} onClick={() => setSelecionados(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])}
-                          style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 20, border: `1.5px solid ${ativo ? info.color : 'rgba(255,255,255,.1)'}`, background: ativo ? info.darkBg : 'transparent', fontSize: 12, fontWeight: 500, color: ativo ? info.color : '#8B949E', cursor: 'pointer', transition: 'all .15s' }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 20, border: `1.5px solid ${ativo ? info.color : 'rgba(0,0,0,.12)'}`, background: ativo ? info.darkBg : 'transparent', fontSize: 12, fontWeight: 500, color: ativo ? info.color : '#6B7280', cursor: 'pointer', transition: 'all .15s' }}
                         >
                           <info.Icon size={11} /> {info.label}
                           {ativo && <Check size={10} />}
@@ -287,12 +287,12 @@ function ComandaRow({ grupo, estado }) {
                   </div>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button onClick={handleAdicionar} disabled={loading || !selecionados.length}
-                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, background: selecionados.length ? 'linear-gradient(135deg,#E85D04,#D4178A)' : 'rgba(255,255,255,.06)', color: selecionados.length ? '#fff' : '#4B5563', fontSize: 12, fontWeight: 600, border: 'none', cursor: selecionados.length ? 'pointer' : 'not-allowed' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, background: selecionados.length ? 'linear-gradient(135deg,#E85D04,#D4178A)' : 'rgba(0,0,0,.05)', color: selecionados.length ? '#fff' : '#9CA3AF', fontSize: 12, fontWeight: 600, border: 'none', cursor: selecionados.length ? 'pointer' : 'not-allowed' }}>
                       {loading ? <Loader2 size={12} style={{ animation: 'spin .7s linear infinite' }} /> : <Check size={12} />}
                       Confirmar
                     </button>
                     <button onClick={() => { setAdicionando(false); setSelecionados([]); }}
-                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,.06)', color: '#8B949E', fontSize: 12, border: 'none', cursor: 'pointer' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, background: 'rgba(0,0,0,.05)', color: '#6B7280', fontSize: 12, border: 'none', cursor: 'pointer' }}>
                       <X size={12} /> Cancelar
                     </button>
                   </div>
@@ -301,9 +301,9 @@ function ComandaRow({ grupo, estado }) {
             </div>
           ) : (
             <button onClick={() => setAdicionando(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,.04)', border: '1px dashed rgba(255,255,255,.1)', color: '#6B7280', fontSize: 12, cursor: 'pointer', transition: 'all .15s' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: 'rgba(0,0,0,.03)', border: '1px dashed rgba(0,0,0,.15)', color: '#6B7280', fontSize: 12, cursor: 'pointer', transition: 'all .15s' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(212,23,138,.3)'; e.currentTarget.style.color = '#D4178A'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,.1)'; e.currentTarget.style.color = '#6B7280'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,.15)'; e.currentTarget.style.color = '#6B7280'; }}
             >
               <Plus size={13} /> Adicionar serviço
             </button>
@@ -338,7 +338,7 @@ export default function DashboardTab({ estado: estadoProps }) {
     { label: 'atendimentos',   valor: emAndamento.length + aguardando.length, sub: 'ativos agora', Icon: UserX, color: '#D4178A', bg: 'rgba(212,23,138,.12)', title: 'Concluídos hoje' },
   ];
 
-  const dark = { color: '#E6EDF3', colorSub: '#6B7280', border: 'rgba(255,255,255,.08)' };
+  const dark = { color: '#1B2A4A', colorSub: '#6B7280', border: 'rgba(0,0,0,.08)' };
 
   return (
     <div>
@@ -386,7 +386,7 @@ export default function DashboardTab({ estado: estadoProps }) {
         </div>
 
         {comandas.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px', background: '#1C2128', borderRadius: 12, border: '1px solid rgba(255,255,255,.07)', color: '#374151', fontSize: 14 }}>
+          <div style={{ textAlign: 'center', padding: '40px', background: '#FFFFFF', borderRadius: 12, border: '1px solid rgba(0,0,0,.07)', color: '#6B7280', fontSize: 14 }}>
             Nenhuma comanda ativa no momento
           </div>
         ) : (
@@ -395,9 +395,9 @@ export default function DashboardTab({ estado: estadoProps }) {
               <ComandaRow key={grupo.numero} grupo={grupo} estado={estado} />
             ))}
             {comandas.length > 5 && (
-              <button style={{ width: '100%', padding: '12px', background: '#1C2128', border: '1px solid rgba(255,255,255,.07)', borderRadius: 10, color: '#8B949E', fontSize: 13, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 4, transition: 'all .15s' }}
+              <button style={{ width: '100%', padding: '12px', background: '#FFFFFF', border: '1px solid rgba(0,0,0,.07)', borderRadius: 10, color: '#6B7280', fontSize: 13, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 4, transition: 'all .15s' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(212,23,138,.2)'; e.currentTarget.style.color = '#D4178A'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,.07)'; e.currentTarget.style.color = '#8B949E'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,.07)'; e.currentTarget.style.color = '#6B7280'; }}
               >
                 Ver todas as comandas ativas <ArrowRight size={14} />
               </button>

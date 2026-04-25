@@ -25,7 +25,7 @@ const FORM_VAZIO = {
 function InputField({ label, icon: Icon, required, children, error }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <label style={{ fontSize: 11, fontWeight: 600, color: '#8B949E', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: 5 }}>
+      <label style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: 5 }}>
         {Icon && <Icon size={11} />}
         {label}
         {required && <span style={{ color: '#D4178A' }}>*</span>}
@@ -43,8 +43,8 @@ function InputField({ label, icon: Icon, required, children, error }) {
 
 const inputStyle = (hasError) => ({
   width: '100%', padding: '10px 12px',
-  background: '#21262D', border: `1.5px solid ${hasError ? '#EF4444' : 'rgba(255,255,255,.1)'}`,
-  borderRadius: 8, fontSize: 14, color: '#E6EDF3',
+  background: '#F8F7F5', border: `1.5px solid ${hasError ? '#EF4444' : 'rgba(0,0,0,.12)'}`,
+  borderRadius: 8, fontSize: 14, color: '#1B2A4A',
   outline: 'none', transition: 'border-color .15s',
   boxSizing: 'border-box',
 });
@@ -83,7 +83,7 @@ function ClienteForm({ inicial, onSalvar, onCancelar, loading }) {
             value={form.nome}
             onChange={e => set('nome', e.target.value)}
             onFocus={e => e.target.style.borderColor = '#D4178A'}
-            onBlur={e => e.target.style.borderColor = erros.nome ? '#EF4444' : 'rgba(255,255,255,.1)'}
+            onBlur={e => e.target.style.borderColor = erros.nome ? '#EF4444' : 'rgba(0,0,0,.1)'}
           />
         </InputField>
 
@@ -95,7 +95,7 @@ function ClienteForm({ inicial, onSalvar, onCancelar, loading }) {
             value={form.telefone}
             onChange={e => set('telefone', e.target.value)}
             onFocus={e => e.target.style.borderColor = '#D4178A'}
-            onBlur={e => e.target.style.borderColor = erros.telefone ? '#EF4444' : 'rgba(255,255,255,.1)'}
+            onBlur={e => e.target.style.borderColor = erros.telefone ? '#EF4444' : 'rgba(0,0,0,.1)'}
           />
         </InputField>
 
@@ -107,7 +107,7 @@ function ClienteForm({ inicial, onSalvar, onCancelar, loading }) {
             value={form.email}
             onChange={e => set('email', e.target.value)}
             onFocus={e => e.target.style.borderColor = '#D4178A'}
-            onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,.1)'}
+            onBlur={e => e.target.style.borderColor = 'rgba(0,0,0,.1)'}
           />
         </InputField>
 
@@ -119,7 +119,7 @@ function ClienteForm({ inicial, onSalvar, onCancelar, loading }) {
             value={form.cpf}
             onChange={e => set('cpf', e.target.value)}
             onFocus={e => e.target.style.borderColor = '#D4178A'}
-            onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,.1)'}
+            onBlur={e => e.target.style.borderColor = 'rgba(0,0,0,.1)'}
           />
         </InputField>
 
@@ -130,7 +130,7 @@ function ClienteForm({ inicial, onSalvar, onCancelar, loading }) {
             value={form.genero}
             onChange={e => set('genero', e.target.value)}
             onFocus={e => e.target.style.borderColor = '#D4178A'}
-            onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,.1)'}
+            onBlur={e => e.target.style.borderColor = 'rgba(0,0,0,.1)'}
           >
             <option value="">Selecionar...</option>
             {GENEROS.map(g => <option key={g} value={g}>{g}</option>)}
@@ -145,7 +145,7 @@ function ClienteForm({ inicial, onSalvar, onCancelar, loading }) {
             value={form.nascimento}
             onChange={e => set('nascimento', e.target.value)}
             onFocus={e => e.target.style.borderColor = '#D4178A'}
-            onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,.1)'}
+            onBlur={e => e.target.style.borderColor = 'rgba(0,0,0,.1)'}
           />
         </InputField>
 
@@ -157,7 +157,7 @@ function ClienteForm({ inicial, onSalvar, onCancelar, loading }) {
             value={form.redesSociais}
             onChange={e => set('redesSociais', e.target.value)}
             onFocus={e => e.target.style.borderColor = '#D4178A'}
-            onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,.1)'}
+            onBlur={e => e.target.style.borderColor = 'rgba(0,0,0,.1)'}
           />
         </InputField>
 
@@ -168,7 +168,7 @@ function ClienteForm({ inicial, onSalvar, onCancelar, loading }) {
             value={form.comoConheceu}
             onChange={e => set('comoConheceu', e.target.value)}
             onFocus={e => e.target.style.borderColor = '#D4178A'}
-            onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,.1)'}
+            onBlur={e => e.target.style.borderColor = 'rgba(0,0,0,.1)'}
           >
             <option value="">Selecionar...</option>
             {COMO_CONHECEU.map(c => <option key={c} value={c}>{c}</option>)}
@@ -185,7 +185,7 @@ function ClienteForm({ inicial, onSalvar, onCancelar, loading }) {
             value={form.observacoes}
             onChange={e => set('observacoes', e.target.value)}
             onFocus={e => e.target.style.borderColor = '#D4178A'}
-            onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,.1)'}
+            onBlur={e => e.target.style.borderColor = 'rgba(0,0,0,.1)'}
           />
         </InputField>
       </div>
@@ -198,7 +198,7 @@ function ClienteForm({ inicial, onSalvar, onCancelar, loading }) {
           {inicial ? 'Salvar alterações' : 'Cadastrar cliente'}
         </button>
         <button type="button" onClick={onCancelar}
-          style={{ padding: '10px 18px', background: 'rgba(255,255,255,.06)', color: '#8B949E', borderRadius: 9, fontSize: 14, border: '1px solid rgba(255,255,255,.08)', cursor: 'pointer' }}>
+          style={{ padding: '10px 18px', background: 'rgba(255,255,255,.06)', color: '#6B7280', borderRadius: 9, fontSize: 14, border: '1px solid rgba(0,0,0,.08)', cursor: 'pointer' }}>
           Cancelar
         </button>
       </div>
@@ -213,18 +213,18 @@ function ClienteCard({ cliente, onEditar, onVerHistorico }) {
     : null;
 
   return (
-    <div style={{ background: '#1C2128', border: '1px solid rgba(255,255,255,.08)', borderRadius: 12, padding: '16px', transition: 'border-color .2s', display: 'flex', alignItems: 'flex-start', gap: 14 }}
+    <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,.08)', borderRadius: 12, padding: '16px', transition: 'border-color .2s', display: 'flex', alignItems: 'flex-start', gap: 14 }}
       onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,.15)'}
-      onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,.08)'}
+      onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(0,0,0,.08)'}
     >
       {/* Avatar */}
-      <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(212,23,138,.3), rgba(232,93,4,.2))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#E6EDF3', flexShrink: 0 }}>
+      <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(212,23,138,.3), rgba(232,93,4,.2))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#1B2A4A', flexShrink: 0 }}>
         {inicial}
       </div>
 
       {/* Info */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: '#E6EDF3', marginBottom: 4 }}>{cliente.nome}</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#1B2A4A', marginBottom: 4 }}>{cliente.nome}</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, fontSize: 12, color: '#6B7280' }}>
           {cliente.telefone && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Phone size={11} />{cliente.telefone}</span>}
           {cliente.email    && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Mail size={11} />{cliente.email}</span>}
@@ -250,7 +250,7 @@ function ClienteCard({ cliente, onEditar, onVerHistorico }) {
       {/* Ações */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
         <button onClick={() => onVerHistorico(cliente)}
-          style={{ fontSize: 11, fontWeight: 600, padding: '5px 10px', background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 7, color: '#8B949E', cursor: 'pointer' }}>
+          style={{ fontSize: 11, fontWeight: 600, padding: '5px 10px', background: 'rgba(255,255,255,.06)', border: '1px solid rgba(0,0,0,.08)', borderRadius: 7, color: '#6B7280', cursor: 'pointer' }}>
           Histórico
         </button>
         <button onClick={() => onEditar(cliente)}
@@ -320,17 +320,17 @@ export default function ClientesTab() {
     return (
       <div>
         <button onClick={() => { setModo('lista'); setHistorico(null); }}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.08)', color: '#8B949E', padding: '7px 14px', borderRadius: 8, fontSize: 13, cursor: 'pointer', marginBottom: 20 }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,.06)', border: '1px solid rgba(0,0,0,.08)', color: '#6B7280', padding: '7px 14px', borderRadius: 8, fontSize: 13, cursor: 'pointer', marginBottom: 20 }}>
           <ArrowLeft size={14} /> Voltar
         </button>
 
-        <div style={{ background: '#1C2128', border: '1px solid rgba(255,255,255,.08)', borderRadius: 12, padding: '20px', marginBottom: 16 }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,.08)', borderRadius: 12, padding: '20px', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-            <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(212,23,138,.3), rgba(232,93,4,.2))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700, color: '#E6EDF3' }}>
+            <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(212,23,138,.3), rgba(232,93,4,.2))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700, color: '#1B2A4A' }}>
               {clienteSelecionado.nome?.[0]?.toUpperCase()}
             </div>
             <div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#E6EDF3' }}>{clienteSelecionado.nome}</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: '#1B2A4A' }}>{clienteSelecionado.nome}</div>
               <div style={{ fontSize: 13, color: '#6B7280', marginTop: 3, display: 'flex', gap: 12 }}>
                 {clienteSelecionado.telefone && <span>{clienteSelecionado.telefone}</span>}
                 {clienteSelecionado.email && <span>{clienteSelecionado.email}</span>}
@@ -351,8 +351,8 @@ export default function ClientesTab() {
           </div>
         </div>
 
-        <div style={{ background: '#1C2128', border: '1px solid rgba(255,255,255,.08)', borderRadius: 12, overflow: 'hidden' }}>
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,.07)', fontSize: 13, fontWeight: 700, color: '#8B949E', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Histórico de atendimentos</div>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,.08)', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,.07)', fontSize: 13, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Histórico de atendimentos</div>
           {!historico ? (
             <div style={{ padding: '32px', textAlign: 'center' }}><Loader2 size={20} color="#374151" style={{ animation: 'spin .7s linear infinite' }} /></div>
           ) : historico.atendimentos.length === 0 ? (
@@ -388,12 +388,12 @@ export default function ClientesTab() {
     return (
       <div>
         <button onClick={() => { setModo('lista'); setClienteSelecionado(null); setErro(''); }}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.08)', color: '#8B949E', padding: '7px 14px', borderRadius: 8, fontSize: 13, cursor: 'pointer', marginBottom: 20 }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,.06)', border: '1px solid rgba(0,0,0,.08)', color: '#6B7280', padding: '7px 14px', borderRadius: 8, fontSize: 13, cursor: 'pointer', marginBottom: 20 }}>
           <ArrowLeft size={14} /> Voltar
         </button>
 
-        <div style={{ background: '#1C2128', border: '1px solid rgba(255,255,255,.08)', borderRadius: 12, padding: '24px' }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: '#E6EDF3', marginBottom: 4 }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,.08)', borderRadius: 12, padding: '24px' }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1B2A4A', marginBottom: 4 }}>
             {modo === 'editar' ? 'Editar cliente' : 'Cadastrar nova cliente'}
           </h2>
           <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 24 }}>
@@ -428,7 +428,7 @@ export default function ClientesTab() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 22, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 22, fontWeight: 700, color: '#1B2A4A', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(103,232,249,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Users size={16} color="#67E8F9" />
             </div>
@@ -446,12 +446,12 @@ export default function ClientesTab() {
       <div style={{ position: 'relative', marginBottom: 20 }}>
         <Search size={15} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#4B5563', pointerEvents: 'none' }} />
         <input
-          style={{ width: '100%', padding: '11px 14px 11px 40px', background: '#1C2128', border: '1.5px solid rgba(255,255,255,.08)', borderRadius: 10, fontSize: 14, color: '#E6EDF3', outline: 'none', boxSizing: 'border-box' }}
+          style={{ width: '100%', padding: '11px 14px 11px 40px', background: '#FFFFFF', border: '1.5px solid rgba(0,0,0,.08)', borderRadius: 10, fontSize: 14, color: '#1B2A4A', outline: 'none', boxSizing: 'border-box' }}
           placeholder="Buscar por nome, telefone, e-mail ou CPF..."
           value={busca}
           onChange={e => handleBusca(e.target.value)}
           onFocus={e => e.target.style.borderColor = '#D4178A'}
-          onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,.08)'}
+          onBlur={e => e.target.style.borderColor = 'rgba(0,0,0,.08)'}
         />
         {busca && (
           <button onClick={() => { setBusca(''); carregar(''); }}
@@ -463,7 +463,7 @@ export default function ClientesTab() {
 
       {/* Lista */}
       {clientes.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: '#1C2128', borderRadius: 12, border: '1px solid rgba(255,255,255,.07)' }}>
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: '#FFFFFF', borderRadius: 12, border: '1px solid rgba(255,255,255,.07)' }}>
           <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
             <Users size={24} color="#374151" />
           </div>

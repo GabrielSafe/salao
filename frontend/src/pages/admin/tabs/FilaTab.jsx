@@ -35,7 +35,7 @@ export default function FilaTab({ estado: estadoProps }) {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 22, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 22, fontWeight: 700, color: '#1B2A4A', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(252,211,77,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Clock size={16} color="#FCD34D" />
             </div>
@@ -60,7 +60,7 @@ export default function FilaTab({ estado: estadoProps }) {
           const filaDoServico = estado.filas.filter(f => f.especialidade === srv);
           return (
             <div key={srv} style={{
-              background: '#1C2128', border: `1px solid ${filaDoServico.length > 0 ? info.border : 'rgba(255,255,255,.08)'}`,
+              background: '#FFFFFF', border: `1px solid ${filaDoServico.length > 0 ? info.border : 'rgba(0,0,0,.08)'}`,
               borderRadius: 12, padding: '16px',
               transition: 'border-color .2s',
             }}>
@@ -68,9 +68,9 @@ export default function FilaTab({ estado: estadoProps }) {
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: info.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <info.Icon size={16} color={info.color} />
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#E6EDF3' }}>{info.label}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#1B2A4A' }}>{info.label}</span>
               </div>
-              <div style={{ fontSize: 30, fontWeight: 800, color: filaDoServico.length > 0 ? info.color : '#374151', fontFamily: "'Poppins', sans-serif", lineHeight: 1 }}>
+              <div style={{ fontSize: 30, fontWeight: 800, color: filaDoServico.length > 0 ? info.color : '#6B7280', fontFamily: "'Poppins', sans-serif", lineHeight: 1 }}>
                 {filaDoServico.length}
               </div>
               <div style={{ fontSize: 11, color: '#6B7280', marginTop: 4 }}>
@@ -90,14 +90,14 @@ export default function FilaTab({ estado: estadoProps }) {
             .sort((a, b) => new Date(a.entradaEm) - new Date(b.entradaEm));
 
           return (
-            <div key={srv} style={{ background: '#1C2128', border: '1px solid rgba(255,255,255,.08)', borderRadius: 12, overflow: 'hidden' }}>
+            <div key={srv} style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,.08)', borderRadius: 12, overflow: 'hidden' }}>
               {/* Header da coluna */}
-              <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(0,0,0,.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: 30, height: 30, borderRadius: 8, background: info.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <info.Icon size={15} color={info.color} />
                   </div>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: '#E6EDF3' }}>{info.label}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#1B2A4A' }}>{info.label}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: info.color, background: info.bg, padding: '3px 10px', borderRadius: 20 }}>
                   <Users size={11} />
@@ -109,11 +109,11 @@ export default function FilaTab({ estado: estadoProps }) {
               <div style={{ padding: '8px 0' }}>
                 {filaDoServico.length === 0 ? (
                   <div style={{ padding: '28px 16px', textAlign: 'center' }}>
-                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(0,0,0,.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
                       <Wifi size={18} color="#374151" />
                     </div>
-                    <div style={{ fontSize: 13, color: '#374151', fontWeight: 500 }}>Fila vazia</div>
-                    <div style={{ fontSize: 11, color: '#2D3748', marginTop: 4 }}>Nenhuma funcionária disponível</div>
+                    <div style={{ fontSize: 13, color: '#6B7280', fontWeight: 500 }}>Fila vazia</div>
+                    <div style={{ fontSize: 11, color: '#D1D5DB', marginTop: 4 }}>Nenhuma funcionária disponível</div>
                   </div>
                 ) : (
                   filaDoServico.map((entrada, idx) => {
@@ -130,13 +130,13 @@ export default function FilaTab({ estado: estadoProps }) {
                           borderLeft: isFirst ? '3px solid #10B981' : '3px solid transparent',
                           transition: 'background .15s',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,.03)'}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,.02)'}
                         onMouseLeave={e => e.currentTarget.style.background = isFirst ? 'rgba(16,185,129,.04)' : 'transparent'}
                       >
                         {/* Posição */}
                         <div style={{
                           width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
-                          background: isFirst ? 'rgba(16,185,129,.2)' : 'rgba(255,255,255,.06)',
+                          background: isFirst ? 'rgba(16,185,129,.2)' : 'rgba(0,0,0,.05)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontSize: 11, fontWeight: 700,
                           color: isFirst ? '#10B981' : '#6B7280',
@@ -161,7 +161,7 @@ export default function FilaTab({ estado: estadoProps }) {
 
                         {/* Info */}
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: '#C9D1D9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {func.usuario?.nome}
                             {isFirst && (
                               <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: '#10B981', background: 'rgba(16,185,129,.12)', padding: '1px 6px', borderRadius: 8 }}>
@@ -186,7 +186,7 @@ export default function FilaTab({ estado: estadoProps }) {
                             ) : null;
                           })}
                           {func.especialidades?.length > 2 && (
-                            <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#6B7280' }}>
+                            <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(0,0,0,.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#6B7280' }}>
                               +{func.especialidades.length - 2}
                             </div>
                           )}
