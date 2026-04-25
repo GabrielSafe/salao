@@ -46,7 +46,7 @@ export default function ComandaPage() {
 
   if (!dados) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #F4F3F1 0%, #EDE9E0 100%)' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #FDF5FA 0%, #F5EEF8 50%, #EEF2F8 100%)' }}>
         <div className="spinner" />
       </div>
     );
@@ -57,14 +57,14 @@ export default function ComandaPage() {
   const clienteNome = atendimentos[0]?.cliente?.nome;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg, #F4F3F1 0%, #EDE9E0 100%)', padding: '20px 16px' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg, #FDF5FA 0%, #F5EEF8 50%, #EEF2F8 100%)', padding: '20px 16px' }}>
       {/* Glow */}
       <div style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: 400, height: 200, background: 'radial-gradient(ellipse, rgba(245,197,24,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
       <div style={{ maxWidth: 480, margin: '0 auto', position: 'relative' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ width: 44, height: 44, background: 'var(--accent)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', boxShadow: '0 0 20px rgba(245,197,24,.2)' }}>
+          <div style={{ width: 44, height: 44, background: 'linear-gradient(135deg, #E85D04, #D4178A)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', boxShadow: '0 4px 16px rgba(212,23,138,.3)' }}>
             <Scissors size={20} color="#0A0A0A" strokeWidth={2.5} />
           </div>
           <h1 style={{ fontSize: 18, fontWeight: 700 }}>{salao.nome}</h1>

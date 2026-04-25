@@ -30,8 +30,8 @@ export default function AdminPage() {
         }}>
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 24, flexShrink: 0 }}>
-            <div style={{ width: 30, height: 30, background: 'var(--accent)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Scissors size={16} color="#0A0A0A" strokeWidth={2.5} />
+            <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg, #E85D04, #D4178A)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Scissors size={16} color="#FFFFFF" strokeWidth={2.5} />
             </div>
             <span style={{ fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap' }}>{usuario?.salao?.nome || 'Salão'}</span>
           </div>

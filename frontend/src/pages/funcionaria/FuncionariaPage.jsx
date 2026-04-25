@@ -81,8 +81,8 @@ export default function FuncionariaPage() {
         padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 36, height: 36, background: 'var(--accent)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Scissors size={18} color="#0A0A0A" strokeWidth={2.5} />
+          <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #E85D04, #D4178A)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Scissors size={18} color="#FFFFFF" strokeWidth={2.5} />
           </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: 14, color: '#FFFFFF' }}>{usuario?.nome}</div>

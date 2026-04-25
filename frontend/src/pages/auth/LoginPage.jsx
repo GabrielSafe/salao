@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Scissors, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Zap } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function LoginPage() {
@@ -31,38 +31,61 @@ export default function LoginPage() {
     <div style={{
       minHeight: '100vh',
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(160deg, #F4F3F1 0%, #EDE9E0 100%)',
-      padding: '20px',
+      background: 'linear-gradient(135deg, #1B2A4A 0%, #2D1B4E 50%, #1B2A4A 100%)',
+      overflow: 'hidden',
     }}>
-      {/* Glow background */}
+      {/* Decoração lado esquerdo — visível em desktop */}
       <div style={{
-        position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)',
-        width: 600, height: 300,
-        background: 'radial-gradient(ellipse, rgba(201,168,76,0.15) 0%, transparent 70%)',
-        pointerEvents: 'none',
-      }} />
+        flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        padding: '40px', position: 'relative',
+      }} className="login-left">
+        {/* Círculo decorativo */}
+        <div style={{ position: 'absolute', top: -100, left: -100, width: 400, height: 400, borderRadius: '50%', background: 'rgba(212,23,138,0.08)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -80, right: -60, width: 300, height: 300, borderRadius: '50%', background: 'rgba(232,93,4,0.06)', pointerEvents: 'none' }} />
 
-      <div style={{ width: '100%', maxWidth: 400, position: 'relative' }}>
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{
-            width: 56, height: 56,
-            background: 'var(--accent)',
-            borderRadius: 16,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 16px',
-            boxShadow: 'var(--shadow-gold)',
-          }}>
-            <Scissors size={28} color="#0A0A0A" strokeWidth={2.5} />
+        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 400 }}>
+          {/* Logo texto */}
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 4 }}>
+              <Zap size={28} fill="#D4178A" color="#D4178A" />
+            </div>
+            <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 48, fontWeight: 800, lineHeight: 1, letterSpacing: '-1px' }}>
+              <span style={{ color: '#FFFFFF' }}>RÁPIDO</span>
+              <br />
+              <span style={{ background: 'linear-gradient(135deg, #E85D04, #D4178A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>BEAUTY</span>
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 10, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
+              Salão de Beleza Veloz
+            </div>
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.5px' }}>Sistema Salão</h1>
-          <p style={{ fontSize: 14, color: 'var(--text-2)', marginTop: 6 }}>Acesso restrito — Equipe</p>
-        </div>
 
-        {/* Card */}
-        <div className="card" style={{ padding: '28px 28px 24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {['Atendimento Imediato', 'Expresso', 'Sem Filas'].map((item) => (
+              <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'linear-gradient(135deg, #E85D04, #D4178A)', flexShrink: 0 }} />
+                <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 14 }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Formulário lado direito */}
+      <div style={{
+        width: '100%', maxWidth: 420,
+        background: '#FFFFFF',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        padding: '48px 40px',
+        boxShadow: '-20px 0 60px rgba(0,0,0,0.2)',
+      }}>
+        <div style={{ width: '100%', maxWidth: 340 }}>
+          <div style={{ marginBottom: 32 }}>
+            <h1 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 24, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>
+              Bem-vinda de volta
+            </h1>
+            <p style={{ fontSize: 14, color: 'var(--text-2)' }}>Entre com suas credenciais para acessar</p>
+          </div>
+
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label className="label">E-mail</label>
@@ -77,7 +100,7 @@ export default function LoginPage() {
               />
             </div>
 
-            <div className="form-group" style={{ marginBottom: erro ? 12 : 20 }}>
+            <div className="form-group" style={{ marginBottom: erro ? 12 : 24 }}>
               <label className="label">Senha</label>
               <div style={{ position: 'relative' }}>
                 <input
@@ -93,35 +116,31 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowSenha(!showSenha)}
-                  style={{
-                    position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                    background: 'none', color: 'var(--text-3)', padding: 4,
-                  }}
+                  style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', color: 'var(--text-3)', padding: 4 }}
                 >
                   {showSenha ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
-            {erro && (
-              <div className="alert-error" style={{ marginBottom: 16, fontSize: 13 }}>{erro}</div>
-            )}
+            {erro && <div className="alert-error" style={{ marginBottom: 16, fontSize: 13 }}>{erro}</div>}
 
-            <button
-              className="btn btn-primary btn-lg"
-              type="submit"
-              style={{ width: '100%' }}
-              disabled={loading}
-            >
+            <button className="btn btn-primary btn-lg" type="submit" style={{ width: '100%' }} disabled={loading}>
               {loading ? <><Loader2 size={16} style={{ animation: 'spin 0.7s linear infinite' }} /> Entrando...</> : 'Entrar'}
             </button>
           </form>
-        </div>
 
-        <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-3)', marginTop: 20 }}>
-          Sistema de atendimento inteligente
-        </p>
+          <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-3)', marginTop: 24 }}>
+            Sistema de atendimento inteligente
+          </p>
+        </div>
       </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .login-left { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 }

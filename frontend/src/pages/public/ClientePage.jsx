@@ -46,7 +46,7 @@ export default function ClientePage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(160deg, #F4F3F1 0%, #EDE9E0 100%)',
+      background: 'linear-gradient(160deg, #FDF5FA 0%, #F5EEF8 50%, #EEF2F8 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -58,7 +58,7 @@ export default function ClientePage() {
       <div style={{ width: '100%', maxWidth: 460, position: 'relative' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ width: 52, height: 52, background: 'var(--accent)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', boxShadow: '0 0 28px rgba(245,197,24,.25)' }}>
+          <div style={{ width: 52, height: 52, background: 'linear-gradient(135deg, #E85D04, #D4178A)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', boxShadow: '0 4px 20px rgba(212,23,138,.3)' }}>
             <Scissors size={24} color="#0A0A0A" strokeWidth={2.5} />
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.3px' }}>Bem-vinda!</h1>
