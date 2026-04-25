@@ -225,7 +225,7 @@ function ComandaCard({ grupo }) {
   );
 }
 
-function EquipeAvatarBar({ funcionarias, atendimentos, filas }) {
+function EquipeAvatarBar({ funcionarias, atendimentos, filas, compact = false }) {
   const [hovered, setHovered] = useState(null);
 
   const statusCfg = {
@@ -237,7 +237,7 @@ function EquipeAvatarBar({ funcionarias, atendimentos, filas }) {
   return (
     <div>
       {/* Barra de avatares */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingBottom: 16, borderBottom: '1px solid var(--border)', marginBottom: 16 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, ...(compact ? {} : { paddingBottom: 16, borderBottom: '1px solid var(--border)', marginBottom: 16 }) }}>
         {funcionarias.map((f, i) => {
           const cfg = statusCfg[f.status] || statusCfg.OFFLINE;
           const inicial = f.usuario?.nome?.[0]?.toUpperCase() || '?';
@@ -309,19 +309,21 @@ function EquipeAvatarBar({ funcionarias, atendimentos, filas }) {
         })}
       </div>
 
-      {/* Contadores rápidos */}
-      <div style={{ display: 'flex', gap: 16 }}>
-        {[
-          { label: 'Online',    count: funcionarias.filter((f) => f.status === 'ONLINE').length,         color: '#16A34A' },
-          { label: 'Ocupadas',  count: funcionarias.filter((f) => f.status === 'EM_ATENDIMENTO').length, color: '#C9A84C' },
-          { label: 'Offline',   count: funcionarias.filter((f) => f.status === 'OFFLINE').length,        color: '#AAAAAA' },
-        ].map(({ label, count, color }) => (
-          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />
-            <span style={{ fontSize: 12, color: 'var(--text-2)' }}>{count} {label}</span>
-          </div>
-        ))}
-      </div>
+      {/* Contadores rápidos — apenas fora do modo compact */}
+      {!compact && (
+        <div style={{ display: 'flex', gap: 16 }}>
+          {[
+            { label: 'Online',   count: funcionarias.filter((f) => f.status === 'ONLINE').length,         color: '#16A34A' },
+            { label: 'Ocupadas', count: funcionarias.filter((f) => f.status === 'EM_ATENDIMENTO').length, color: '#C9A84C' },
+            { label: 'Offline',  count: funcionarias.filter((f) => f.status === 'OFFLINE').length,        color: '#AAAAAA' },
+          ].map(({ label, count, color }) => (
+            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />
+              <span style={{ fontSize: 12, color: 'var(--text-2)' }}>{count} {label}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -348,30 +350,32 @@ export default function DashboardTab() {
   const grupos = agruparPorComanda(estado.atendimentos);
 
   return (
-    <div>
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Dashboard</h1>
-          <p className="page-subtitle">Acompanhe o salão em tempo real</p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--success-dim)', border: '1px solid rgba(34,197,94,.2)', padding: '6px 12px', borderRadius: 20 }}>
-          <span className="status-dot online" style={{ width: 6, height: 6 }} />
-          <span style={{ fontSize: 12, color: 'var(--success)', fontWeight: 600 }}>Ao vivo</span>
-        </div>
-      </div>
+    <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
 
-      {/* KPIs */}
-      <div className="grid-4" style={{ marginBottom: 24 }}>
-        {kpis.map(({ label, valor, Icon, color, bg }) => (
-          <div key={label} className="kpi-card">
-            <div className="kpi-icon" style={{ background: bg }}><Icon size={18} color={color} /></div>
-            <div className="kpi-value" style={{ color }}>{valor}</div>
-            <div className="kpi-label">{label}</div>
+      {/* ── Coluna principal ── */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">Dashboard</h1>
+            <p className="page-subtitle">Acompanhe o salão em tempo real</p>
           </div>
-        ))}
-      </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--success-dim)', border: '1px solid rgba(34,197,94,.2)', padding: '6px 12px', borderRadius: 20 }}>
+            <span className="status-dot online" style={{ width: 6, height: 6 }} />
+            <span style={{ fontSize: 12, color: 'var(--success)', fontWeight: 600 }}>Ao vivo</span>
+          </div>
+        </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        {/* KPIs */}
+        <div className="grid-4" style={{ marginBottom: 20 }}>
+          {kpis.map(({ label, valor, Icon, color, bg }) => (
+            <div key={label} className="kpi-card">
+              <div className="kpi-icon" style={{ background: bg }}><Icon size={18} color={color} /></div>
+              <div className="kpi-value" style={{ color }}>{valor}</div>
+              <div className="kpi-label">{label}</div>
+            </div>
+          ))}
+        </div>
+
         {/* Comandas ativas */}
         <div className="card">
           <h3 style={{ fontWeight: 700, marginBottom: 14, fontSize: 13, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -384,27 +388,87 @@ export default function DashboardTab() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {grupos.map((grupo, i) => (
-                <div
-                  key={grupo.numero}
-                  className="animate-slide-in"
-                  style={{ animationDelay: `${i * 40}ms` }}
-                >
+                <div key={grupo.numero} className="animate-slide-in" style={{ animationDelay: `${i * 40}ms` }}>
                   <ComandaCard grupo={grupo} />
                 </div>
               ))}
             </div>
           )}
         </div>
+      </div>
 
-        {/* Equipe — avatar bar */}
-        <div className="card">
-          <h3 style={{ fontWeight: 700, marginBottom: 16, fontSize: 13, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Equipe
-          </h3>
+      {/* ── Chat bar direita ── */}
+      <div style={{
+        width: 220, flexShrink: 0,
+        position: 'sticky', top: 76,
+        background: '#0F0F0F',
+        borderRadius: 14,
+        border: '1px solid rgba(255,255,255,.07)',
+        overflow: 'hidden',
+        boxShadow: '0 4px 24px rgba(0,0,0,.15)',
+      }}>
+        {/* Header */}
+        <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,.07)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,.5)', textTransform: 'uppercase', letterSpacing: '0.7px' }}>Equipe</span>
+            <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 600, color: '#16A34A', background: 'rgba(22,163,74,.15)', padding: '2px 7px', borderRadius: 20 }}>
+              {estado.funcionarias.filter((f) => f.status !== 'OFFLINE').length} ativas
+            </span>
+          </div>
+          {/* Avatar bar compacta */}
+          <EquipeAvatarBar funcionarias={estado.funcionarias} atendimentos={estado.atendimentos} filas={estado.filas} compact />
+        </div>
+
+        {/* Lista de funcionárias */}
+        <div style={{ padding: '8px 0', maxHeight: 420, overflowY: 'auto' }}>
           {estado.funcionarias.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-3)', fontSize: 13 }}>Nenhuma funcionária cadastrada</div>
+            <div style={{ padding: '20px 16px', textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,.3)' }}>Nenhuma funcionária</div>
           ) : (
-            <EquipeAvatarBar funcionarias={estado.funcionarias} atendimentos={estado.atendimentos} filas={estado.filas} />
+            ['ONLINE', 'EM_ATENDIMENTO', 'OFFLINE'].map((statusGroup) => {
+              const grupo = estado.funcionarias.filter((f) => f.status === statusGroup);
+              if (grupo.length === 0) return null;
+              const groupLabel = { ONLINE: 'Online', EM_ATENDIMENTO: 'Em atendimento', OFFLINE: 'Offline' }[statusGroup];
+              const groupColor = { ONLINE: '#16A34A', EM_ATENDIMENTO: '#C9A84C', OFFLINE: '#555' }[statusGroup];
+              return (
+                <div key={statusGroup}>
+                  <div style={{ padding: '6px 16px 4px', fontSize: 10, fontWeight: 700, color: groupColor, textTransform: 'uppercase', letterSpacing: '0.7px' }}>
+                    {groupLabel} · {grupo.length}
+                  </div>
+                  {grupo.map((f, i) => {
+                    const atend = estado.atendimentos.find((a) => a.funcionariaId === f.id && a.status === 'EM_ATENDIMENTO');
+                    const nFilas = estado.filas.filter((fi) => fi.funcionariaId === f.id).length;
+                    const detalhe = f.status === 'EM_ATENDIMENTO' && atend
+                      ? `Atendendo ${atend.cliente?.nome}`
+                      : f.status === 'ONLINE' && nFilas > 0
+                      ? `Na fila · ${nFilas} serviço${nFilas > 1 ? 's' : ''}`
+                      : f.status === 'ONLINE' ? 'Disponível' : 'Offline';
+                    return (
+                      <div key={f.id} className="animate-fade-scale" style={{ animationDelay: `${i * 30}ms`, display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', transition: 'background 0.15s', cursor: 'default' }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,.04)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        {/* Avatar pequeno */}
+                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: '50%', background: `${groupColor}18`, border: `1.5px solid ${groupColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: groupColor }}>
+                            {f.usuario?.nome?.[0]?.toUpperCase()}
+                          </div>
+                          <div style={{ position: 'absolute', bottom: 0, right: 0, width: 9, height: 9, borderRadius: '50%', background: groupColor, border: '1.5px solid #0F0F0F' }} />
+                        </div>
+                        {/* Info */}
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: f.status === 'OFFLINE' ? 'rgba(255,255,255,.3)' : 'rgba(255,255,255,.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {f.usuario?.nome}
+                          </div>
+                          <div style={{ fontSize: 11, color: f.status === 'OFFLINE' ? 'rgba(255,255,255,.2)' : groupColor, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {detalhe}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })
           )}
         </div>
       </div>
