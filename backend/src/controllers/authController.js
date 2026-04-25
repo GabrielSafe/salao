@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../config/prisma');
+const { emitirEstadoCompleto } = require('../services/distribuicao');
 
 function gerarToken(usuario) {
   return jwt.sign(
@@ -35,6 +36,8 @@ async function login(req, res) {
       where: { id: usuario.funcionaria.id },
       data: { status: 'ONLINE' },
     });
+    const io = req.app.get('io');
+    if (usuario.salaoId) emitirEstadoCompleto(usuario.salaoId, io);
   }
 
   const token = gerarToken(usuario);
@@ -55,12 +58,13 @@ async function login(req, res) {
 async function logout(req, res) {
   if (req.usuario.role === 'FUNCIONARIA' && req.usuario.funcionaria) {
     const funcionaria = req.usuario.funcionaria;
-    // Remove da fila e coloca offline
     await prisma.filaEntrada.deleteMany({ where: { funcionariaId: funcionaria.id } });
     await prisma.funcionaria.update({
       where: { id: funcionaria.id },
       data: { status: 'OFFLINE' },
     });
+    const io = req.app.get('io');
+    if (req.usuario.salaoId) emitirEstadoCompleto(req.usuario.salaoId, io);
   }
   return res.json({ mensagem: 'Logout realizado com sucesso' });
 }
