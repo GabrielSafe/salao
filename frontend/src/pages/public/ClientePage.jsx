@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowRight, ArrowLeft, Sparkles, Hand, Leaf, Check, Loader2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Scissors, Sparkles, Hand, Leaf, Check, Loader2 } from 'lucide-react';
 import logo from '../../public/logo.png';
 
 const SERVICOS = [

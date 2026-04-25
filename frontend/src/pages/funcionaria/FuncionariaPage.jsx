@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { LogOut, PlayCircle, PauseCircle, CheckCircle2, Sparkles, Hand, Leaf, Clock } from 'lucide-react';
+import { LogOut, PlayCircle, PauseCircle, CheckCircle2, Scissors, Sparkles, Hand, Leaf, Clock } from 'lucide-react';
 import logo from '../../public/logo.png';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../hooks/useSocket';

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { io } from 'socket.io-client';
-import { Sparkles, Hand, Leaf, Clock, CheckCircle2, XCircle, User } from 'lucide-react';
+import { Scissors, Sparkles, Hand, Leaf, Clock, CheckCircle2, XCircle, User } from 'lucide-react';
 import logo from '../../public/logo.png';
 
 const SERVICE_INFO = {
