@@ -79,13 +79,19 @@ model Funcionaria {
 }
 
 model Cliente {
-  id        String   @id @default(uuid())
-  nome      String
-  cpf       String?
-  telefone  String?
-  salaoId   String   @map("salao_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id            String    @id @default(uuid())
+  nome          String
+  telefone      String?
+  cpf           String?
+  email         String?
+  genero        String?
+  nascimento    DateTime?
+  redesSociais  String?   @map("redes_sociais")
+  comoConheceu  String?   @map("como_conheceu")
+  observacoes   String?
+  salaoId       String    @map("salao_id")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
   salao        Salao         @relation(fields: [salaoId], references: [id])
   atendimentos Atendimento[]

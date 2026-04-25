@@ -34,8 +34,10 @@ router.post('/fila/entrar', autenticar, exigirRole('FUNCIONARIA'), funcionariasC
 router.post('/fila/sair', autenticar, exigirRole('FUNCIONARIA'), funcionariasCtrl.sairFila);
 
 // Clientes
+router.get('/clientes', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, clientesCtrl.listar);
 router.get('/clientes/buscar', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'FUNCIONARIA'), exigirSalao, clientesCtrl.buscar);
-router.post('/clientes', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, clientesCtrl.buscarOuCriar);
+router.post('/clientes', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, clientesCtrl.criar);
+router.put('/clientes/:id', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, clientesCtrl.atualizar);
 router.get('/clientes/:id/historico', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, clientesCtrl.historico);
 
 // Atendimentos
