@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { BarChart3, CheckCircle2, XCircle, Loader2, Scissors, Sparkles, Hand, Leaf } from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useSocket } from '../../../hooks/useSocket';
 import api from '../../../services/api';
 
 const SERVICE_INFO = {
@@ -12,20 +14,25 @@ const SERVICE_INFO = {
 function dataHoje() { return new Date().toISOString().split('T')[0]; }
 
 export default function RelatorioTab() {
+  const { usuario } = useAuth();
   const [filtro, setFiltro] = useState({ inicio: dataHoje(), fim: dataHoje() });
   const [dados, setDados] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  async function carregar() {
+  const carregar = useCallback(async (f) => {
+    const filtroAtual = f || filtro;
     setLoading(true);
     try {
-      const { data } = await api.get(`/atendimentos/relatorio?inicio=${filtro.inicio}T00:00:00&fim=${filtro.fim}T23:59:59`);
+      const { data } = await api.get(`/atendimentos/relatorio?inicio=${filtroAtual.inicio}T00:00:00&fim=${filtroAtual.fim}T23:59:59`);
       setDados(data);
     } catch {}
     setLoading(false);
-  }
+  }, [filtro]);
 
   useEffect(() => { carregar(); }, []);
+
+  // Atualiza automaticamente quando qualquer atendimento muda
+  useSocket(usuario?.salaoId, { onEstadoCompleto: () => carregar() });
 
   return (
     <div>
