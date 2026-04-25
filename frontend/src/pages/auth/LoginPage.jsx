@@ -34,10 +34,10 @@ export default function LoginPage() {
       background: 'linear-gradient(135deg, #1B2A4A 0%, #2D1B4E 50%, #1B2A4A 100%)',
       overflow: 'hidden',
     }}>
-      {/* Decoração lado esquerdo — visível em desktop */}
+      {/* Lado esquerdo — 50% */}
       <div style={{
         flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        padding: '40px', position: 'relative',
+        padding: '48px', position: 'relative',
       }} className="login-left">
         {/* Círculo decorativo */}
         <div style={{ position: 'absolute', top: -100, left: -100, width: 400, height: 400, borderRadius: '50%', background: 'rgba(212,23,138,0.08)', pointerEvents: 'none' }} />
@@ -69,9 +69,9 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Formulário lado direito */}
+      {/* Lado direito — 50% */}
       <div style={{
-        width: '100%', maxWidth: 420,
+        flex: 1,
         background: '#FFFFFF',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         padding: '48px 40px',
