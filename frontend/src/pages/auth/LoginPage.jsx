@@ -129,16 +129,12 @@ export default function LoginPage() {
                 <stop offset="50%"  stopColor="#D4178A" stopOpacity="0.65" />
                 <stop offset="100%" stopColor="#9B12B8" stopOpacity="0.45" />
               </linearGradient>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="5" result="blur" />
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-            </defs>
+              </defs>
             {/* x=60 = centro do SVG = borda direita do lado esquerdo = linha divisória */}
             <path className="hair-1"
               d="M 60 0 C 84 85 36 175 65 260 C 90 342 40 430 68 515 C 92 596 44 682 64 765 L 60 900"
               stroke="url(#hg1)" strokeWidth="7" fill="none"
-              strokeLinecap="round" filter="url(#glow)"
+              strokeLinecap="round"
               strokeDasharray="1800" strokeDashoffset="1800"
             />
             <path className="hair-2"
