@@ -103,6 +103,7 @@ model Cliente {
 
 enum StatusAtendimento {
   AGUARDANDO
+  PENDENTE_ACEITE
   EM_ATENDIMENTO
   FINALIZADO
   CANCELADO
@@ -113,11 +114,12 @@ model Atendimento {
   clienteId     String            @map("cliente_id")
   funcionariaId String?           @map("funcionaria_id")
   salaoId       String            @map("salao_id")
-  tipoServico   Especialidade     @map("tipo_servico")
-  status        StatusAtendimento @default(AGUARDANDO)
-  numeroComanda Int               @map("numero_comanda")
-  iniciadoEm    DateTime?         @map("iniciado_em")
-  finalizadoEm  DateTime?         @map("finalizado_em")
+  tipoServico      Especialidade     @map("tipo_servico")
+  status           StatusAtendimento @default(AGUARDANDO)
+  numeroComanda    Int               @map("numero_comanda")
+  propostaParaId   String?           @map("proposta_para_id")
+  iniciadoEm       DateTime?         @map("iniciado_em")
+  finalizadoEm     DateTime?         @map("finalizado_em")
   createdAt     DateTime          @default(now()) @map("created_at")
   updatedAt     DateTime          @updatedAt @map("updated_at")
 

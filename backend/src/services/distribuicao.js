@@ -1,34 +1,35 @@
 const prisma = require('../config/prisma');
 
+const TIMEOUT_PROPOSTA_MS = 10_000; // 10 segundos
+const timeoutsPendentes = new Map();
+
 /**
- * Motor de distribuição automática.
- * Para cada atendimento AGUARDANDO no salão, tenta encontrar
- * a primeira funcionária disponível na fila para aquele serviço.
- * Usa transação para evitar condição de corrida.
+ * Roda a distribuição para todos os atendimentos AGUARDANDO.
  */
 async function rodarDistribuicao(salaoId, io) {
-  const atendimentosAguardando = await prisma.atendimento.findMany({
+  const atendimentos = await prisma.atendimento.findMany({
     where: { salaoId, status: 'AGUARDANDO' },
     orderBy: { createdAt: 'asc' },
     include: { cliente: true },
   });
 
-  for (const atendimento of atendimentosAguardando) {
-    await tentarAtribuir(atendimento, salaoId, io);
+  for (const atendimento of atendimentos) {
+    await tentarProporAtendimento(atendimento, salaoId, io);
   }
 }
 
-async function tentarAtribuir(atendimento, salaoId, io) {
+/**
+ * Encontra a 1ª funcionária disponível na fila e envia uma proposta.
+ */
+async function tentarProporAtendimento(atendimento, salaoId, io) {
   try {
+    let funcionariaId = null;
+    let atendimentoComDados = null;
+
     await prisma.$transaction(async (tx) => {
-      // Revalida status dentro da transação para evitar race condition
-      const atual = await tx.atendimento.findUnique({
-        where: { id: atendimento.id },
-      });
+      const atual = await tx.atendimento.findUnique({ where: { id: atendimento.id } });
       if (!atual || atual.status !== 'AGUARDANDO') return;
 
-      // Pega a primeira entrada na fila para este serviço (FIFO)
-      // Sem filtro aninhado na relação — verifica o status explicitamente abaixo
       const entradaFila = await tx.filaEntrada.findFirst({
         where: { salaoId, especialidade: atendimento.tipoServico },
         orderBy: { entradaEm: 'asc' },
@@ -36,46 +37,141 @@ async function tentarAtribuir(atendimento, salaoId, io) {
       });
 
       if (!entradaFila) return;
-      // Aceita ONLINE e AUSENTE — ausente está na fila mas pode estar longe da tela
       if (!['ONLINE', 'AUSENTE'].includes(entradaFila.funcionaria.status)) return;
 
-      const funcionariaId = entradaFila.funcionariaId;
+      funcionariaId = entradaFila.funcionariaId;
 
-      // Atualiza status atomicamente — só avança se ONLINE ou AUSENTE.
-      // Evita dupla atribuição em chamadas concorrentes ao motor.
+      // Muda para PENDENTE_ACEITE para bloquear nova proposta simultânea
+      atendimentoComDados = await tx.atendimento.update({
+        where: { id: atendimento.id },
+        data: { status: 'PENDENTE_ACEITE', propostaParaId: funcionariaId },
+        include: { cliente: true },
+      });
+    });
+
+    if (!funcionariaId || !atendimentoComDados) return;
+
+    // Emite proposta para a funcionária
+    setImmediate(() => {
+      if (io) {
+        io.to(`funcionaria:${funcionariaId}`).emit('proposta_atendimento', atendimentoComDados);
+      }
+    });
+
+    // Timeout: se não responder em 10s → recusa automática
+    const timer = setTimeout(() => {
+      recusarProposta(atendimentoComDados.id, funcionariaId, salaoId, io, true);
+    }, TIMEOUT_PROPOSTA_MS);
+
+    timeoutsPendentes.set(atendimentoComDados.id, timer);
+
+  } catch (err) {
+    console.error('[distribuicao] Erro ao propor atendimento:', err.message);
+  }
+}
+
+/**
+ * Funcionária ACEITA a proposta.
+ */
+async function aceitarProposta(atendimentoId, funcionariaId, salaoId, io) {
+  // Cancela o timeout
+  const timer = timeoutsPendentes.get(atendimentoId);
+  if (timer) { clearTimeout(timer); timeoutsPendentes.delete(atendimentoId); }
+
+  try {
+    let atendimentoAtualizado = null;
+
+    await prisma.$transaction(async (tx) => {
+      const atend = await tx.atendimento.findUnique({ where: { id: atendimentoId } });
+      if (!atend || atend.status !== 'PENDENTE_ACEITE') return;
+      if (atend.propostaParaId !== funcionariaId) return;
+
+      // Atualiza status da funcionária atomicamente
       const { count } = await tx.funcionaria.updateMany({
         where: { id: funcionariaId, status: { in: ['ONLINE', 'AUSENTE'] } },
         data: { status: 'EM_ATENDIMENTO' },
       });
       if (count === 0) return;
 
-      // Remove a funcionária de TODAS as filas após garantir a atribuição
+      // Remove de todas as filas
       await tx.filaEntrada.deleteMany({ where: { funcionariaId } });
 
-      // Atribui o atendimento
-      const atendimentoAtualizado = await tx.atendimento.update({
-        where: { id: atendimento.id },
+      // Confirma o atendimento
+      atendimentoAtualizado = await tx.atendimento.update({
+        where: { id: atendimentoId },
         data: {
           funcionariaId,
           status: 'EM_ATENDIMENTO',
           iniciadoEm: new Date(),
+          propostaParaId: null,
         },
         include: {
           cliente: true,
           funcionaria: { include: { usuario: true } },
         },
       });
+    });
 
-      // Emite evento em tempo real após a transação comprometer
+    if (atendimentoAtualizado) {
       setImmediate(() => {
         if (!io) return;
         io.to(`salao:${salaoId}`).emit('atendimento_atualizado', atendimentoAtualizado);
         io.to(`funcionaria:${funcionariaId}`).emit('novo_atendimento', atendimentoAtualizado);
         emitirEstadoCompleto(salaoId, io);
       });
-    });
+    }
   } catch (err) {
-    console.error('[distribuicao] Erro ao atribuir atendimento:', err.message);
+    console.error('[distribuicao] Erro ao aceitar proposta:', err.message);
+  }
+}
+
+/**
+ * Funcionária RECUSA a proposta (ou timeout).
+ */
+async function recusarProposta(atendimentoId, funcionariaId, salaoId, io, automatico = false) {
+  // Cancela o timeout se chamado manualmente
+  const timer = timeoutsPendentes.get(atendimentoId);
+  if (timer) { clearTimeout(timer); timeoutsPendentes.delete(atendimentoId); }
+
+  try {
+    let especialidade = null;
+
+    await prisma.$transaction(async (tx) => {
+      const atend = await tx.atendimento.findUnique({ where: { id: atendimentoId } });
+      if (!atend || atend.status !== 'PENDENTE_ACEITE') return;
+      if (atend.propostaParaId !== funcionariaId) return;
+
+      especialidade = atend.tipoServico;
+
+      // Volta o atendimento para a fila
+      await tx.atendimento.update({
+        where: { id: atendimentoId },
+        data: { status: 'AGUARDANDO', propostaParaId: null },
+      });
+
+      // Move funcionária para o final de todas as suas filas
+      const entradas = await tx.filaEntrada.findMany({ where: { funcionariaId } });
+      await tx.filaEntrada.deleteMany({ where: { funcionariaId } });
+      // Re-insere com timestamp atual (vai para o final do FIFO)
+      if (entradas.length > 0) {
+        await tx.filaEntrada.createMany({
+          data: entradas.map(e => ({
+            funcionariaId: e.funcionariaId,
+            salaoId: e.salaoId,
+            especialidade: e.especialidade,
+          })),
+        });
+      }
+    });
+
+    console.log(`[distribuicao] Proposta ${automatico ? 'expirada' : 'recusada'} — atendimento ${atendimentoId}`);
+
+    // Redistribui para a próxima funcionária
+    await rodarDistribuicao(salaoId, io);
+    await emitirEstadoCompleto(salaoId, io);
+
+  } catch (err) {
+    console.error('[distribuicao] Erro ao recusar proposta:', err.message);
   }
 }
 
@@ -84,7 +180,7 @@ async function emitirEstadoCompleto(salaoId, io) {
   try {
     const [atendimentos, filas, funcionarias] = await Promise.all([
       prisma.atendimento.findMany({
-        where: { salaoId, status: { in: ['AGUARDANDO', 'EM_ATENDIMENTO'] } },
+        where: { salaoId, status: { in: ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'] } },
         include: {
           cliente: true,
           funcionaria: { include: { usuario: true } },
@@ -102,14 +198,10 @@ async function emitirEstadoCompleto(salaoId, io) {
       }),
     ]);
 
-    io.to(`salao:${salaoId}`).emit('estado_completo', {
-      atendimentos,
-      filas,
-      funcionarias,
-    });
+    io.to(`salao:${salaoId}`).emit('estado_completo', { atendimentos, filas, funcionarias });
   } catch (err) {
     console.error('[distribuicao] Erro ao emitir estado:', err.message);
   }
 }
 
-module.exports = { rodarDistribuicao, emitirEstadoCompleto };
+module.exports = { rodarDistribuicao, emitirEstadoCompleto, aceitarProposta, recusarProposta };

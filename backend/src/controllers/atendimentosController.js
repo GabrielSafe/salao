@@ -1,5 +1,5 @@
 const prisma = require('../config/prisma');
-const { rodarDistribuicao, emitirEstadoCompleto } = require('../services/distribuicao');
+const { rodarDistribuicao, emitirEstadoCompleto, aceitarProposta, recusarProposta } = require('../services/distribuicao');
 
 async function proximoNumeroComanda(salaoId, tx) {
   const contador = await tx.contadorComanda.update({
@@ -191,4 +191,24 @@ async function relatorio(req, res) {
   });
 }
 
-module.exports = { criarComanda, adicionarServico, finalizar, cancelar, listarPorComanda, relatorio };
+async function aceitar(req, res) {
+  const { id } = req.params;
+  const funcionaria = req.usuario.funcionaria;
+  if (!funcionaria) return res.status(403).json({ erro: 'Acesso negado' });
+
+  const io = req.app.get('io');
+  await aceitarProposta(id, funcionaria.id, req.usuario.salaoId, io);
+  return res.json({ mensagem: 'Atendimento aceito' });
+}
+
+async function recusar(req, res) {
+  const { id } = req.params;
+  const funcionaria = req.usuario.funcionaria;
+  if (!funcionaria) return res.status(403).json({ erro: 'Acesso negado' });
+
+  const io = req.app.get('io');
+  await recusarProposta(id, funcionaria.id, req.usuario.salaoId, io, false);
+  return res.json({ mensagem: 'Proposta recusada' });
+}
+
+module.exports = { criarComanda, adicionarServico, finalizar, cancelar, listarPorComanda, relatorio, aceitar, recusar };
