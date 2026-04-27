@@ -214,7 +214,7 @@ async function emitirEstadoCompleto(salaoId, io) {
           salaoId,
           OR: [
             { status: { in: ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'] } },
-            { status: 'FINALIZADO', createdAt: { gte: inicioHoje } },
+            { status: 'FINALIZADO', fechadaEm: null, createdAt: { gte: inicioHoje } },
           ],
         },
         include: {

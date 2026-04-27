@@ -268,4 +268,28 @@ async function recusar(req, res) {
   return res.json({ mensagem: 'Proposta recusada' });
 }
 
-module.exports = { criarComanda, adicionarServico, finalizar, finalizarAdmin, cancelar, listarPorComanda, relatorio, aceitar, recusar };
+async function fecharComanda(req, res) {
+  const { numero } = req.params;
+  const salaoId = req.salaoId;
+
+  const count = await prisma.atendimento.updateMany({
+    where: {
+      salaoId,
+      numeroComanda: Number(numero),
+      status: 'FINALIZADO',
+      fechadaEm: null,
+    },
+    data: { fechadaEm: new Date() },
+  });
+
+  if (count.count === 0) {
+    return res.status(400).json({ erro: 'Comanda não encontrada ou ainda tem serviços em aberto' });
+  }
+
+  const io = req.app.get('io');
+  await emitirEstadoCompleto(salaoId, io);
+
+  return res.json({ mensagem: 'Comanda fechada com sucesso' });
+}
+
+module.exports = { criarComanda, adicionarServico, finalizar, finalizarAdmin, cancelar, listarPorComanda, relatorio, aceitar, recusar, fecharComanda };

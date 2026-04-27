@@ -53,6 +53,7 @@ router.post('/atendimentos/:id/recusar',   autenticar, exigirRole('FUNCIONARIA')
 router.patch('/atendimentos/:id/cancelar', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, atendimentosCtrl.cancelar);
 router.get('/atendimentos/comanda/:numero', autenticar, exigirSalao, atendimentosCtrl.listarPorComanda);
 router.get('/atendimentos/relatorio', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, atendimentosCtrl.relatorio);
+router.patch('/atendimentos/comanda/:numero/fechar', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, atendimentosCtrl.fecharComanda);
 
 // Rota pública para cliente acompanhar comanda (sem auth)
 router.get('/publico/:salaoSlug/comanda/:numero', async (req, res) => {

@@ -43,7 +43,7 @@ function agrupar(atendimentos) {
 }
 
 // ── Card de comanda expandida ──────────────────────────────────────────────
-function ComandaCard({ grupo, funcionarias, onFechar }) {
+function ComandaCard({ grupo, funcionarias, onFechar, fechando }) {
   const [adicionando, setAdicionando]       = useState(false);
   const [catAtiva, setCatAtiva]             = useState('CABELO');
   const [selecionados, setSelecionados]     = useState([]); // [{ tipoServico, servicoNome, servicoPreco }]
@@ -274,10 +274,12 @@ function ComandaCard({ grupo, funcionarias, onFechar }) {
               <CheckCircle2 size={14} color="#16A34A" />
               <span style={{ fontSize: 12, color: '#16A34A', fontWeight: 600 }}>Todos os serviços concluídos</span>
             </div>
-            <button onClick={() => onFechar(grupo.numero)}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 8, background: 'linear-gradient(135deg, #16A34A, #15803D)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, boxShadow: '0 2px 8px rgba(22,163,74,.3)' }}>
-              <CheckCircle2 size={14} /> Fechar comanda
-              {totalValor > 0 && <span style={{ opacity: 0.85 }}>· R$ {totalValor.toFixed(2).replace('.', ',')}</span>}
+            <button onClick={() => onFechar(grupo.numero)} disabled={fechando}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 8, background: fechando ? '#9CA3AF' : 'linear-gradient(135deg, #16A34A, #15803D)', color: '#fff', border: 'none', cursor: fechando ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 700, boxShadow: fechando ? 'none' : '0 2px 8px rgba(22,163,74,.3)', transition: 'all .15s' }}>
+              {fechando
+                ? <><Loader2 size={14} style={{ animation: 'spin .7s linear infinite' }} /> Fechando...</>
+                : <><CheckCircle2 size={14} /> Fechar comanda {totalValor > 0 && `· R$ ${totalValor.toFixed(2).replace('.', ',')}`}</>
+              }
             </button>
           </div>
         ) : (
@@ -296,7 +298,7 @@ export default function ComandasTab({ estado: estadoProps }) {
   const { usuario } = useAuth();
   const [estadoLocal, setEstadoLocal] = useState({ atendimentos: [], filas: [], funcionarias: [] });
   const [filtro, setFiltro]           = useState('todos');
-  const [fechadas, setFechadas]       = useState(new Set()); // números de comandas fechadas
+  const [fechandoComanda, setFechandoComanda] = useState(null); // número em processo de fechar
 
   const onEstadoCompleto = useCallback(dados => setEstadoLocal(dados), []);
   useSocket(usuario?.salaoId, { onEstadoCompleto });
@@ -304,16 +306,21 @@ export default function ComandasTab({ estado: estadoProps }) {
   const estado = estadoProps?.funcionarias?.length >= 0 ? estadoProps : estadoLocal;
   const todos  = agrupar(estado.atendimentos);
 
-  // Mostra: tem serviço ativo OU todos finalizados mas ainda não fechada
   const grupos = todos.filter(g => {
-    if (fechadas.has(g.numero)) return false;
     const temAtivo = g.itens.some(i => ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'].includes(i.status));
     const todosFinalizados = g.itens.length > 0 && g.itens.every(i => i.status === 'FINALIZADO');
     return temAtivo || todosFinalizados;
   });
 
-  function fecharComanda(numero) {
-    setFechadas(prev => new Set([...prev, numero]));
+  async function fecharComanda(numero) {
+    setFechandoComanda(numero);
+    try {
+      await api.patch(`/atendimentos/comanda/${numero}/fechar`);
+    } catch (err) {
+      console.error('Erro ao fechar comanda:', err.response?.data?.erro);
+    } finally {
+      setFechandoComanda(null);
+    }
   }
 
   const gruposFiltrados = grupos.filter(g => {
@@ -383,6 +390,7 @@ export default function ComandasTab({ estado: estadoProps }) {
             grupo={grupo}
             funcionarias={estado.funcionarias}
             onFechar={fecharComanda}
+            fechando={fechandoComanda === grupo.numero}
           />
         ))
       )}
