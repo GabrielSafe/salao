@@ -173,7 +173,9 @@ export default function FuncionariaPage() {
 
   // Solicita permissão de notificação
   useEffect(() => {
-    if (Notification.permission === 'default') Notification.requestPermission();
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
   }, []);
 
   // Detecta aba minimizada/em foco
@@ -208,8 +210,8 @@ export default function FuncionariaPage() {
     }, 600);
 
     // Notificação do navegador
-    if (Notification.permission === 'granted') {
-      new Notification('🔔 Nova cliente!', {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      new Notification('Nova cliente!', {
         body: `${atendimento.cliente?.nome} — ${SERVICE_INFO[atendimento.tipoServico]?.label}`,
         requireInteraction: true,
       });
