@@ -14,6 +14,7 @@ import FuncionariasTab from './tabs/FuncionariasTab';
 import RelatorioTab from './tabs/RelatorioTab';
 import FilaTab from './tabs/FilaTab';
 import ClientesTab from './tabs/ClientesTab';
+import ComandasTab from './tabs/ComandasTab';
 
 const NAV_ITEMS = [
   { path: '',             label: 'Dashboard',      Icon: LayoutDashboard, implemented: true,  iconColor: '#D4178A', iconBg: 'rgba(212,23,138,.2)' },
@@ -22,7 +23,7 @@ const NAV_ITEMS = [
   { path: 'relatorio',    label: 'Relatórios',     Icon: BarChart3,       implemented: true,  iconColor: '#34D399', iconBg: 'rgba(52,211,153,.2)' },
   null,
   { path: 'fila',         label: 'Fila de Espera', Icon: Clock,           implemented: true,  iconColor: '#FCD34D', iconBg: 'rgba(252,211,77,.15)' },
-  { path: 'atendimentos', label: 'Atendimentos',   Icon: Zap,             implemented: false, iconColor: '#FB923C', iconBg: 'rgba(251,146,60,.15)' },
+  { path: 'comandas',     label: 'Comandas',        Icon: FileText,        implemented: true,  iconColor: '#FB923C', iconBg: 'rgba(251,146,60,.15)' },
   { path: 'clientes',     label: 'Clientes',       Icon: UserCircle,      implemented: true,  iconColor: '#67E8F9', iconBg: 'rgba(103,232,249,.15)' },
   { path: 'configuracoes',label: 'Configurações',  Icon: Settings,        implemented: false, iconColor: '#9CA3AF', iconBg: 'rgba(156,163,175,.12)' },
 ];
@@ -326,6 +327,7 @@ export default function AdminPage() {
               <Route path="relatorio" element={<RelatorioTab />} />
               <Route path="fila" element={<FilaTab estado={estado} />} />
               <Route path="clientes" element={<ClientesTab />} />
+              <Route path="comandas" element={<ComandasTab estado={estado} />} />
             </Routes>
           </main>
           <RightTeamPanel estado={estado} />
