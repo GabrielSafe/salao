@@ -37,12 +37,13 @@ const SERVICE_INFO = {
 function RightTeamPanel({ estado }) {
   const atendendo  = estado.funcionarias.filter(f => f.status === 'EM_ATENDIMENTO');
   const disponiveis= estado.funcionarias.filter(f => f.status === 'ONLINE');
+  const ausentes   = estado.funcionarias.filter(f => f.status === 'AUSENTE');
   const offline    = estado.funcionarias.filter(f => f.status === 'OFFLINE');
 
   function Avatar({ f, size = 36 }) {
     const atend = estado.atendimentos.find(a => a.funcionariaId === f.id && a.status === 'EM_ATENDIMENTO');
     const svcInfo = atend ? SERVICE_INFO[atend.tipoServico] : null;
-    const statusColor = f.status === 'EM_ATENDIMENTO' ? '#F59E0B' : f.status === 'ONLINE' ? '#10B981' : '#6B7280';
+    const statusColor = f.status === 'EM_ATENDIMENTO' ? '#F59E0B' : f.status === 'ONLINE' ? '#10B981' : f.status === 'AUSENTE' ? '#D97706' : '#6B7280';
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', transition: 'background .15s', cursor: 'default', borderRadius: 8 }}
         onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,.03)'}
@@ -55,11 +56,11 @@ function RightTeamPanel({ estado }) {
           <div style={{ position: 'absolute', bottom: 0, right: 0, width: 10, height: 10, borderRadius: '50%', background: statusColor, border: '1.5px solid #0D1117' }} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: f.status === 'OFFLINE' ? '#9CA3AF' : '#1B2A4A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: f.status === 'OFFLINE' ? '#9CA3AF' : f.status === 'AUSENTE' ? '#6B7280' : '#1B2A4A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {f.usuario?.nome}
           </div>
-          <div style={{ fontSize: 11, color: f.status === 'OFFLINE' ? '#D1D5DB' : svcInfo?.color || '#6B7280', marginTop: 1 }}>
-            {svcInfo?.label || (f.status === 'ONLINE' ? 'Disponível' : 'Offline')}
+          <div style={{ fontSize: 11, color: f.status === 'OFFLINE' ? '#D1D5DB' : f.status === 'AUSENTE' ? '#D97706' : svcInfo?.color || '#6B7280', marginTop: 1 }}>
+            {svcInfo?.label || (f.status === 'ONLINE' ? 'Disponível' : f.status === 'AUSENTE' ? 'Ausente ☕' : 'Offline')}
           </div>
         </div>
         {f.status === 'EM_ATENDIMENTO' && atend && (
@@ -104,6 +105,16 @@ function RightTeamPanel({ estado }) {
               Disponíveis
             </div>
             {disponiveis.map(f => <Avatar key={f.id} f={f} />)}
+          </div>
+        )}
+
+        {/* Ausentes */}
+        {ausentes.length > 0 && (
+          <div style={{ marginTop: 12 }}>
+            <div style={{ padding: '4px 16px 8px', fontSize: 10, fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span>☕</span> Ausente
+            </div>
+            {ausentes.map(f => <Avatar key={f.id} f={f} />)}
           </div>
         )}
 
