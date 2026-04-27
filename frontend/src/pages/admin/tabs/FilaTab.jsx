@@ -1,16 +1,17 @@
 import { useCallback, useState } from 'react';
-import { Scissors, Sparkles, Hand, Leaf, Clock, Users, Wifi } from 'lucide-react';
+import { Scissors, Sparkles, Hand, Leaf, Eye, Clock, Users, Wifi } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSocket } from '../../../hooks/useSocket';
 
 const SERVICE_INFO = {
-  CABELO:    { label: 'Cabelo',    Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.15)', border: 'rgba(168,85,247,.25)' },
-  MAQUIAGEM: { label: 'Maquiagem', Icon: Sparkles, color: '#F472B6', bg: 'rgba(236,72,153,.15)', border: 'rgba(236,72,153,.25)' },
-  MAO:       { label: 'Mão',       Icon: Hand,     color: '#FB923C', bg: 'rgba(251,146,60,.15)',  border: 'rgba(251,146,60,.25)' },
-  PE:        { label: 'Pé',        Icon: Leaf,     color: '#4ADE80', bg: 'rgba(34,197,94,.15)',   border: 'rgba(34,197,94,.25)' },
+  CABELO:      { label: 'Cabelo',      Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.15)', border: 'rgba(168,85,247,.25)' },
+  MAQUIAGEM:   { label: 'Maquiagem',   Icon: Sparkles, color: '#F472B6', bg: 'rgba(236,72,153,.15)', border: 'rgba(236,72,153,.25)' },
+  MAO:         { label: 'Mão',         Icon: Hand,     color: '#FB923C', bg: 'rgba(251,146,60,.15)',  border: 'rgba(251,146,60,.25)'  },
+  PE:          { label: 'Pé',          Icon: Leaf,     color: '#4ADE80', bg: 'rgba(34,197,94,.15)',   border: 'rgba(34,197,94,.25)'   },
+  SOBRANCELHA: { label: 'Sobrancelha', Icon: Eye,      color: '#38BDF8', bg: 'rgba(56,189,248,.15)',  border: 'rgba(56,189,248,.25)'  },
 };
 
-const SERVICES = ['CABELO', 'MAQUIAGEM', 'MAO', 'PE'];
+const SERVICES = ['CABELO', 'MAQUIAGEM', 'MAO', 'PE', 'SOBRANCELHA'];
 
 function tempoNaFila(entradaEm) {
   const mins = Math.floor((Date.now() - new Date(entradaEm).getTime()) / 60000);
@@ -54,7 +55,7 @@ export default function FilaTab({ estado: estadoProps }) {
       </div>
 
       {/* Resumo geral */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 28 }}>
         {SERVICES.map(srv => {
           const info = SERVICE_INFO[srv];
           const filaDoServico = estado.filas.filter(f => f.especialidade === srv);

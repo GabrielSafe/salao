@@ -10,6 +10,7 @@ async function proximoNumeroComanda(salaoId, tx) {
 }
 
 async function criarComanda(req, res) {
+  // servicos: [{ tipoServico, servicoNome, servicoPreco }]
   const { clienteId, servicos } = req.body;
   const salaoId = req.salaoId;
 
@@ -20,25 +21,32 @@ async function criarComanda(req, res) {
   const cliente = await prisma.cliente.findFirst({ where: { id: clienteId, salaoId } });
   if (!cliente) return res.status(404).json({ erro: 'Cliente não encontrada' });
 
+  // Deduplica por servicoNome (ou tipoServico se sem nome)
+  const vistos = new Set();
+  const servicosUnicos = servicos.filter(s => {
+    const chave = s.servicoNome || s.tipoServico;
+    if (vistos.has(chave)) return false;
+    vistos.add(chave);
+    return true;
+  });
+
   const atendimentos = await prisma.$transaction(async (tx) => {
     const numero = await proximoNumeroComanda(salaoId, tx);
-
-    const servicosUnicos = [...new Set(servicos)];
     const criados = [];
 
-    for (const tipoServico of servicosUnicos) {
+    for (const { tipoServico, servicoNome, servicoPreco } of servicosUnicos) {
       const jaExiste = await tx.atendimento.findFirst({
         where: {
           clienteId,
           salaoId,
-          tipoServico,
-          status: { in: ['AGUARDANDO', 'EM_ATENDIMENTO'] },
+          ...(servicoNome ? { servicoNome } : { tipoServico }),
+          status: { in: ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'] },
         },
       });
       if (jaExiste) continue;
 
       const a = await tx.atendimento.create({
-        data: { clienteId, salaoId, tipoServico, numeroComanda: numero },
+        data: { clienteId, salaoId, tipoServico, servicoNome, servicoPreco, numeroComanda: numero },
         include: { cliente: true },
       });
       criados.push(a);
@@ -55,11 +63,16 @@ async function criarComanda(req, res) {
 }
 
 async function adicionarServico(req, res) {
-  const { clienteId, tipoServico } = req.body;
+  const { clienteId, tipoServico, servicoNome, servicoPreco } = req.body;
   const salaoId = req.salaoId;
 
   const jaExiste = await prisma.atendimento.findFirst({
-    where: { clienteId, salaoId, tipoServico, status: { in: ['AGUARDANDO', 'EM_ATENDIMENTO'] } },
+    where: {
+      clienteId,
+      salaoId,
+      ...(servicoNome ? { servicoNome } : { tipoServico }),
+      status: { in: ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'] },
+    },
   });
   if (jaExiste) return res.status(409).json({ erro: 'Serviço já está em andamento para esta cliente' });
 
@@ -73,6 +86,8 @@ async function adicionarServico(req, res) {
       clienteId,
       salaoId,
       tipoServico,
+      servicoNome,
+      servicoPreco,
       numeroComanda: ultimaComanda?.numeroComanda ?? 0,
     },
     include: { cliente: true },
@@ -219,7 +234,7 @@ async function relatorio(req, res) {
     orderBy: { createdAt: 'desc' },
   });
 
-  const por_servico = ['CABELO', 'MAQUIAGEM', 'MAO', 'PE'].reduce((acc, s) => {
+  const por_servico = ['CABELO', 'MAQUIAGEM', 'MAO', 'PE', 'SOBRANCELHA'].reduce((acc, s) => {
     acc[s] = atendimentos.filter((a) => a.tipoServico === s).length;
     return acc;
   }, {});

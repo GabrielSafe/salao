@@ -1,20 +1,20 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
-  Scissors, Sparkles, Hand, Leaf, Clock, CheckCircle2,
-  Plus, Check, X, Loader2, User, Filter, ShieldCheck
+  Scissors, Sparkles, Hand, Leaf, Eye, Clock, CheckCircle2,
+  Plus, Check, X, Loader2, User, ShieldCheck, ChevronDown
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSocket } from '../../../hooks/useSocket';
 import api from '../../../services/api';
+import { CATALOG, CATEGORIAS_ORDEM } from '../../../utils/servicosCatalog';
 
 const SERVICE_INFO = {
-  CABELO:    { label: 'Cabelo',    Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.12)', border: 'rgba(168,85,247,.2)' },
-  MAQUIAGEM: { label: 'Maquiagem', Icon: Sparkles, color: '#F472B6', bg: 'rgba(236,72,153,.12)', border: 'rgba(236,72,153,.2)' },
-  MAO:       { label: 'Mão',       Icon: Hand,     color: '#FB923C', bg: 'rgba(251,146,60,.12)',  border: 'rgba(251,146,60,.2)' },
-  PE:        { label: 'Pé',        Icon: Leaf,     color: '#4ADE80', bg: 'rgba(34,197,94,.12)',   border: 'rgba(34,197,94,.2)' },
+  CABELO:      { label: 'Cabelo',      Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.12)', border: 'rgba(168,85,247,.2)' },
+  MAQUIAGEM:   { label: 'Maquiagem',   Icon: Sparkles, color: '#F472B6', bg: 'rgba(236,72,153,.12)', border: 'rgba(236,72,153,.2)' },
+  MAO:         { label: 'Mão',         Icon: Hand,     color: '#FB923C', bg: 'rgba(251,146,60,.12)',  border: 'rgba(251,146,60,.2)'  },
+  PE:          { label: 'Pé',          Icon: Leaf,     color: '#4ADE80', bg: 'rgba(34,197,94,.12)',   border: 'rgba(34,197,94,.2)'   },
+  SOBRANCELHA: { label: 'Sobrancelha', Icon: Eye,      color: '#38BDF8', bg: 'rgba(56,189,248,.12)',  border: 'rgba(56,189,248,.2)'  },
 };
-
-const SERVICOS_LIST = ['CABELO', 'MAQUIAGEM', 'MAO', 'PE'];
 
 const STATUS_LABEL = {
   AGUARDANDO:      { text: 'Aguardando',      color: '#D97706', bg: 'rgba(217,119,6,.1)' },
@@ -43,24 +43,33 @@ function agrupar(atendimentos) {
 
 // ── Card de comanda expandida ──────────────────────────────────────────────
 function ComandaCard({ grupo, funcionarias }) {
-  const [adicionando, setAdicionando]   = useState(false);
-  const [selecionados, setSelecionados] = useState([]);
-  const [loading, setLoading]           = useState(false);
-  const [msg, setMsg]                   = useState('');
+  const [adicionando, setAdicionando]       = useState(false);
+  const [catAtiva, setCatAtiva]             = useState('CABELO');
+  const [selecionados, setSelecionados]     = useState([]); // [{ tipoServico, servicoNome, servicoPreco }]
+  const [loading, setLoading]               = useState(false);
+  const [msg, setMsg]                       = useState('');
 
-  const ativos     = grupo.itens.filter(i => i.status === 'EM_ATENDIMENTO').length;
-  const total      = grupo.itens.length;
-  const temAtivo   = ativos > 0;
-  const servicosJa = grupo.itens.map(i => i.tipoServico);
-  const disponiveis = SERVICOS_LIST.filter(s => !servicosJa.includes(s));
+  const ativos   = grupo.itens.filter(i => i.status === 'EM_ATENDIMENTO').length;
+  const total    = grupo.itens.length;
+  const temAtivo = ativos > 0;
+  const nomesJa  = grupo.itens.map(i => i.servicoNome).filter(Boolean);
+
+  const noSelecionados = (nome) => selecionados.some(s => s.servicoNome === nome);
+
+  function toggleSelecionado(tipoServico, servicoNome, servicoPreco) {
+    if (noSelecionados(servicoNome)) {
+      setSelecionados(p => p.filter(s => s.servicoNome !== servicoNome));
+    } else {
+      setSelecionados(p => [...p, { tipoServico, servicoNome, servicoPreco }]);
+    }
+  }
 
   async function handleAdicionar() {
     if (!selecionados.length) return;
     const clienteId = grupo.clienteId;
-    const servicos  = [...selecionados];
     setLoading(true);
     try {
-      await Promise.all(servicos.map(s => api.post('/atendimentos/adicionar', { clienteId, tipoServico: s })));
+      await Promise.all(selecionados.map(s => api.post('/atendimentos/adicionar', { clienteId, tipoServico: s.tipoServico, servicoNome: s.servicoNome, servicoPreco: s.servicoPreco })));
       setMsg('Serviço(s) adicionado(s)!');
       setSelecionados([]); setAdicionando(false);
       setTimeout(() => setMsg(''), 3000);
@@ -138,7 +147,8 @@ function ComandaCard({ grupo, funcionarias }) {
 
               {/* Detalhes */}
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{info?.label}</div>
+                <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{item.servicoNome || info?.label}</div>
+                {item.servicoNome && <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 1 }}>{info?.label}</div>}
                 {func ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
                     <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(212,23,138,.2), rgba(232,93,4,.1))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'var(--accent)' }}>
@@ -160,6 +170,11 @@ function ComandaCard({ grupo, funcionarias }) {
 
               {/* Status + ação admin */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                {item.servicoPreco != null && (
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent)' }}>
+                    R$ {Number(item.servicoPreco).toFixed(2).replace('.', ',')}
+                  </span>
+                )}
                 <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: stInfo.bg, color: stInfo.color }}>
                   {stInfo.text}
                 </span>
@@ -183,38 +198,62 @@ function ComandaCard({ grupo, funcionarias }) {
 
         {adicionando ? (
           <div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Selecione o serviço
+            {/* Tabs de categoria */}
+            <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 10, scrollbarWidth: 'none' }}>
+              {CATEGORIAS_ORDEM.map(cat => {
+                const info = SERVICE_INFO[cat];
+                const ativo = cat === catAtiva;
+                const qtd = selecionados.filter(s => s.tipoServico === cat).length;
+                return (
+                  <button key={cat} onClick={() => setCatAtiva(cat)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 16, whiteSpace: 'nowrap', fontSize: 11, fontWeight: 600, cursor: 'pointer', flexShrink: 0, transition: 'all .12s',
+                      background: ativo ? info.bg : 'transparent',
+                      border: `1.5px solid ${ativo ? info.color + '60' : 'var(--border-2)'}`,
+                      color: ativo ? info.color : 'var(--text-3)',
+                    }}>
+                    <info.Icon size={11} /> {info.label}
+                    {qtd > 0 && <span style={{ fontSize: 9, fontWeight: 800, background: info.color, color: '#fff', width: 14, height: 14, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{qtd}</span>}
+                  </button>
+                );
+              })}
             </div>
-            {disponiveis.length === 0 ? (
-              <span style={{ fontSize: 13, color: 'var(--text-3)' }}>Todos os serviços já adicionados.</span>
-            ) : (
-              <>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-                  {disponiveis.map(s => {
-                    const info = SERVICE_INFO[s];
-                    const ativo = selecionados.includes(s);
+
+            {/* Itens da categoria */}
+            <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 8, marginBottom: 10 }}>
+              {CATALOG[catAtiva].grupos.map(grupo => (
+                <div key={grupo.nome}>
+                  <div style={{ padding: '5px 10px 2px', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', background: 'var(--bg-elevated)' }}>{grupo.nome}</div>
+                  {grupo.itens.map(item => {
+                    const jaExiste = nomesJa.includes(item.nome);
+                    const selecionado = noSelecionados(item.nome);
+                    const catInfo = SERVICE_INFO[catAtiva];
                     return (
-                      <button key={s} onClick={() => setSelecionados(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s])}
-                        style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 20, border: `1.5px solid ${ativo ? info.color : 'var(--border-2)'}`, background: ativo ? info.bg : 'transparent', fontSize: 12, fontWeight: 500, color: ativo ? info.color : 'var(--text-2)', cursor: 'pointer', transition: 'all .15s' }}>
-                        <info.Icon size={12} /> {info.label} {ativo && <Check size={11} />}
+                      <button key={item.nome} onClick={() => !jaExiste && toggleSelecionado(catAtiva, item.nome, item.preco)}
+                        disabled={jaExiste}
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', background: selecionado ? catInfo.bg : 'transparent', border: 'none', cursor: jaExiste ? 'not-allowed' : 'pointer', textAlign: 'left', opacity: jaExiste ? 0.4 : 1, transition: 'background .1s' }}>
+                        <div style={{ width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${selecionado ? catInfo.color : 'var(--border-2)'}`, background: selecionado ? catInfo.color : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          {selecionado && <Check size={10} color="#fff" />}
+                        </div>
+                        <span style={{ flex: 1, fontSize: 12, color: selecionado ? catInfo.color : 'var(--text)', fontWeight: selecionado ? 600 : 400 }}>{item.nome}</span>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)', flexShrink: 0 }}>R$ {item.preco}</span>
                       </button>
                     );
                   })}
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={handleAdicionar} disabled={loading || !selecionados.length}
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 14px', borderRadius: 8, background: selecionados.length ? 'var(--brand-gradient)' : 'var(--bg-hover)', color: selecionados.length ? '#fff' : 'var(--text-3)', fontSize: 12, fontWeight: 600, border: 'none', cursor: selecionados.length ? 'pointer' : 'not-allowed' }}>
-                    {loading ? <Loader2 size={12} style={{ animation: 'spin .7s linear infinite' }} /> : <Check size={12} />}
-                    Confirmar
-                  </button>
-                  <button onClick={() => { setAdicionando(false); setSelecionados([]); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, background: 'var(--bg-hover)', color: 'var(--text-2)', fontSize: 12, border: 'none', cursor: 'pointer' }}>
-                    <X size={12} /> Cancelar
-                  </button>
-                </div>
-              </>
-            )}
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={handleAdicionar} disabled={loading || !selecionados.length}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 14px', borderRadius: 8, background: selecionados.length ? 'var(--brand-gradient)' : 'var(--bg-hover)', color: selecionados.length ? '#fff' : 'var(--text-3)', fontSize: 12, fontWeight: 600, border: 'none', cursor: selecionados.length ? 'pointer' : 'not-allowed' }}>
+                {loading ? <Loader2 size={12} style={{ animation: 'spin .7s linear infinite' }} /> : <Check size={12} />}
+                Confirmar {selecionados.length > 0 && `(${selecionados.length})`}
+              </button>
+              <button onClick={() => { setAdicionando(false); setSelecionados([]); }}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, background: 'var(--bg-hover)', color: 'var(--text-2)', fontSize: 12, border: 'none', cursor: 'pointer' }}>
+                <X size={12} /> Cancelar
+              </button>
+            </div>
           </div>
         ) : (
           <button onClick={() => setAdicionando(true)}

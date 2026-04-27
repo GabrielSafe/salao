@@ -1,20 +1,22 @@
 import { useState, useCallback } from 'react';
 import {
-  Clock, Zap, UserCheck, UserX, Scissors, Sparkles, Hand, Leaf,
+  Clock, Zap, UserCheck, UserX, Scissors, Sparkles, Hand, Leaf, Eye,
   ChevronDown, ChevronUp, Plus, Check, X, Loader2, ArrowRight, TrendingUp, ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSocket } from '../../../hooks/useSocket';
 import api from '../../../services/api';
+import { CATALOG, CATEGORIAS_ORDEM } from '../../../utils/servicosCatalog';
 
 const SERVICE_INFO = {
-  CABELO:    { label: 'Cabelo',    Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.15)', darkBg: 'rgba(168,85,247,.1)' },
-  MAQUIAGEM: { label: 'Maquiagem', Icon: Sparkles, color: '#F472B6', bg: 'rgba(236,72,153,.15)', darkBg: 'rgba(236,72,153,.1)' },
-  MAO:       { label: 'Mão',       Icon: Hand,     color: '#FB923C', bg: 'rgba(251,146,60,.15)',  darkBg: 'rgba(251,146,60,.1)' },
-  PE:        { label: 'Pé',        Icon: Leaf,     color: '#4ADE80', bg: 'rgba(34,197,94,.15)',   darkBg: 'rgba(34,197,94,.1)' },
+  CABELO:      { label: 'Cabelo',      Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.15)', darkBg: 'rgba(168,85,247,.1)' },
+  MAQUIAGEM:   { label: 'Maquiagem',   Icon: Sparkles, color: '#F472B6', bg: 'rgba(236,72,153,.15)', darkBg: 'rgba(236,72,153,.1)' },
+  MAO:         { label: 'Mão',         Icon: Hand,     color: '#FB923C', bg: 'rgba(251,146,60,.15)',  darkBg: 'rgba(251,146,60,.1)' },
+  PE:          { label: 'Pé',          Icon: Leaf,     color: '#4ADE80', bg: 'rgba(34,197,94,.15)',   darkBg: 'rgba(34,197,94,.1)' },
+  SOBRANCELHA: { label: 'Sobrancelha', Icon: Eye,      color: '#38BDF8', bg: 'rgba(56,189,248,.15)',  darkBg: 'rgba(56,189,248,.1)' },
 };
 
-const SERVICES = ['CABELO', 'MAQUIAGEM', 'MAO', 'PE'];
+const SERVICES = ['CABELO', 'MAQUIAGEM', 'MAO', 'PE', 'SOBRANCELHA'];
 
 function tempoEspera(createdAt) {
   const mins = Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000);
@@ -184,16 +186,25 @@ function ComandaRow({ grupo, estado }) {
 
   const ativos = grupo.itens.filter(i => i.status === 'EM_ATENDIMENTO').length;
   const temAtivo = ativos > 0;
-  const servicosJa = grupo.itens.map(i => i.tipoServico);
-  const servicosDisponiveis = SERVICES.filter(s => !servicosJa.includes(s));
+  const nomesJa = grupo.itens.map(i => i.servicoNome).filter(Boolean);
+  const [catAtiva, setCatAtiva] = useState('CABELO');
+
+  const noSelecionados = (nome) => selecionados.some(s => s.servicoNome === nome);
+
+  function toggleSelecionado(tipoServico, servicoNome, servicoPreco) {
+    if (noSelecionados(servicoNome)) {
+      setSelecionados(p => p.filter(s => s.servicoNome !== servicoNome));
+    } else {
+      setSelecionados(p => [...p, { tipoServico, servicoNome, servicoPreco }]);
+    }
+  }
 
   async function handleAdicionar() {
     if (!selecionados.length) return;
     const clienteId = grupo.clienteId;
-    const servicos = [...selecionados];
     setLoading(true);
     try {
-      await Promise.all(servicos.map(s => api.post('/atendimentos/adicionar', { clienteId, tipoServico: s })));
+      await Promise.all(selecionados.map(s => api.post('/atendimentos/adicionar', { clienteId, tipoServico: s.tipoServico, servicoNome: s.servicoNome, servicoPreco: s.servicoPreco })));
       setMsg('Adicionado!');
       setSelecionados([]);
       setAdicionando(false);
@@ -281,16 +292,20 @@ function ComandaRow({ grupo, estado }) {
                     <info.Icon size={12} color={info.color} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: '#6B7280' }}>{info.label}</div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: '#1B2A4A' }}>{item.servicoNome || info.label}</div>
+                    {item.servicoNome && <div style={{ fontSize: 10, color: '#9CA3AF' }}>{info.label}</div>}
                     {item.funcionaria && (
                       <div style={{ fontSize: 11, color: '#6B7280', marginTop: 1 }}>
                         {isAtivo ? 'com' : 'por'} {item.funcionaria.usuario?.nome}
                       </div>
                     )}
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: isAtivo ? 'rgba(16,185,129,.12)' : 'rgba(245,158,11,.12)', color: isAtivo ? '#10B981' : '#F59E0B' }}>
-                    {isAtivo ? 'Ativo' : 'Fila'}
-                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
+                    {item.servicoPreco != null && <span style={{ fontSize: 11, fontWeight: 700, color: '#D4178A' }}>R$ {Number(item.servicoPreco).toFixed(2).replace('.', ',')}</span>}
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: isAtivo ? 'rgba(16,185,129,.12)' : 'rgba(245,158,11,.12)', color: isAtivo ? '#10B981' : '#F59E0B' }}>
+                      {isAtivo ? 'Ativo' : 'Fila'}
+                    </span>
+                  </div>
                 </div>
               ) : null;
             })}
@@ -322,39 +337,62 @@ function ComandaRow({ grupo, estado }) {
           )}
 
           {adicionando ? (
-            <div style={{ background: 'rgba(212,23,138,.06)', border: '1px solid rgba(212,23,138,.15)', borderRadius: 8, padding: '10px 12px' }}>
+            <div style={{ background: 'rgba(212,23,138,.04)', border: '1px solid rgba(212,23,138,.12)', borderRadius: 8, padding: '10px 12px' }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Adicionar serviço</div>
-              {servicosDisponiveis.length === 0 ? (
-                <span style={{ fontSize: 12, color: '#9CA3AF' }}>Todos os serviços já adicionados.</span>
-              ) : (
-                <>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-                    {servicosDisponiveis.map(s => {
-                      const info = SERVICE_INFO[s];
-                      const ativo = selecionados.includes(s);
+              {/* Tabs de categoria */}
+              <div style={{ display: 'flex', gap: 5, overflowX: 'auto', marginBottom: 8, scrollbarWidth: 'none' }}>
+                {CATEGORIAS_ORDEM.map(cat => {
+                  const info = SERVICE_INFO[cat];
+                  const ativo = cat === catAtiva;
+                  const qtd = selecionados.filter(s => s.tipoServico === cat).length;
+                  return (
+                    <button key={cat} onClick={() => setCatAtiva(cat)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '3px 9px', borderRadius: 14, whiteSpace: 'nowrap', fontSize: 11, fontWeight: 600, cursor: 'pointer', flexShrink: 0, transition: 'all .12s',
+                        background: ativo ? info.darkBg : 'transparent',
+                        border: `1.5px solid ${ativo ? info.color + '60' : 'rgba(0,0,0,.1)'}`,
+                        color: ativo ? info.color : '#9CA3AF',
+                      }}>
+                      <info.Icon size={10} /> {info.label}
+                      {qtd > 0 && <span style={{ fontSize: 8, fontWeight: 800, background: info.color, color: '#fff', width: 13, height: 13, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{qtd}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* Itens */}
+              <div style={{ maxHeight: 160, overflowY: 'auto', border: '1px solid rgba(0,0,0,.08)', borderRadius: 6, marginBottom: 8, background: '#fff' }}>
+                {CATALOG[catAtiva].grupos.map(grupo => (
+                  <div key={grupo.nome}>
+                    <div style={{ padding: '4px 8px 2px', fontSize: 9, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', background: '#F9FAFB' }}>{grupo.nome}</div>
+                    {grupo.itens.map(item => {
+                      const jaExiste = nomesJa.includes(item.nome);
+                      const sel = noSelecionados(item.nome);
+                      const catInfo = SERVICE_INFO[catAtiva];
                       return (
-                        <button key={s} onClick={() => setSelecionados(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])}
-                          style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 20, border: `1.5px solid ${ativo ? info.color : 'rgba(0,0,0,.12)'}`, background: ativo ? info.darkBg : 'transparent', fontSize: 12, fontWeight: 500, color: ativo ? info.color : '#6B7280', cursor: 'pointer', transition: 'all .15s' }}
-                        >
-                          <info.Icon size={11} /> {info.label}
-                          {ativo && <Check size={10} />}
+                        <button key={item.nome} onClick={() => !jaExiste && toggleSelecionado(catAtiva, item.nome, item.preco)}
+                          disabled={jaExiste}
+                          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 7, padding: '6px 8px', background: sel ? catInfo.darkBg : 'transparent', border: 'none', cursor: jaExiste ? 'not-allowed' : 'pointer', textAlign: 'left', opacity: jaExiste ? 0.4 : 1 }}>
+                          <div style={{ width: 14, height: 14, borderRadius: 3, border: `1.5px solid ${sel ? catInfo.color : 'rgba(0,0,0,.15)'}`, background: sel ? catInfo.color : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            {sel && <Check size={9} color="#fff" />}
+                          </div>
+                          <span style={{ flex: 1, fontSize: 11, color: sel ? catInfo.color : '#374151', fontWeight: sel ? 600 : 400 }}>{item.nome}</span>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', flexShrink: 0 }}>R$ {item.preco}</span>
                         </button>
                       );
                     })}
                   </div>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <button onClick={handleAdicionar} disabled={loading || !selecionados.length}
-                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, background: selecionados.length ? 'linear-gradient(135deg,#E85D04,#D4178A)' : 'rgba(0,0,0,.05)', color: selecionados.length ? '#fff' : '#9CA3AF', fontSize: 12, fontWeight: 600, border: 'none', cursor: selecionados.length ? 'pointer' : 'not-allowed' }}>
-                      {loading ? <Loader2 size={12} style={{ animation: 'spin .7s linear infinite' }} /> : <Check size={12} />}
-                      Confirmar
-                    </button>
-                    <button onClick={() => { setAdicionando(false); setSelecionados([]); }}
-                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, background: 'rgba(0,0,0,.05)', color: '#6B7280', fontSize: 12, border: 'none', cursor: 'pointer' }}>
-                      <X size={12} /> Cancelar
-                    </button>
-                  </div>
-                </>
-              )}
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={handleAdicionar} disabled={loading || !selecionados.length}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, background: selecionados.length ? 'linear-gradient(135deg,#E85D04,#D4178A)' : 'rgba(0,0,0,.05)', color: selecionados.length ? '#fff' : '#9CA3AF', fontSize: 12, fontWeight: 600, border: 'none', cursor: selecionados.length ? 'pointer' : 'not-allowed' }}>
+                  {loading ? <Loader2 size={12} style={{ animation: 'spin .7s linear infinite' }} /> : <Check size={12} />}
+                  Confirmar {selecionados.length > 0 && `(${selecionados.length})`}
+                </button>
+                <button onClick={() => { setAdicionando(false); setSelecionados([]); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, background: 'rgba(0,0,0,.05)', color: '#6B7280', fontSize: 12, border: 'none', cursor: 'pointer' }}>
+                  <X size={12} /> Cancelar
+                </button>
+              </div>
             </div>
           ) : (
             <button onClick={() => setAdicionando(true)}
@@ -424,7 +462,7 @@ export default function DashboardTab({ estado: estadoProps }) {
             Filas de Atendimento
           </h2>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
           {SERVICES.map(s => (
             <FilaColuna key={s} servico={s} atendimentos={estado.atendimentos} />
           ))}

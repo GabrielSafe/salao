@@ -1,15 +1,16 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { LogOut, PlayCircle, PauseCircle, CheckCircle2, Scissors, Sparkles, Hand, Leaf, Clock, Coffee, X, Check } from 'lucide-react';
+import { LogOut, PlayCircle, PauseCircle, CheckCircle2, Scissors, Sparkles, Hand, Leaf, Eye, Clock, Coffee, X, Check } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../hooks/useSocket';
 import api from '../../services/api';
 import logo from '../../public/logo.png';
 
 const SERVICE_INFO = {
-  CABELO:    { label: 'Cabelo',    Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.15)' },
-  MAQUIAGEM: { label: 'Maquiagem', Icon: Sparkles, color: '#F472B6', bg: 'rgba(236,72,153,.15)' },
-  MAO:       { label: 'Mão',       Icon: Hand,     color: '#FB923C', bg: 'rgba(251,146,60,.15)' },
-  PE:        { label: 'Pé',        Icon: Leaf,     color: '#4ADE80', bg: 'rgba(34,197,94,.15)' },
+  CABELO:      { label: 'Cabelo',      Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.15)' },
+  MAQUIAGEM:   { label: 'Maquiagem',   Icon: Sparkles, color: '#F472B6', bg: 'rgba(236,72,153,.15)' },
+  MAO:         { label: 'Mão',         Icon: Hand,     color: '#FB923C', bg: 'rgba(251,146,60,.15)' },
+  PE:          { label: 'Pé',          Icon: Leaf,     color: '#4ADE80', bg: 'rgba(34,197,94,.15)' },
+  SOBRANCELHA: { label: 'Sobrancelha', Icon: Eye,      color: '#38BDF8', bg: 'rgba(56,189,248,.15)' },
 };
 
 const TIMEOUT_SEGUNDOS = 60;
@@ -89,10 +90,17 @@ function ModalProposta({ proposta, onAceitar, onRecusar }) {
                 {info && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20, background: info.bg }}>
                     <info.Icon size={13} color={info.color} />
-                    <span style={{ fontSize: 13, fontWeight: 600, color: info.color }}>{info.label}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: info.color }}>
+                      {proposta.servicoNome || info.label}
+                    </span>
                   </div>
                 )}
                 <span style={{ fontSize: 12, color: '#9CA3AF' }}>Comanda #{proposta.numeroComanda}</span>
+                {proposta.servicoPreco != null && (
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#D4178A' }}>
+                    R$ {Number(proposta.servicoPreco).toFixed(2).replace('.', ',')}
+                  </span>
+                )}
               </div>
             </div>
           </div>

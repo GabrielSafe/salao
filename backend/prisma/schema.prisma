@@ -52,6 +52,7 @@ enum Especialidade {
   MAQUIAGEM
   MAO
   PE
+  SOBRANCELHA
 }
 
 enum StatusFuncionaria {
@@ -119,6 +120,8 @@ model Atendimento {
   numeroComanda    Int               @map("numero_comanda")
   propostaParaId   String?           @map("proposta_para_id")
   finalizadoPorAdm Boolean           @default(false) @map("finalizado_por_adm")
+  servicoNome      String?           @map("servico_nome")
+  servicoPreco     Float?            @map("servico_preco")
   iniciadoEm       DateTime?         @map("iniciado_em")
   finalizadoEm     DateTime?         @map("finalizado_em")
   createdAt     DateTime          @default(now()) @map("created_at")

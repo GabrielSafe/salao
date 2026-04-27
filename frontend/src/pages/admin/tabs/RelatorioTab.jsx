@@ -1,14 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import { BarChart3, CheckCircle2, XCircle, Loader2, Scissors, Sparkles, Hand, Leaf } from 'lucide-react';
+import { BarChart3, CheckCircle2, XCircle, Loader2, Scissors, Sparkles, Hand, Leaf, Eye } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSocket } from '../../../hooks/useSocket';
 import api from '../../../services/api';
 
 const SERVICE_INFO = {
-  CABELO:    { label: 'Cabelo',    Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.12)' },
-  MAQUIAGEM: { label: 'Maquiagem', Icon: Sparkles, color: '#F472B6', bg: 'rgba(236,72,153,.12)' },
-  MAO:       { label: 'Mão',       Icon: Hand,     color: '#FB923C', bg: 'rgba(251,146,60,.12)' },
-  PE:        { label: 'Pé',        Icon: Leaf,     color: '#4ADE80', bg: 'rgba(34,197,94,.12)' },
+  CABELO:      { label: 'Cabelo',      Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.12)' },
+  MAQUIAGEM:   { label: 'Maquiagem',   Icon: Sparkles, color: '#F472B6', bg: 'rgba(236,72,153,.12)' },
+  MAO:         { label: 'Mão',         Icon: Hand,     color: '#FB923C', bg: 'rgba(251,146,60,.12)' },
+  PE:          { label: 'Pé',          Icon: Leaf,     color: '#4ADE80', bg: 'rgba(34,197,94,.12)' },
+  SOBRANCELHA: { label: 'Sobrancelha', Icon: Eye,      color: '#38BDF8', bg: 'rgba(56,189,248,.12)' },
 };
 
 function dataHoje() { return new Date().toISOString().split('T')[0]; }
@@ -125,7 +126,7 @@ export default function RelatorioTab() {
                           <td>
                             {info && (
                               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 500, padding: '2px 8px', borderRadius: 6, background: info.bg, color: info.color }}>
-                                <info.Icon size={11} /> {info.label}
+                                <info.Icon size={11} /> {a.servicoNome || info.label}
                               </span>
                             )}
                           </td>

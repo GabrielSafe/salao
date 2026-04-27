@@ -1,16 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Plus, User, Scissors, Sparkles, Hand, Leaf, Loader2, Clock, CheckCircle2, Timer, ChevronDown, ChevronUp, X, Check } from 'lucide-react';
+import { ArrowLeft, Plus, User, Scissors, Sparkles, Hand, Leaf, Eye, Loader2, Clock, CheckCircle2, Timer, ChevronDown, ChevronUp, X, Check } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSocket } from '../../../hooks/useSocket';
 import api from '../../../services/api';
 
 const SERVICE_INFO = {
-  CABELO:    { label: 'Cabelo',    Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.12)' },
-  MAQUIAGEM: { label: 'Maquiagem', Icon: Sparkles, color: '#F472B6', bg: 'rgba(236,72,153,.12)' },
-  MAO:       { label: 'Mão',       Icon: Hand,     color: '#FB923C', bg: 'rgba(251,146,60,.12)' },
-  PE:        { label: 'Pé',        Icon: Leaf,     color: '#4ADE80', bg: 'rgba(34,197,94,.12)' },
+  CABELO:      { label: 'Cabelo',      Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.12)' },
+  MAQUIAGEM:   { label: 'Maquiagem',   Icon: Sparkles, color: '#F472B6', bg: 'rgba(236,72,153,.12)' },
+  MAO:         { label: 'Mão',         Icon: Hand,     color: '#FB923C', bg: 'rgba(251,146,60,.12)' },
+  PE:          { label: 'Pé',          Icon: Leaf,     color: '#4ADE80', bg: 'rgba(34,197,94,.12)' },
+  SOBRANCELHA: { label: 'Sobrancelha', Icon: Eye,      color: '#38BDF8', bg: 'rgba(56,189,248,.12)' },
 };
-const ESPECIALIDADES = ['CABELO', 'MAQUIAGEM', 'MAO', 'PE'];
+const ESPECIALIDADES = ['CABELO', 'MAQUIAGEM', 'MAO', 'PE', 'SOBRANCELHA'];
 
 function StatusPill({ status }) {
   const map = {
