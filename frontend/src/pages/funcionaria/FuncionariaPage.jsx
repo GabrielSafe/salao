@@ -12,7 +12,7 @@ const SERVICE_INFO = {
   PE:        { label: 'Pé',        Icon: Leaf,     color: '#4ADE80', bg: 'rgba(34,197,94,.15)' },
 };
 
-const TIMEOUT_SEGUNDOS = 10;
+const TIMEOUT_SEGUNDOS = 60;
 
 function tocarAlerta() {
   try {
@@ -42,7 +42,7 @@ function ModalProposta({ proposta, onAceitar, onRecusar }) {
   }, [segundos]);
 
   const pct = (segundos / TIMEOUT_SEGUNDOS) * 100;
-  const corBarra = segundos > 6 ? '#10B981' : segundos > 3 ? '#F59E0B' : '#EF4444';
+  const corBarra = segundos > 20 ? '#10B981' : segundos > 10 ? '#F59E0B' : '#EF4444';
 
   return (
     <div style={{

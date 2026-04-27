@@ -1,6 +1,6 @@
 const prisma = require('../config/prisma');
 
-const TIMEOUT_PROPOSTA_MS = 10_000; // 10 segundos
+const TIMEOUT_PROPOSTA_MS = 60_000; // 60 segundos
 const timeoutsPendentes   = new Map();
 
 // Rastreia quem já rejeitou cada atendimento para evitar loop infinito
