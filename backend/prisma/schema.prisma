@@ -118,6 +118,7 @@ model Atendimento {
   status           StatusAtendimento @default(AGUARDANDO)
   numeroComanda    Int               @map("numero_comanda")
   propostaParaId   String?           @map("proposta_para_id")
+  finalizadoPorAdm Boolean           @default(false) @map("finalizado_por_adm")
   iniciadoEm       DateTime?         @map("iniciado_em")
   finalizadoEm     DateTime?         @map("finalizado_em")
   createdAt     DateTime          @default(now()) @map("created_at")

@@ -46,7 +46,8 @@ router.get('/clientes/:id/historico', autenticar, exigirRole('ADMIN', 'SUPERADMI
 // Atendimentos
 router.post('/atendimentos/comanda', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, atendimentosCtrl.criarComanda);
 router.post('/atendimentos/adicionar', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, atendimentosCtrl.adicionarServico);
-router.patch('/atendimentos/:id/finalizar', autenticar, exigirRole('FUNCIONARIA'), atendimentosCtrl.finalizar);
+router.patch('/atendimentos/:id/finalizar',       autenticar, exigirRole('FUNCIONARIA'),          atendimentosCtrl.finalizar);
+router.patch('/atendimentos/:id/finalizar-admin', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, atendimentosCtrl.finalizarAdmin);
 router.post('/atendimentos/:id/aceitar',   autenticar, exigirRole('FUNCIONARIA'), atendimentosCtrl.aceitar);
 router.post('/atendimentos/:id/recusar',   autenticar, exigirRole('FUNCIONARIA'), atendimentosCtrl.recusar);
 router.patch('/atendimentos/:id/cancelar', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, atendimentosCtrl.cancelar);

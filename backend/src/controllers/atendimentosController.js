@@ -114,6 +114,48 @@ async function finalizar(req, res) {
   return res.json({ mensagem: 'Atendimento finalizado com sucesso' });
 }
 
+async function finalizarAdmin(req, res) {
+  const { id } = req.params;
+  const salaoId = req.salaoId;
+
+  const atendimento = await prisma.atendimento.findFirst({
+    where: { id, salaoId, status: { in: ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'] } },
+  });
+
+  if (!atendimento) return res.status(404).json({ erro: 'Atendimento não encontrado' });
+
+  const ops = [
+    prisma.atendimento.update({
+      where: { id },
+      data: { status: 'FINALIZADO', finalizadoEm: new Date(), finalizadoPorAdm: true },
+    }),
+  ];
+
+  // Se havia funcionária atribuída, volta ela para ONLINE
+  if (atendimento.funcionariaId) {
+    ops.push(
+      prisma.funcionaria.update({
+        where: { id: atendimento.funcionariaId },
+        data: { status: 'ONLINE' },
+      })
+    );
+  }
+
+  // Limpa proposta pendente se houver
+  if (atendimento.status === 'PENDENTE_ACEITE') {
+    const { limparRejeicoes } = require('../services/distribuicao');
+    limparRejeicoes(id);
+  }
+
+  await prisma.$transaction(ops);
+
+  const io = req.app.get('io');
+  await rodarDistribuicao(salaoId, io);
+  await emitirEstadoCompleto(salaoId, io);
+
+  return res.json({ mensagem: 'Atendimento finalizado pelo administrador' });
+}
+
 async function cancelar(req, res) {
   const { id } = req.params;
   const salaoId = req.salaoId;
@@ -211,4 +253,4 @@ async function recusar(req, res) {
   return res.json({ mensagem: 'Proposta recusada' });
 }
 
-module.exports = { criarComanda, adicionarServico, finalizar, cancelar, listarPorComanda, relatorio, aceitar, recusar };
+module.exports = { criarComanda, adicionarServico, finalizar, finalizarAdmin, cancelar, listarPorComanda, relatorio, aceitar, recusar };

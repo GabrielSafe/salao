@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import {
   Clock, Zap, UserCheck, UserX, Scissors, Sparkles, Hand, Leaf,
-  ChevronDown, ChevronUp, Plus, Check, X, Loader2, ArrowRight, TrendingUp
+  ChevronDown, ChevronUp, Plus, Check, X, Loader2, ArrowRight, TrendingUp, ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSocket } from '../../../hooks/useSocket';
@@ -140,6 +140,40 @@ function FilaColuna({ servico, atendimentos }) {
   );
 }
 
+// ── Botão finalizar admin ──────────────────────────────────────────────────
+function FinalizarAdminBtn({ atendimentoId, onFinalizado }) {
+  const [loading, setLoading] = useState(false);
+  const [confirmando, setConfirmando] = useState(false);
+
+  async function handleFinalizar() {
+    if (!confirmando) { setConfirmando(true); return; }
+    setLoading(true);
+    try {
+      await api.patch(`/atendimentos/${atendimentoId}/finalizar-admin`);
+      if (onFinalizado) onFinalizado();
+    } catch {}
+    finally { setLoading(false); setConfirmando(false); }
+  }
+
+  return confirmando ? (
+    <div style={{ display: 'flex', gap: 5 }}>
+      <button onClick={handleFinalizar} disabled={loading}
+        style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 6, background: '#EF4444', color: '#fff', border: 'none', cursor: 'pointer' }}>
+        {loading ? <Loader2 size={11} style={{ animation: 'spin .7s linear infinite' }} /> : 'Confirmar'}
+      </button>
+      <button onClick={() => setConfirmando(false)}
+        style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: 'rgba(0,0,0,.06)', color: '#6B7280', border: 'none', cursor: 'pointer' }}>
+        Não
+      </button>
+    </div>
+  ) : (
+    <button onClick={handleFinalizar}
+      style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 6, background: 'rgba(239,68,68,.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+      <ShieldCheck size={11} /> Finalizar
+    </button>
+  );
+}
+
 // ── ComandaRow ─────────────────────────────────────────────────────────────
 function ComandaRow({ grupo, estado }) {
   const [aberto, setAberto] = useState(false);
@@ -263,6 +297,29 @@ function ComandaRow({ grupo, estado }) {
           </div>
 
           {msg && <div style={{ fontSize: 12, color: msg.includes('Erro') ? '#EF4444' : '#10B981', marginBottom: 8 }}>{msg}</div>}
+
+          {/* Finalizar serviços individualmente pelo admin */}
+          {grupo.itens.some(i => ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'].includes(i.status)) && (
+            <div style={{ marginBottom: 10, padding: '10px 12px', background: 'rgba(239,68,68,.04)', border: '1px dashed rgba(239,68,68,.2)', borderRadius: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <ShieldCheck size={12} color="#9CA3AF" /> Finalização de emergência (Admin)
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                {grupo.itens.filter(i => ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'].includes(i.status)).map(item => {
+                  const info = SERVICE_INFO[item.tipoServico];
+                  return info ? (
+                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6B7280' }}>
+                        <info.Icon size={12} color={info.color} />
+                        {info.label}
+                      </div>
+                      <FinalizarAdminBtn atendimentoId={item.id} onFinalizado={() => setMsg('Finalizado pelo admin.')} />
+                    </div>
+                  ) : null;
+                })}
+              </div>
+            </div>
+          )}
 
           {adicionando ? (
             <div style={{ background: 'rgba(212,23,138,.06)', border: '1px solid rgba(212,23,138,.15)', borderRadius: 8, padding: '10px 12px' }}>
