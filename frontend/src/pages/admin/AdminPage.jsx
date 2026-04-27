@@ -111,8 +111,8 @@ function RightTeamPanel({ estado }) {
         {/* Ausentes */}
         {ausentes.length > 0 && (
           <div style={{ marginTop: 12 }}>
-            <div style={{ padding: '4px 16px 8px', fontSize: 10, fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <Coffee size={11} /> Ausente
+            <div style={{ padding: '4px 16px 8px', fontSize: 10, fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+              Ausente
             </div>
             {ausentes.map(f => <Avatar key={f.id} f={f} />)}
           </div>
