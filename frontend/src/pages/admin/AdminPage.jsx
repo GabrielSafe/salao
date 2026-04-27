@@ -4,7 +4,7 @@ import {
   LayoutDashboard, ClipboardPlus, Users, BarChart3, LogOut,
   Scissors, Menu, X, Bell, ChevronDown, Settings, Clock,
   FileText, Zap, Sparkles, UserCircle, Crown, HelpCircle,
-  Wifi, Leaf, Hand
+  Wifi, Leaf, Hand, Coffee
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../hooks/useSocket';
