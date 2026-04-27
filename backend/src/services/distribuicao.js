@@ -205,9 +205,18 @@ async function recusarProposta(atendimentoId, funcionariaId, salaoId, io, automa
 async function emitirEstadoCompleto(salaoId, io) {
   if (!io) return;
   try {
+    const inicioHoje = new Date();
+    inicioHoje.setHours(0, 0, 0, 0);
+
     const [atendimentos, filas, funcionarias] = await Promise.all([
       prisma.atendimento.findMany({
-        where: { salaoId, status: { in: ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'] } },
+        where: {
+          salaoId,
+          OR: [
+            { status: { in: ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'] } },
+            { status: 'FINALIZADO', createdAt: { gte: inicioHoje } },
+          ],
+        },
         include: {
           cliente: true,
           funcionaria: { include: { usuario: true } },

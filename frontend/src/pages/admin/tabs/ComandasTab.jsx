@@ -17,9 +17,10 @@ const SERVICE_INFO = {
 };
 
 const STATUS_LABEL = {
-  AGUARDANDO:      { text: 'Aguardando',      color: '#D97706', bg: 'rgba(217,119,6,.1)' },
-  PENDENTE_ACEITE: { text: 'Aguardando aceite', color: '#D97706', bg: 'rgba(217,119,6,.1)' },
-  EM_ATENDIMENTO:  { text: 'Em atendimento',  color: '#16A34A', bg: 'rgba(22,163,74,.1)' },
+  AGUARDANDO:      { text: 'Aguardando',        color: '#D97706', bg: 'rgba(217,119,6,.1)'  },
+  PENDENTE_ACEITE: { text: 'Aguardando aceite',  color: '#D97706', bg: 'rgba(217,119,6,.1)'  },
+  EM_ATENDIMENTO:  { text: 'Em atendimento',     color: '#16A34A', bg: 'rgba(22,163,74,.1)'  },
+  FINALIZADO:      { text: 'Concluído',           color: '#6B7280', bg: 'rgba(107,114,128,.1)' },
 };
 
 function tempoDecorrido(data) {
@@ -32,7 +33,7 @@ function tempoDecorrido(data) {
 function agrupar(atendimentos) {
   const grupos = {};
   atendimentos
-    .filter(a => ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'].includes(a.status))
+    .filter(a => ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO', 'FINALIZADO'].includes(a.status))
     .forEach(a => {
       const k = a.numeroComanda;
       if (!grupos[k]) grupos[k] = { numero: k, cliente: a.cliente, clienteId: a.clienteId, criadoEm: a.createdAt, itens: [] };
@@ -42,17 +43,20 @@ function agrupar(atendimentos) {
 }
 
 // ── Card de comanda expandida ──────────────────────────────────────────────
-function ComandaCard({ grupo, funcionarias }) {
+function ComandaCard({ grupo, funcionarias, onFechar }) {
   const [adicionando, setAdicionando]       = useState(false);
   const [catAtiva, setCatAtiva]             = useState('CABELO');
   const [selecionados, setSelecionados]     = useState([]); // [{ tipoServico, servicoNome, servicoPreco }]
   const [loading, setLoading]               = useState(false);
   const [msg, setMsg]                       = useState('');
 
-  const ativos   = grupo.itens.filter(i => i.status === 'EM_ATENDIMENTO').length;
-  const total    = grupo.itens.length;
-  const temAtivo = ativos > 0;
-  const nomesJa  = grupo.itens.map(i => i.servicoNome).filter(Boolean);
+  const ativos         = grupo.itens.filter(i => i.status === 'EM_ATENDIMENTO').length;
+  const finalizados    = grupo.itens.filter(i => i.status === 'FINALIZADO').length;
+  const total          = grupo.itens.length;
+  const temAtivo       = ativos > 0;
+  const todosFinalizados = finalizados === total && total > 0;
+  const totalValor     = grupo.itens.reduce((s, i) => s + (i.servicoPreco || 0), 0);
+  const nomesJa        = grupo.itens.map(i => i.servicoNome).filter(Boolean);
 
   const noSelecionados = (nome) => selecionados.some(s => s.servicoNome === nome);
 
@@ -113,17 +117,22 @@ function ComandaCard({ grupo, funcionarias }) {
           </div>
         </div>
 
-        {/* Número e progresso */}
+        {/* Número, total e progresso */}
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent)', fontFamily: "'Poppins', sans-serif", lineHeight: 1 }}>
+          <div style={{ fontSize: 24, fontWeight: 800, color: todosFinalizados ? '#16A34A' : 'var(--accent)', fontFamily: "'Poppins', sans-serif", lineHeight: 1 }}>
             #{grupo.numero}
           </div>
-          <div style={{ fontSize: 11, color: temAtivo ? '#16A34A' : '#D97706', fontWeight: 600, marginTop: 4 }}>
-            {ativos}/{total} em atendimento
+          {totalValor > 0 && (
+            <div style={{ fontSize: 14, fontWeight: 800, color: todosFinalizados ? '#16A34A' : 'var(--accent)', marginTop: 2, fontFamily: "'Poppins', sans-serif" }}>
+              R$ {totalValor.toFixed(2).replace('.', ',')}
+            </div>
+          )}
+          <div style={{ fontSize: 11, color: todosFinalizados ? '#16A34A' : temAtivo ? '#16A34A' : '#D97706', fontWeight: 600, marginTop: 3 }}>
+            {todosFinalizados ? 'Todos concluídos' : `${finalizados}/${total} concluído${finalizados !== 1 ? 's' : ''}`}
           </div>
           {/* barra */}
-          <div style={{ height: 3, background: 'var(--border-2)', borderRadius: 2, marginTop: 5, width: 80 }}>
-            <div style={{ height: '100%', borderRadius: 2, width: `${total > 0 ? (ativos / total) * 100 : 0}%`, background: temAtivo ? '#16A34A' : '#D97706', transition: 'width .4s' }} />
+          <div style={{ height: 3, background: 'var(--border-2)', borderRadius: 2, marginTop: 5, width: 90 }}>
+            <div style={{ height: '100%', borderRadius: 2, width: `${total > 0 ? (finalizados / total) * 100 : 0}%`, background: todosFinalizados ? '#16A34A' : temAtivo ? '#16A34A' : '#D97706', transition: 'width .4s' }} />
           </div>
         </div>
       </div>
@@ -136,12 +145,16 @@ function ComandaCard({ grupo, funcionarias }) {
           const stInfo = STATUS_LABEL[item.status] || STATUS_LABEL.AGUARDANDO;
           const isUltimo = idx === grupo.itens.length - 1;
 
+          const isFinalizado = item.status === 'FINALIZADO';
           return (
-            <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: isUltimo && !adicionando && !msg ? 'none' : '1px solid var(--border)' }}>
+            <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: isUltimo && !adicionando && !msg ? 'none' : '1px solid var(--border)', opacity: isFinalizado ? 0.7 : 1, transition: 'opacity .2s' }}>
               {/* Ícone serviço */}
               {info && (
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: info.bg, border: `1px solid ${info.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <info.Icon size={18} color={info.color} />
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: isFinalizado ? 'rgba(107,114,128,.08)' : info.bg, border: `1px solid ${isFinalizado ? 'rgba(107,114,128,.15)' : info.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {isFinalizado
+                    ? <CheckCircle2 size={18} color="#6B7280" />
+                    : <info.Icon size={18} color={info.color} />
+                  }
                 </div>
               )}
 
@@ -190,8 +203,8 @@ function ComandaCard({ grupo, funcionarias }) {
         })}
       </div>
 
-      {/* ── Rodapé: adicionar serviço ── */}
-      <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
+      {/* ── Rodapé: fechar comanda ou adicionar serviço ── */}
+      <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border)', background: todosFinalizados ? 'rgba(22,163,74,.04)' : 'var(--bg-elevated)' }}>
         {msg && (
           <div style={{ fontSize: 12, color: msg.includes('Erro') ? '#EF4444' : '#16A34A', marginBottom: 10 }}>{msg}</div>
         )}
@@ -255,6 +268,18 @@ function ComandaCard({ grupo, funcionarias }) {
               </button>
             </div>
           </div>
+        ) : todosFinalizados ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <CheckCircle2 size={14} color="#16A34A" />
+              <span style={{ fontSize: 12, color: '#16A34A', fontWeight: 600 }}>Todos os serviços concluídos</span>
+            </div>
+            <button onClick={() => onFechar(grupo.numero)}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 8, background: 'linear-gradient(135deg, #16A34A, #15803D)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, boxShadow: '0 2px 8px rgba(22,163,74,.3)' }}>
+              <CheckCircle2 size={14} /> Fechar comanda
+              {totalValor > 0 && <span style={{ opacity: 0.85 }}>· R$ {totalValor.toFixed(2).replace('.', ',')}</span>}
+            </button>
+          </div>
         ) : (
           <button onClick={() => setAdicionando(true)}
             style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 500, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
@@ -270,22 +295,39 @@ function ComandaCard({ grupo, funcionarias }) {
 export default function ComandasTab({ estado: estadoProps }) {
   const { usuario } = useAuth();
   const [estadoLocal, setEstadoLocal] = useState({ atendimentos: [], filas: [], funcionarias: [] });
-  const [filtro, setFiltro] = useState('todos'); // todos | aguardando | atendendo
+  const [filtro, setFiltro]           = useState('todos');
+  const [fechadas, setFechadas]       = useState(new Set()); // números de comandas fechadas
 
   const onEstadoCompleto = useCallback(dados => setEstadoLocal(dados), []);
   useSocket(usuario?.salaoId, { onEstadoCompleto });
 
   const estado = estadoProps?.funcionarias?.length >= 0 ? estadoProps : estadoLocal;
-  const grupos  = agrupar(estado.atendimentos);
+  const todos  = agrupar(estado.atendimentos);
+
+  // Mostra: tem serviço ativo OU todos finalizados mas ainda não fechada
+  const grupos = todos.filter(g => {
+    if (fechadas.has(g.numero)) return false;
+    const temAtivo = g.itens.some(i => ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'].includes(i.status));
+    const todosFinalizados = g.itens.length > 0 && g.itens.every(i => i.status === 'FINALIZADO');
+    return temAtivo || todosFinalizados;
+  });
+
+  function fecharComanda(numero) {
+    setFechadas(prev => new Set([...prev, numero]));
+  }
 
   const gruposFiltrados = grupos.filter(g => {
-    if (filtro === 'aguardando') return g.itens.every(i => i.status !== 'EM_ATENDIMENTO');
+    const temAtivo = g.itens.some(i => ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'].includes(i.status));
+    const todosFinalizados = g.itens.every(i => i.status === 'FINALIZADO');
+    if (filtro === 'aguardando') return !g.itens.some(i => i.status === 'EM_ATENDIMENTO') && temAtivo;
     if (filtro === 'atendendo')  return g.itens.some(i => i.status === 'EM_ATENDIMENTO');
+    if (filtro === 'concluido')  return todosFinalizados;
     return true;
   });
 
-  const totalAguardando = grupos.filter(g => g.itens.every(i => i.status !== 'EM_ATENDIMENTO')).length;
+  const totalAguardando = grupos.filter(g => g.itens.some(i => ['AGUARDANDO', 'PENDENTE_ACEITE'].includes(i.status)) && !g.itens.some(i => i.status === 'EM_ATENDIMENTO')).length;
   const totalAtendendo  = grupos.filter(g => g.itens.some(i => i.status === 'EM_ATENDIMENTO')).length;
+  const totalConcluido  = grupos.filter(g => g.itens.every(i => i.status === 'FINALIZADO')).length;
 
   return (
     <div>
@@ -304,11 +346,12 @@ export default function ComandasTab({ estado: estadoProps }) {
         </div>
 
         {/* Filtros */}
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {[
             { key: 'todos',      label: `Todas (${grupos.length})` },
             { key: 'aguardando', label: `Aguardando (${totalAguardando})` },
             { key: 'atendendo',  label: `Atendendo (${totalAtendendo})` },
+            { key: 'concluido',  label: `Concluído (${totalConcluido})` },
           ].map(({ key, label }) => (
             <button key={key} onClick={() => setFiltro(key)}
               style={{ padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, border: '1.5px solid', cursor: 'pointer', transition: 'all .15s',
@@ -339,6 +382,7 @@ export default function ComandasTab({ estado: estadoProps }) {
             key={grupo.numero}
             grupo={grupo}
             funcionarias={estado.funcionarias}
+            onFechar={fecharComanda}
           />
         ))
       )}
