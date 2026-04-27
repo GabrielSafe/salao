@@ -378,6 +378,71 @@ export default function FuncionariaPage() {
           </button>
         )}
 
+        {/* Posição na fila */}
+        {naFila && !meuAtendimento && (
+          <div className="card" style={{ marginBottom: 16 }}>
+            <h3 style={{ fontWeight: 600, marginBottom: 12, fontSize: 13, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Sua posição na fila
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {minhasEspecialidades.map(esp => {
+                const info = SERVICE_INFO[esp];
+                if (!info) return null;
+
+                // Ordena entradas desta especialidade por tempo de entrada
+                const filaEsp = [...estado.filas]
+                  .filter(f => f.especialidade === esp)
+                  .sort((a, b) => new Date(a.entradaEm) - new Date(b.entradaEm));
+
+                const posicao = filaEsp.findIndex(f => f.funcionariaId === funcionariaId) + 1;
+                if (posicao === 0) return null; // não está nesta fila
+
+                const isPrimeira = posicao === 1;
+                const totalNaFila = filaEsp.length;
+
+                return (
+                  <div key={esp} style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '12px 14px', borderRadius: 10,
+                    background: isPrimeira ? 'rgba(16,163,74,.06)' : 'var(--bg-elevated)',
+                    border: `1px solid ${isPrimeira ? 'rgba(22,163,74,.2)' : 'var(--border)'}`,
+                  }}>
+                    {/* Posição */}
+                    <div style={{
+                      width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                      background: isPrimeira ? 'rgba(22,163,74,.15)' : info.bg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 18, fontWeight: 800,
+                      color: isPrimeira ? 'var(--success)' : info.color,
+                      fontFamily: "'Poppins', sans-serif",
+                    }}>
+                      {posicao}°
+                    </div>
+
+                    {/* Info */}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <info.Icon size={14} color={info.color} />
+                        <span style={{ fontWeight: 600, fontSize: 14 }}>{info.label}</span>
+                        {isPrimeira && (
+                          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--success)', background: 'rgba(22,163,74,.12)', padding: '1px 7px', borderRadius: 10 }}>
+                            Próxima
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 3 }}>
+                        {isPrimeira
+                          ? 'Você será a próxima a atender'
+                          : `${posicao - 1} pessoa${posicao - 1 > 1 ? 's' : ''} na sua frente · ${totalNaFila} na fila`}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="card">
           <h3 style={{ fontWeight: 600, marginBottom: 12, fontSize: 13, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Minhas especialidades</h3>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
