@@ -31,7 +31,10 @@ router.get('/funcionarias/:id/historico', autenticar, exigirRole('ADMIN', 'SUPER
 
 // Fila (funcionária controla a própria fila)
 router.post('/fila/entrar', autenticar, exigirRole('FUNCIONARIA'), funcionariasCtrl.entrarFila);
-router.post('/fila/sair', autenticar, exigirRole('FUNCIONARIA'), funcionariasCtrl.sairFila);
+router.post('/fila/sair',   autenticar, exigirRole('FUNCIONARIA'), funcionariasCtrl.sairFila);
+
+// Status de presença (ausente / online)
+router.patch('/status/presenca', autenticar, exigirRole('FUNCIONARIA'), funcionariasCtrl.atualizarPresenca);
 
 // Clientes
 router.get('/clientes', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, clientesCtrl.listar);

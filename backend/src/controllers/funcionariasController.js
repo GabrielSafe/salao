@@ -166,4 +166,28 @@ async function historico(req, res) {
   });
 }
 
-module.exports = { listar, criar, atualizar, entrarFila, sairFila, historico };
+async function atualizarPresenca(req, res) {
+  const funcionaria = req.usuario.funcionaria;
+  if (!funcionaria) return res.status(403).json({ erro: 'Acesso negado' });
+
+  const { ausente } = req.body;
+
+  // Só altera se estiver ONLINE ou AUSENTE — não interfere em EM_ATENDIMENTO
+  const atual = await prisma.funcionaria.findUnique({ where: { id: funcionaria.id } });
+  if (!atual || atual.status === 'EM_ATENDIMENTO' || atual.status === 'OFFLINE') {
+    return res.json({ status: atual?.status });
+  }
+
+  const novoStatus = ausente ? 'AUSENTE' : 'ONLINE';
+  await prisma.funcionaria.update({
+    where: { id: funcionaria.id },
+    data: { status: novoStatus },
+  });
+
+  const io = req.app.get('io');
+  if (req.usuario.salaoId) emitirEstadoCompleto(req.usuario.salaoId, io);
+
+  return res.json({ status: novoStatus });
+}
+
+module.exports = { listar, criar, atualizar, entrarFila, sairFila, historico, atualizarPresenca };

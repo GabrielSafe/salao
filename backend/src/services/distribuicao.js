@@ -36,14 +36,15 @@ async function tentarAtribuir(atendimento, salaoId, io) {
       });
 
       if (!entradaFila) return;
-      if (entradaFila.funcionaria.status !== 'ONLINE') return;
+      // Aceita ONLINE e AUSENTE — ausente está na fila mas pode estar longe da tela
+      if (!['ONLINE', 'AUSENTE'].includes(entradaFila.funcionaria.status)) return;
 
       const funcionariaId = entradaFila.funcionariaId;
 
-      // Atualiza status atomicamente — só avança se ainda estiver ONLINE.
+      // Atualiza status atomicamente — só avança se ONLINE ou AUSENTE.
       // Evita dupla atribuição em chamadas concorrentes ao motor.
       const { count } = await tx.funcionaria.updateMany({
-        where: { id: funcionariaId, status: 'ONLINE' },
+        where: { id: funcionariaId, status: { in: ['ONLINE', 'AUSENTE'] } },
         data: { status: 'EM_ATENDIMENTO' },
       });
       if (count === 0) return;

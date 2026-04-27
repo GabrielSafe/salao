@@ -57,6 +57,7 @@ enum Especialidade {
 enum StatusFuncionaria {
   OFFLINE
   ONLINE
+  AUSENTE
   EM_ATENDIMENTO
 }
 
