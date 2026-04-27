@@ -60,7 +60,7 @@ function RightTeamPanel({ estado }) {
             {f.usuario?.nome}
           </div>
           <div style={{ fontSize: 11, color: f.status === 'OFFLINE' ? '#D1D5DB' : f.status === 'AUSENTE' ? '#D97706' : svcInfo?.color || '#6B7280', marginTop: 1 }}>
-            {svcInfo?.label || (f.status === 'ONLINE' ? 'Disponível' : f.status === 'AUSENTE' ? 'Ausente ☕' : 'Offline')}
+            {svcInfo?.label || (f.status === 'ONLINE' ? 'Disponível' : f.status === 'AUSENTE' ? 'Ausente' : 'Offline')}
           </div>
         </div>
         {f.status === 'EM_ATENDIMENTO' && atend && (
@@ -112,7 +112,7 @@ function RightTeamPanel({ estado }) {
         {ausentes.length > 0 && (
           <div style={{ marginTop: 12 }}>
             <div style={{ padding: '4px 16px 8px', fontSize: 10, fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span>☕</span> Ausente
+              <Coffee size={11} /> Ausente
             </div>
             {ausentes.map(f => <Avatar key={f.id} f={f} />)}
           </div>

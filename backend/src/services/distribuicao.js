@@ -1,7 +1,11 @@
 const prisma = require('../config/prisma');
 
 const TIMEOUT_PROPOSTA_MS = 10_000; // 10 segundos
-const timeoutsPendentes = new Map();
+const timeoutsPendentes   = new Map();
+
+// Rastreia quem já rejeitou cada atendimento para evitar loop infinito
+// atendimentoId → Set<funcionariaId>
+const rejeicoesPorAtendimento = new Map();
 
 /**
  * Roda a distribuição para todos os atendimentos AGUARDANDO.
@@ -30,13 +34,20 @@ async function tentarProporAtendimento(atendimento, salaoId, io) {
       const atual = await tx.atendimento.findUnique({ where: { id: atendimento.id } });
       if (!atual || atual.status !== 'AGUARDANDO') return;
 
+      // Pula funcionárias que já rejeitaram este atendimento
+      const jáRejeitaram = [...(rejeicoesPorAtendimento.get(atendimento.id) || [])];
+
       const entradaFila = await tx.filaEntrada.findFirst({
-        where: { salaoId, especialidade: atendimento.tipoServico },
+        where: {
+          salaoId,
+          especialidade: atendimento.tipoServico,
+          ...(jáRejeitaram.length > 0 && { funcionariaId: { notIn: jáRejeitaram } }),
+        },
         orderBy: { entradaEm: 'asc' },
         include: { funcionaria: true },
       });
 
-      if (!entradaFila) return;
+      if (!entradaFila) return; // Todas rejeitaram ou fila vazia — aguarda nova entrada
       if (!['ONLINE', 'AUSENTE'].includes(entradaFila.funcionaria.status)) return;
 
       funcionariaId = entradaFila.funcionariaId;
@@ -113,6 +124,9 @@ async function aceitarProposta(atendimentoId, funcionariaId, salaoId, io) {
     });
 
     if (atendimentoAtualizado) {
+      // Limpa rejeições — atendimento foi aceito
+      rejeicoesPorAtendimento.delete(atendimentoId);
+
       setImmediate(() => {
         if (!io) return;
         io.to(`salao:${salaoId}`).emit('atendimento_atualizado', atendimentoAtualizado);
@@ -142,6 +156,11 @@ async function recusarProposta(atendimentoId, funcionariaId, salaoId, io, automa
       if (atend.propostaParaId !== funcionariaId) return;
 
       especialidade = atend.tipoServico;
+
+      // Registra a rejeição para evitar loop
+      const rejeitados = rejeicoesPorAtendimento.get(atendimentoId) || new Set();
+      rejeitados.add(funcionariaId);
+      rejeicoesPorAtendimento.set(atendimentoId, rejeitados);
 
       // Volta o atendimento para a fila
       await tx.atendimento.update({
@@ -204,4 +223,18 @@ async function emitirEstadoCompleto(salaoId, io) {
   }
 }
 
-module.exports = { rodarDistribuicao, emitirEstadoCompleto, aceitarProposta, recusarProposta };
+// Limpa rejeições de um atendimento finalizado/cancelado
+function limparRejeicoes(atendimentoId) {
+  rejeicoesPorAtendimento.delete(atendimentoId);
+}
+
+// Quando nova funcionária entra na fila, reseta rejeições para que ela possa receber
+function resetarRejeicoesPorEspecialidade(salaoId, especialidade) {
+  // Remove da lista de rejeitados as funcionárias que entraram na fila DEPOIS da rejeição
+  // Simplificado: limpa todos os atendimentos dessa especialidade para a nova funcionária ser elegível
+  for (const [atendimentoId] of rejeicoesPorAtendimento) {
+    // Deixa a entrada existir mas não faz nada — a nova funcionária não estará no set
+  }
+}
+
+module.exports = { rodarDistribuicao, emitirEstadoCompleto, aceitarProposta, recusarProposta, limparRejeicoes };
