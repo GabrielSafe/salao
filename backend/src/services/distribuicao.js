@@ -9,6 +9,7 @@ const rejeicoesPorAtendimento = new Map();
 
 /**
  * Roda a distribuição para todos os atendimentos AGUARDANDO.
+ * Mantém um Set local para evitar propor dois serviços para a mesma funcionária na mesma rodada.
  */
 async function rodarDistribuicao(salaoId, io) {
   const atendimentos = await prisma.atendimento.findMany({
@@ -17,15 +18,18 @@ async function rodarDistribuicao(salaoId, io) {
     include: { cliente: true },
   });
 
+  const funcionariasEmProposta = new Set();
+
   for (const atendimento of atendimentos) {
-    await tentarProporAtendimento(atendimento, salaoId, io);
+    await tentarProporAtendimento(atendimento, salaoId, io, funcionariasEmProposta);
   }
 }
 
 /**
  * Encontra a 1ª funcionária disponível na fila e envia uma proposta.
+ * funcionariasEmProposta: Set de IDs já propostos nesta rodada (evita propor 2 serviços à mesma pessoa).
  */
-async function tentarProporAtendimento(atendimento, salaoId, io) {
+async function tentarProporAtendimento(atendimento, salaoId, io, funcionariasEmProposta = new Set()) {
   try {
     let funcionariaId = null;
     let atendimentoComDados = null;
@@ -34,14 +38,15 @@ async function tentarProporAtendimento(atendimento, salaoId, io) {
       const atual = await tx.atendimento.findUnique({ where: { id: atendimento.id } });
       if (!atual || atual.status !== 'AGUARDANDO') return;
 
-      // Pula funcionárias que já rejeitaram este atendimento
+      // Pula funcionárias que já rejeitaram este atendimento OU que já receberam proposta nesta rodada
       const jáRejeitaram = [...(rejeicoesPorAtendimento.get(atendimento.id) || [])];
+      const excluir = [...new Set([...jáRejeitaram, ...funcionariasEmProposta])];
 
       const entradaFila = await tx.filaEntrada.findFirst({
         where: {
           salaoId,
           especialidade: atendimento.tipoServico,
-          ...(jáRejeitaram.length > 0 && { funcionariaId: { notIn: jáRejeitaram } }),
+          ...(excluir.length > 0 && { funcionariaId: { notIn: excluir } }),
         },
         orderBy: { entradaEm: 'asc' },
         include: { funcionaria: true },
@@ -61,6 +66,9 @@ async function tentarProporAtendimento(atendimento, salaoId, io) {
     });
 
     if (!funcionariaId || !atendimentoComDados) return;
+
+    // Marca como proposta enviada nesta rodada para evitar propor outro serviço à mesma pessoa
+    funcionariasEmProposta.add(funcionariaId);
 
     // Emite proposta para a funcionária
     setImmediate(() => {
