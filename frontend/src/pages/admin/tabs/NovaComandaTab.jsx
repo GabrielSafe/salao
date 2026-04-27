@@ -57,7 +57,7 @@ export default function NovaComandaTab() {
         clienteId = data.id;
       }
       const { data } = await api.post('/atendimentos/comanda', { clienteId, servicos: selecionados });
-      setSucesso({ numero: data[0]?.numeroComanda, nome: cliente?.nome || novoNome });
+      setSucesso({ numero: data[0]?.numeroComanda, nome: cliente?.nome || novoNome, atendimentos: data });
       setCliente(null); setBusca(''); setNovoNome(''); setNovoCpf(''); setSelecionados([]);
     } catch (err) {
       setErro(err.response?.data?.erro || 'Erro ao criar comanda');
@@ -86,27 +86,79 @@ export default function NovaComandaTab() {
 
   if (sucesso) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}>
-        <div className="card" style={{ textAlign: 'center', maxWidth: 360, width: '100%', padding: 40 }}>
-          <div style={{
-            width: 64, height: 64, background: 'var(--success-dim)',
-            borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 20px',
-          }}>
-            <CheckCircle2 size={32} color="var(--success)" />
-          </div>
-          <h2 style={{ fontWeight: 700, fontSize: 20, marginBottom: 8 }}>
-            {sucesso.adicional ? 'Serviço adicionado!' : 'Comanda criada!'}
-          </h2>
-          {sucesso.numero && (
-            <div style={{ fontSize: 48, fontWeight: 800, color: 'var(--accent)', marginBottom: 6, letterSpacing: '-2px' }}>
-              #{sucesso.numero}
+      <div style={{ maxWidth: 560 }}>
+        {/* Header com botão no canto */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 32, height: 32, background: 'var(--success-dim)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CheckCircle2 size={18} color="var(--success)" />
             </div>
-          )}
-          <p style={{ color: 'var(--text-2)', marginBottom: 28, fontSize: 14 }}>{sucesso.nome}</p>
-          <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => setSucesso(null)}>
-            <Plus size={16} /> Nova comanda
+            <div>
+              <h2 style={{ fontWeight: 700, fontSize: 18, color: 'var(--text)' }}>
+                {sucesso.adicional ? 'Serviço adicionado!' : 'Comanda criada!'}
+              </h2>
+              <p style={{ fontSize: 13, color: 'var(--text-2)' }}>{sucesso.nome}</p>
+            </div>
+          </div>
+          <button className="btn btn-primary" onClick={() => setSucesso(null)}>
+            <Plus size={15} /> Nova comanda
           </button>
+        </div>
+
+        {/* Card da comanda */}
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          {/* Topo da comanda */}
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-elevated)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(212,23,138,.2), rgba(232,93,4,.15))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>
+                {sucesso.nome?.[0]?.toUpperCase()}
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>{sucesso.nome}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>
+                  {sucesso.atendimentos?.length || selecionados.length} serviço{(sucesso.atendimentos?.length || 1) > 1 ? 's' : ''} solicitado{(sucesso.atendimentos?.length || 1) > 1 ? 's' : ''}
+                </div>
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--accent)', fontFamily: "'Poppins', sans-serif", letterSpacing: '-0.5px' }}>
+                #{sucesso.numero}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 1 }}>Comanda</div>
+            </div>
+          </div>
+
+          {/* Serviços */}
+          <div style={{ padding: '8px 0' }}>
+            {(sucesso.atendimentos || []).map((atend) => {
+              const svc = SERVICOS.find(s => s.id === atend.tipoServico);
+              if (!svc) return null;
+              return (
+                <div key={atend.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 9, background: svc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svc.Icon size={17} color={svc.color} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{svc.label}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>{svc.desc}</div>
+                  </div>
+                  <span style={{
+                    fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20,
+                    background: atend.status === 'PENDENTE_ACEITE' ? 'rgba(245,158,11,.12)' : 'rgba(245,197,24,.12)',
+                    color: atend.status === 'PENDENTE_ACEITE' ? '#D97706' : 'var(--accent)',
+                  }}>
+                    {atend.status === 'PENDENTE_ACEITE' ? 'Aguardando aceite' : 'Na fila'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Rodapé */}
+          <div style={{ padding: '12px 20px', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success)', animation: 'pulse-dot 2s ease infinite' }} />
+            <span style={{ fontSize: 12, color: 'var(--text-2)' }}>Distribuindo para as funcionárias disponíveis...</span>
+          </div>
         </div>
       </div>
     );
