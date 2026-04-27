@@ -55,7 +55,7 @@ async function criar(req, res) {
 
 async function atualizar(req, res) {
   const { id } = req.params;
-  const { nome, especialidades, multiTarefas, ativo } = req.body;
+  const { nome, especialidades, multiTarefas, ativo, senha } = req.body;
   const salaoId = req.salaoId;
 
   const funcionaria = await prisma.funcionaria.findFirst({ where: { id, salaoId } });
@@ -63,17 +63,19 @@ async function atualizar(req, res) {
 
   const esp = multiTarefas ? TODAS_ESPECIALIDADES : especialidades;
 
+  const dadosUsuario = {};
+  if (nome     !== undefined) dadosUsuario.nome  = nome;
+  if (ativo    !== undefined) dadosUsuario.ativo = ativo;
+  if (senha?.trim()) dadosUsuario.senha = await bcrypt.hash(senha, 10);
+
   const [func] = await prisma.$transaction([
     prisma.funcionaria.update({
       where: { id },
       data: { especialidades: esp ?? undefined, multiTarefas: multiTarefas ?? undefined },
       include: { usuario: true },
     }),
-    ...(nome !== undefined || ativo !== undefined
-      ? [prisma.usuario.update({
-          where: { id: funcionaria.usuarioId },
-          data: { nome: nome ?? undefined, ativo: ativo ?? undefined },
-        })]
+    ...(Object.keys(dadosUsuario).length > 0
+      ? [prisma.usuario.update({ where: { id: funcionaria.usuarioId }, data: dadosUsuario })]
       : []),
   ]);
 
