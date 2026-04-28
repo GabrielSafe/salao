@@ -21,6 +21,7 @@ model Salao {
   atendimentos  Atendimento[]
   filaEntradas  FilaEntrada[]
   servicoItens  ServicoItem[]
+  cadeiras      Cadeira[]
 
   @@map("saloes")
 }
@@ -122,6 +123,7 @@ model Atendimento {
   numeroComanda    Int               @map("numero_comanda")
   propostaParaId   String?           @map("proposta_para_id")
   finalizadoPorAdm Boolean           @default(false) @map("finalizado_por_adm")
+  cadeiraId        String?           @map("cadeira_id")
   servicoNome      String?           @map("servico_nome")
   servicoPreco     Float?            @map("servico_preco")
   iniciadoEm       DateTime?         @map("iniciado_em")
@@ -133,6 +135,7 @@ model Atendimento {
   cliente     Cliente      @relation(fields: [clienteId], references: [id])
   funcionaria Funcionaria? @relation(fields: [funcionariaId], references: [id])
   salao       Salao        @relation(fields: [salaoId], references: [id])
+  cadeira     Cadeira?     @relation(fields: [cadeiraId], references: [id])
 
   @@map("atendimentos")
 }
@@ -149,6 +152,21 @@ model FilaEntrada {
 
   @@unique([funcionariaId, especialidade])
   @@map("fila_entradas")
+}
+
+model Cadeira {
+  id        String   @id @default(uuid())
+  numero    Int
+  nome      String?
+  ativo     Boolean  @default(true)
+  salaoId   String   @map("salao_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  salao        Salao         @relation(fields: [salaoId], references: [id])
+  atendimentos Atendimento[]
+
+  @@unique([numero, salaoId])
+  @@map("cadeiras")
 }
 
 model ServicoItem {

@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Search, X, Check, Plus, Scissors, Sparkles, Hand, Leaf, Eye,
-  Loader2, CheckCircle2, Trash2, User, ChevronRight, Zap
+  Loader2, CheckCircle2, Trash2, User, ChevronRight, Zap, Armchair
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import api from '../../../services/api';
@@ -51,6 +51,11 @@ function ConfirmacaoComanda({ sucesso, onNova }) {
           <div style={{ fontSize: 17, fontWeight: 600, marginTop: 10, opacity: .9 }}>
             {sucesso.nome}
           </div>
+          {sucesso.cadeiraNome && (
+            <div style={{ marginTop: 6, fontSize: 13, opacity: .8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+              🪑 {sucesso.cadeiraNome}
+            </div>
+          )}
 
           {total > 0 && (
             <div style={{ marginTop: 20, display: 'inline-block', background: 'rgba(255,255,255,.18)', backdropFilter: 'blur(8px)', borderRadius: 50, padding: '10px 28px', border: '1px solid rgba(255,255,255,.25)' }}>
@@ -125,11 +130,17 @@ export default function NovaComandaTab() {
   const [novoCpf, setNovoCpf]               = useState('');
   const [categoriaAtiva, setCategoriaAtiva] = useState('CABELO');
   const [carrinho, setCarrinho]             = useState([]);
+  const [cadeiras, setCadeiras]             = useState([]);
+  const [cadeiraId, setCadeiraId]           = useState(null);
   const [sucesso, setSucesso]               = useState(null);
   const [erro, setErro]                     = useState('');
   const [loading, setLoading]               = useState(false);
   const [showNovoCliente, setShowNovoCliente] = useState(false);
   const timer = useRef(null);
+
+  useEffect(() => {
+    api.get('/cadeiras').then(r => setCadeiras(r.data)).catch(() => {});
+  }, []);
 
   const noCarrinho = (nome) => carrinho.some(s => s.servicoNome === nome);
   const total = carrinho.reduce((s, i) => s + i.servicoPreco, 0);
@@ -184,9 +195,10 @@ export default function NovaComandaTab() {
         const { data } = await api.post('/clientes', { nome: novoNome, cpf: novoCpf || undefined });
         clienteId = data.id;
       }
-      const { data } = await api.post('/atendimentos/comanda', { clienteId, servicos: carrinho });
-      setSucesso({ numero: data[0]?.numeroComanda, nome: cliente?.nome || novoNome, atendimentos: data });
-      setCliente(null); setBusca(''); setNovoNome(''); setNovoCpf(''); setCarrinho([]);
+      const { data } = await api.post('/atendimentos/comanda', { clienteId, servicos: carrinho, cadeiraId: cadeiraId || undefined });
+      const cadeiraEscolhida = cadeiras.find(c => c.id === cadeiraId);
+      setSucesso({ numero: data[0]?.numeroComanda, nome: cliente?.nome || novoNome, atendimentos: data, cadeiraNome: cadeiraEscolhida?.nome });
+      setCliente(null); setBusca(''); setNovoNome(''); setNovoCpf(''); setCarrinho([]); setCadeiraId(null);
     } catch (err) {
       setErro(err.response?.data?.erro || 'Erro ao criar comanda');
     } finally {
@@ -366,6 +378,35 @@ export default function NovaComandaTab() {
                 </div>
               )}
             </div>
+
+            {/* Seção: Cadeiras */}
+            {cadeiras.length > 0 && (
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Armchair size={11} /> Cadeira
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 5 }}>
+                  {cadeiras.map(c => {
+                    const livre    = c.ativo && !c.ocupada;
+                    const selecionada = cadeiraId === c.id;
+                    const cor = selecionada ? '#f59e0b' : livre ? '#10b981' : '#9ca3af';
+                    return (
+                      <button key={c.id} onClick={() => livre && setCadeiraId(selecionada ? null : c.id)} disabled={!livre && !selecionada}
+                        title={c.ocupada ? `Ocupada — ${c.ocupacao?.clienteNome || ''}` : c.nome || `Cadeira ${c.numero}`}
+                        style={{ padding: '6px 4px', borderRadius: 6, border: `1.5px solid ${selecionada ? '#f59e0b' : livre ? 'rgba(16,185,129,.3)' : 'rgba(156,163,175,.2)'}`, background: selecionada ? 'rgba(245,158,11,.12)' : livre ? 'rgba(16,185,129,.06)' : 'rgba(0,0,0,.03)', cursor: livre ? 'pointer' : 'not-allowed', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: cor }} />
+                        <span style={{ fontSize: 10, fontWeight: 700, color: cor }}>{c.numero}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {cadeiraId && (
+                  <div style={{ marginTop: 6, fontSize: 11, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Check size={11} /> {cadeiras.find(c => c.id === cadeiraId)?.nome || `Cadeira ${cadeiras.find(c => c.id === cadeiraId)?.numero}`} selecionada
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Seção: Itens do carrinho */}
             <div style={{ minHeight: 60, maxHeight: 280, overflowY: 'auto', scrollbarWidth: 'thin' }}>

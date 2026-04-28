@@ -3,13 +3,14 @@ import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, ClipboardPlus, Users, BarChart3, LogOut,
   Scissors, Settings, Clock, FileText, UserCircle,
-  HelpCircle, Search, Bell, ChevronDown, Crown, Sun, Moon, Tag
+  HelpCircle, Search, Bell, ChevronDown, Crown, Sun, Moon, Tag, Armchair
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../hooks/useSocket';
 import { useThemeCtx as useTheme } from '../../contexts/ThemeContext.jsx';
 import DashboardTab   from './tabs/DashboardTab';
 import ServicosTab    from './tabs/ServicosTab';
+import CadeirasTab    from './tabs/CadeirasTab';
 import NovaComandaTab from './tabs/NovaComandaTab';
 import FuncionariasTab from './tabs/FuncionariasTab';
 import RelatorioTab   from './tabs/RelatorioTab';
@@ -27,6 +28,7 @@ const MAIN_MENU = [
   { path: 'clientes',     label: 'Clientes',       Icon: UserCircle },
   { path: 'relatorio',    label: 'Relatórios',     Icon: BarChart3 },
   { path: 'servicos',     label: 'Serviços',       Icon: Tag },
+  { path: 'cadeiras',    label: 'Cadeiras',       Icon: Armchair },
 ];
 
 const PREFERENCE_MENU = [
@@ -43,6 +45,7 @@ const PAGE_TITLES = {
   '/admin/clientes':     { title: 'Clientes',       sub: 'Cadastro e histórico de clientes' },
   '/admin/relatorio':    { title: 'Relatórios',     sub: 'Análise de atendimentos' },
   '/admin/servicos':     { title: 'Serviços',       sub: 'Gerencie o catálogo de serviços e preços' },
+  '/admin/cadeiras':    { title: 'Cadeiras',       sub: 'Gestão e relatórios das cadeiras do salão' },
 };
 
 // ── Cores do tema ─────────────────────────────────────────────────────────
@@ -384,6 +387,7 @@ export default function AdminPage() {
             <Route path="clientes"      element={<ClientesTab />} />
             <Route path="comandas"      element={<ComandasTab estado={estado} />} />
             <Route path="servicos"      element={<ServicosTab />} />
+            <Route path="cadeiras"     element={<CadeirasTab />} />
           </Routes>
         </main>
       </div>
