@@ -43,45 +43,121 @@ const fmtMin = (m) => m == null ? '—' : m < 60 ? `${m} min` : `${Math.floor(m/
 const elapsed = (d) => { const m = Math.floor((Date.now() - new Date(d)) / 60000); return m <= 0 ? '<1 min' : fmtMin(m); };
 const avgWait = (arr) => arr.length ? Math.round(arr.reduce((s,a) => s + (Date.now() - new Date(a.createdAt))/60000, 0) / arr.length) : 0;
 
-// ── Sparkline ─────────────────────────────────────────────────────────────
-function Sparkline({ data, color = '#f59e0b', height = 56 }) {
+// ── Sparkline interativa ───────────────────────────────────────────────────
+function Sparkline({ data, color = '#f59e0b', height = 56, labels, formatValue }) {
+  const { isDark } = useThemeCtx();
+  const [hover, setHover] = useState(null);
   const W = 300;
+
   if (!data || data.length < 2) return <div style={{ height }} />;
+
   const temDados = data.some(v => v > 0);
-  if (!temDados) {
-    const y = height * 0.6;
-    const pts = data.map((_, i) => [6 + (i / (data.length-1)) * (W-12), y]);
-    const line = pts.map(([x,y], i) => `${i===0?'M':'L'} ${x} ${y}`).join(' ');
-    return (
-      <svg viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="none" style={{ width: '100%', height }}>
-        <path d={line} fill="none" stroke={color} strokeWidth="1.5" strokeDasharray="4 4" strokeOpacity="0.25" strokeLinecap="round" />
-      </svg>
-    );
+  const max = Math.max(...data, 1);
+  const pad = 8;
+  const pts = data.map((v, i) => [
+    pad + (i / (data.length - 1)) * (W - pad * 2),
+    pad + ((max - v) / max) * (height - pad * 2),
+  ]);
+  const line = pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'} ${x} ${y}`).join(' ');
+  const area = `${line} L ${pts[pts.length - 1][0]} ${height} L ${pts[0][0]} ${height} Z`;
+  const gId   = `sg${color.replace('#', '')}`;
+
+  function onMouseMove(e) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x    = (e.clientX - rect.left) / rect.width;
+    const idx  = Math.max(0, Math.min(data.length - 1, Math.round(x * (data.length - 1))));
+    setHover(idx);
   }
-  const max = Math.max(...data); const pad = 6;
-  const pts = data.map((v, i) => [pad + (i/(data.length-1))*(W-pad*2), pad + ((max-v)/max)*(height-pad*2)]);
-  const line = pts.map(([x,y], i) => `${i===0?'M':'L'} ${x} ${y}`).join(' ');
-  const area = `${line} L ${pts[pts.length-1][0]} ${height} L ${pts[0][0]} ${height} Z`;
+
+  const hPt   = hover !== null ? pts[hover] : null;
+  const svgXpct = hPt ? (hPt[0] / W) * 100 : 0;
+  const tooltipLeft = svgXpct < 15 ? '0%' : svgXpct > 85 ? '100%' : `${svgXpct}%`;
+  const tooltipTranslate = svgXpct < 15 ? '0%' : svgXpct > 85 ? '-100%' : '-50%';
+
   return (
-    <svg viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="none" style={{ width: '100%', height }}>
-      <defs>
-        <linearGradient id={`sg${color.replace('#','')}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={area} fill={`url(#sg${color.replace('#','')})`} />
-      <path d={line} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-      {pts.map(([x,y], i) => <circle key={i} cx={x} cy={y} r="3" fill={color} />)}
-    </svg>
+    <div style={{ position: 'relative', cursor: 'crosshair' }}
+      onMouseMove={onMouseMove}
+      onMouseLeave={() => setHover(null)}
+    >
+      <svg viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="none" style={{ width: '100%', height, display: 'block' }}>
+        <defs>
+          <linearGradient id={gId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor={color} stopOpacity={temDados ? '0.22' : '0.06'} />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+
+        {temDados ? (
+          <>
+            <path d={area} fill={`url(#${gId})`} />
+            <path d={line} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+            {pts.map(([x, y], i) => (
+              <circle key={i} cx={x} cy={y} r={hover === i ? 5 : 3}
+                fill={color} style={{ transition: 'r .1s' }} />
+            ))}
+            {hPt && (
+              <line x1={hPt[0]} y1={0} x2={hPt[0]} y2={height}
+                stroke={color} strokeWidth="1.5" strokeDasharray="3 3" opacity="0.6" />
+            )}
+          </>
+        ) : (
+          <>
+            <path d={line} fill="none" stroke={color} strokeWidth="1.5"
+              strokeDasharray="4 4" strokeOpacity="0.25" strokeLinecap="round" />
+            {pts.map(([x, y], i) => (
+              <circle key={i} cx={x} cy={y} r="2.5" fill={color} fillOpacity="0.25" />
+            ))}
+          </>
+        )}
+      </svg>
+
+      {/* Tooltip */}
+      {hover !== null && temDados && (
+        <div style={{
+          position: 'absolute', top: 6, pointerEvents: 'none', zIndex: 10,
+          left: tooltipLeft, transform: `translateX(${tooltipTranslate})`,
+          background: isDark ? '#1f1f1f' : '#1f2937',
+          border: `1px solid ${color}40`,
+          padding: '5px 9px', borderRadius: 7,
+          boxShadow: `0 4px 16px rgba(0,0,0,.35)`,
+          minWidth: 80,
+        }}>
+          {labels?.[hover] && (
+            <div style={{ fontSize: 10, color: '#9ca3af', marginBottom: 2 }}>{labels[hover]}</div>
+          )}
+          <div style={{ fontSize: 12, fontWeight: 700, color: color }}>
+            {formatValue ? formatValue(data[hover]) : data[hover]}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
 // ── KPI Card ──────────────────────────────────────────────────────────────
-function KpiCard({ label, valor, sub, subColor, Icon, gradient, sparkColor, sparkData }) {
+const SPARK_LABELS = ['8h', '10h', '12h', '14h', '16h', '18h', '20h', '22h'];
+
+function KpiCard({ label, valor, sub, subColor, Icon, gradient, sparkColor, sparkData, formatSpark }) {
   const T = useT();
+  const [hovered, setHovered] = useState(false);
   return (
-    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: T.radius, boxShadow: T.shadow, overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: T.font }}>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: T.card,
+        border: `1px solid ${hovered ? sparkColor + '50' : T.border}`,
+        borderRadius: T.radius,
+        boxShadow: hovered
+          ? `0 8px 28px ${sparkColor}22, 0 2px 8px rgba(0,0,0,.15)`
+          : T.shadow,
+        overflow: 'hidden', display: 'flex', flexDirection: 'column',
+        fontFamily: T.font,
+        transform: hovered ? 'translateY(-3px)' : 'none',
+        transition: 'all .22s ease',
+        cursor: 'default',
+      }}
+    >
       <div style={{ padding: '16px 20px 10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
           <div style={{ width: 38, height: 38, borderRadius: 10, background: gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 12px ${sparkColor}40` }}>
@@ -93,7 +169,11 @@ function KpiCard({ label, valor, sub, subColor, Icon, gradient, sparkColor, spar
         <div style={{ fontSize: 12, color: subColor || T.muted }}>{sub}</div>
       </div>
       <div style={{ marginTop: 'auto' }}>
-        <Sparkline data={sparkData} color={sparkColor} height={56} />
+        <Sparkline
+          data={sparkData} color={sparkColor} height={56}
+          labels={SPARK_LABELS}
+          formatValue={formatSpark}
+        />
       </div>
     </div>
   );
@@ -667,6 +747,7 @@ export default function DashboardTab({ estado: estadoProps }) {
           gradient="linear-gradient(135deg, #f59e0b, #d97706)"
           sparkColor="#f59e0b"
           sparkData={spFat}
+          formatSpark={v => v > 0 ? fmt(v) : 'Sem dados'}
         />
         <KpiCard
           label="Tempo médio de espera"
@@ -677,6 +758,7 @@ export default function DashboardTab({ estado: estadoProps }) {
           gradient="linear-gradient(135deg, #ef4444, #f97316)"
           sparkColor="#ef4444"
           sparkData={spEsp}
+          formatSpark={v => v > 0 ? `${v} esperando` : 'Sem fila'}
         />
         <KpiCard
           label="Clientes ativos agora"
@@ -686,6 +768,7 @@ export default function DashboardTab({ estado: estadoProps }) {
           gradient="linear-gradient(135deg, #8b5cf6, #7c3aed)"
           sparkColor="#8b5cf6"
           sparkData={spCli}
+          formatSpark={v => v > 0 ? `${v} cliente${v !== 1 ? 's' : ''}` : 'Sem clientes'}
         />
         <KpiCard
           label="Capacidade do salão"
@@ -696,6 +779,7 @@ export default function DashboardTab({ estado: estadoProps }) {
           gradient="linear-gradient(135deg, #10b981, #059669)"
           sparkColor="#10b981"
           sparkData={spCap}
+          formatSpark={v => v > 0 ? `${v} atend.` : 'Sem dados'}
         />
       </div>
 
