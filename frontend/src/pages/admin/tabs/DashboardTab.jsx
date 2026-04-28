@@ -116,19 +116,24 @@ function FaturamentoCard({ atendimentos }) {
       boxShadow: '0px 4px 8px -1px rgba(0,0,0,.1)',
       overflow: 'hidden',
       fontFamily: 'Inter, sans-serif',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
     }}>
-      <div style={{ padding: '24px 24px 16px' }}>
-        <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 6, fontWeight: 400 }}>
+      <div style={{ padding: '24px 24px 16px', flex: 1 }}>
+        <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 10, fontWeight: 400 }}>
           Faturamento do Dia
         </div>
-        <div style={{ fontSize: 36, fontWeight: 700, color: '#262626', lineHeight: 1, letterSpacing: '-0.02em', marginBottom: 6 }}>
+        <div style={{ fontSize: 40, fontWeight: 700, color: '#262626', lineHeight: 1, letterSpacing: '-0.02em', marginBottom: 8 }}>
           {totalFmt}
         </div>
         <div style={{ fontSize: 13, color: '#6b7280' }}>
           {qtd} serviço{qtd !== 1 ? 's' : ''} finalizado{qtd !== 1 ? 's' : ''} hoje
         </div>
       </div>
-      <Sparkline data={sparkData} />
+      <div style={{ marginTop: 'auto' }}>
+        <Sparkline data={sparkData} height={90} />
+      </div>
     </div>
   );
 }
@@ -536,14 +541,13 @@ export default function DashboardTab({ estado: estadoProps }) {
         </div>
       </div>
 
-      {/* Faturamento do Dia */}
-      <div style={{ marginBottom: 20, maxWidth: 420 }}>
-        <FaturamentoCard atendimentos={estado.atendimentos} />
-      </div>
-
-      {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
-        {kpis.map(k => <KpiCard key={k.title} label={k.label} valor={k.valor} sub={k.sub} Icon={k.Icon} color={k.color} bg={k.bg} />)}
+      {/* Grid: Faturamento (esquerda, 2 linhas) + 4 KPIs (direita, 2×2) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gridTemplateRows: 'auto auto', gap: 14, marginBottom: 24, alignItems: 'stretch' }}>
+        {/* Faturamento ocupa 2 linhas */}
+        <div style={{ gridRow: 'span 2' }}>
+          <FaturamentoCard atendimentos={estado.atendimentos} />
+        </div>
+        {kpis.map(k => <KpiCard key={k.title} {...k} />)}
       </div>
 
       {/* Filas de Atendimento */}
