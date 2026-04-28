@@ -35,6 +35,8 @@ function tocarAlerta() {
 function ModalProposta({ proposta, onAceitar, onRecusar }) {
   const [segundos, setSegundos] = useState(TIMEOUT_SEGUNDOS);
   const info = SERVICE_INFO[proposta.tipoServico];
+  const servicos = proposta.servicosAgrupados?.length > 0 ? proposta.servicosAgrupados : [proposta];
+  const totalPreco = servicos.reduce((s, a) => s + (a.servicoPreco || 0), 0);
 
   useEffect(() => {
     if (segundos <= 0) return;
@@ -55,7 +57,7 @@ function ModalProposta({ proposta, onAceitar, onRecusar }) {
     }}>
       <div style={{
         background: '#FFFFFF', borderRadius: 24, padding: '32px 28px',
-        maxWidth: 360, width: '100%', textAlign: 'center',
+        maxWidth: 380, width: '100%', textAlign: 'center',
         boxShadow: '0 24px 80px rgba(0,0,0,.5)',
         animation: 'fadeInScale .25s ease',
       }}>
@@ -72,38 +74,56 @@ function ModalProposta({ proposta, onAceitar, onRecusar }) {
         </div>
 
         <h2 style={{ fontSize: 20, fontWeight: 800, color: '#1B2A4A', marginBottom: 4, fontFamily: "'Poppins', sans-serif" }}>
-          Nova solicitação!
+          {servicos.length > 1 ? `${servicos.length} serviços solicitados!` : 'Nova solicitação!'}
         </h2>
         <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 20 }}>
           Uma cliente está esperando por você
         </p>
 
-        {/* Info da cliente */}
-        <div style={{ background: '#F4F3F1', borderRadius: 14, padding: '16px', marginBottom: 20, textAlign: 'left' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(212,23,138,.3), rgba(232,93,4,.2))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#1B2A4A', flexShrink: 0 }}>
+        {/* Info da cliente + serviços */}
+        <div style={{ background: '#F4F3F1', borderRadius: 14, padding: '14px 16px', marginBottom: 20, textAlign: 'left' }}>
+          {/* Cliente */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: servicos.length > 1 ? 12 : 0 }}>
+            <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(212,23,138,.3), rgba(232,93,4,.2))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: '#1B2A4A', flexShrink: 0 }}>
               {proposta.cliente?.nome?.[0]?.toUpperCase()}
             </div>
             <div>
               <div style={{ fontSize: 16, fontWeight: 700, color: '#1B2A4A' }}>{proposta.cliente?.nome}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                {info && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20, background: info.bg }}>
-                    <info.Icon size={13} color={info.color} />
-                    <span style={{ fontSize: 13, fontWeight: 600, color: info.color }}>
-                      {proposta.servicoNome || info.label}
-                    </span>
-                  </div>
-                )}
-                <span style={{ fontSize: 12, color: '#9CA3AF' }}>Comanda #{proposta.numeroComanda}</span>
-                {proposta.servicoPreco != null && (
-                  <span style={{ fontSize: 14, fontWeight: 700, color: '#D4178A' }}>
-                    R$ {Number(proposta.servicoPreco).toFixed(2).replace('.', ',')}
-                  </span>
-                )}
+              <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>
+                Comanda #{proposta.numeroComanda} · {info?.label}
               </div>
             </div>
           </div>
+
+          {/* Lista de serviços */}
+          {servicos.map((s, i) => {
+            const sInfo = SERVICE_INFO[s.tipoServico];
+            return (
+              <div key={s.id || i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderTop: i === 0 && servicos.length > 1 ? '1px solid rgba(0,0,0,.08)' : 'none' }}>
+                {sInfo && (
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: sInfo.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <sInfo.Icon size={13} color={sInfo.color} />
+                  </div>
+                )}
+                <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: '#1B2A4A' }}>{s.servicoNome || sInfo?.label}</span>
+                {s.servicoPreco != null && (
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#D4178A' }}>
+                    R$ {Number(s.servicoPreco).toFixed(2).replace('.', ',')}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Total */}
+          {servicos.length > 1 && totalPreco > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid rgba(0,0,0,.08)', marginTop: 4 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#6B7280' }}>Total</span>
+              <span style={{ fontSize: 15, fontWeight: 800, color: '#D4178A', fontFamily: "'Poppins', sans-serif" }}>
+                R$ {totalPreco.toFixed(2).replace('.', ',')}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Countdown */}

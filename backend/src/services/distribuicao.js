@@ -9,7 +9,7 @@ const rejeicoesPorAtendimento = new Map();
 
 /**
  * Roda a distribuição para todos os atendimentos AGUARDANDO.
- * Mantém um Set local para evitar propor dois serviços para a mesma funcionária na mesma rodada.
+ * Agrupa por cliente+comanda+tipoServico para evitar propostas duplicadas do mesmo grupo.
  */
 async function rodarDistribuicao(salaoId, io) {
   const atendimentos = await prisma.atendimento.findMany({
@@ -19,26 +19,30 @@ async function rodarDistribuicao(salaoId, io) {
   });
 
   const funcionariasEmProposta = new Set();
+  // Evita processar o mesmo grupo (comanda+tipoServico) mais de uma vez por rodada
+  const gruposProcessados = new Set();
 
   for (const atendimento of atendimentos) {
+    const chave = `${atendimento.clienteId}_${atendimento.numeroComanda}_${atendimento.tipoServico}`;
+    if (gruposProcessados.has(chave)) continue;
+    gruposProcessados.add(chave);
     await tentarProporAtendimento(atendimento, salaoId, io, funcionariasEmProposta);
   }
 }
 
 /**
- * Encontra a 1ª funcionária disponível na fila e envia uma proposta.
- * funcionariasEmProposta: Set de IDs já propostos nesta rodada (evita propor 2 serviços à mesma pessoa).
+ * Encontra a 1ª funcionária disponível e envia uma proposta agrupada.
+ * Todos os serviços da mesma comanda+categoria vão na mesma proposta.
  */
 async function tentarProporAtendimento(atendimento, salaoId, io, funcionariasEmProposta = new Set()) {
   try {
     let funcionariaId = null;
-    let atendimentoComDados = null;
+    let propostaAgrupada = null;
 
     await prisma.$transaction(async (tx) => {
       const atual = await tx.atendimento.findUnique({ where: { id: atendimento.id } });
       if (!atual || atual.status !== 'AGUARDANDO') return;
 
-      // Pula funcionárias que já rejeitaram este atendimento OU que já receberam proposta nesta rodada
       const jáRejeitaram = [...(rejeicoesPorAtendimento.get(atendimento.id) || [])];
       const excluir = [...new Set([...jáRejeitaram, ...funcionariasEmProposta])];
 
@@ -52,37 +56,52 @@ async function tentarProporAtendimento(atendimento, salaoId, io, funcionariasEmP
         include: { funcionaria: true },
       });
 
-      if (!entradaFila) return; // Todas rejeitaram ou fila vazia — aguarda nova entrada
+      if (!entradaFila) return;
       if (!['ONLINE', 'AUSENTE'].includes(entradaFila.funcionaria.status)) return;
 
       funcionariaId = entradaFila.funcionariaId;
 
-      // Muda para PENDENTE_ACEITE para bloquear nova proposta simultânea
-      atendimentoComDados = await tx.atendimento.update({
-        where: { id: atendimento.id },
-        data: { status: 'PENDENTE_ACEITE', propostaParaId: funcionariaId },
+      // Busca TODOS os AGUARDANDO da mesma comanda+tipoServico (mesma cliente)
+      const grupo = await tx.atendimento.findMany({
+        where: {
+          salaoId,
+          clienteId: atual.clienteId,
+          numeroComanda: atual.numeroComanda,
+          tipoServico: atual.tipoServico,
+          status: 'AGUARDANDO',
+        },
         include: { cliente: true },
+        orderBy: { createdAt: 'asc' },
       });
+
+      if (!grupo.length) return;
+
+      // Define todos como PENDENTE_ACEITE com a mesma funcionária
+      await tx.atendimento.updateMany({
+        where: { id: { in: grupo.map(a => a.id) } },
+        data: { status: 'PENDENTE_ACEITE', propostaParaId: funcionariaId },
+      });
+
+      // Proposta agrupa todos; primary = mais antigo (usado para timeout/rejeições)
+      propostaAgrupada = { ...grupo[0], servicosAgrupados: grupo };
     });
 
-    if (!funcionariaId || !atendimentoComDados) return;
+    if (!funcionariaId || !propostaAgrupada) return;
 
-    // Marca como proposta enviada nesta rodada para evitar propor outro serviço à mesma pessoa
     funcionariasEmProposta.add(funcionariaId);
 
-    // Emite proposta para a funcionária
     setImmediate(() => {
       if (io) {
-        io.to(`funcionaria:${funcionariaId}`).emit('proposta_atendimento', atendimentoComDados);
+        io.to(`funcionaria:${funcionariaId}`).emit('proposta_atendimento', propostaAgrupada);
       }
     });
 
-    // Timeout: se não responder em 10s → recusa automática
+    // Timeout rastreado pelo primary ID
     const timer = setTimeout(() => {
-      recusarProposta(atendimentoComDados.id, funcionariaId, salaoId, io, true);
+      recusarProposta(propostaAgrupada.id, funcionariaId, salaoId, io, true);
     }, TIMEOUT_PROPOSTA_MS);
 
-    timeoutsPendentes.set(atendimentoComDados.id, timer);
+    timeoutsPendentes.set(propostaAgrupada.id, timer);
 
   } catch (err) {
     console.error('[distribuicao] Erro ao propor atendimento:', err.message);
@@ -90,50 +109,56 @@ async function tentarProporAtendimento(atendimento, salaoId, io, funcionariasEmP
 }
 
 /**
- * Funcionária ACEITA a proposta.
+ * Funcionária ACEITA a proposta — aceita TODOS os atendimentos do grupo.
  */
 async function aceitarProposta(atendimentoId, funcionariaId, salaoId, io) {
-  // Cancela o timeout
   const timer = timeoutsPendentes.get(atendimentoId);
   if (timer) { clearTimeout(timer); timeoutsPendentes.delete(atendimentoId); }
 
   try {
     let atendimentoAtualizado = null;
+    let idsGrupo = [];
 
     await prisma.$transaction(async (tx) => {
       const atend = await tx.atendimento.findUnique({ where: { id: atendimentoId } });
       if (!atend || atend.status !== 'PENDENTE_ACEITE') return;
       if (atend.propostaParaId !== funcionariaId) return;
 
-      // Atualiza status da funcionária atomicamente
       const { count } = await tx.funcionaria.updateMany({
         where: { id: funcionariaId, status: { in: ['ONLINE', 'AUSENTE'] } },
         data: { status: 'EM_ATENDIMENTO' },
       });
       if (count === 0) return;
 
-      // Remove de todas as filas
       await tx.filaEntrada.deleteMany({ where: { funcionariaId } });
 
-      // Confirma o atendimento
-      atendimentoAtualizado = await tx.atendimento.update({
+      // Busca todos do grupo (mesma comanda+tipoServico com proposta para esta funcionária)
+      const grupo = await tx.atendimento.findMany({
+        where: {
+          salaoId,
+          clienteId: atend.clienteId,
+          numeroComanda: atend.numeroComanda,
+          tipoServico: atend.tipoServico,
+          status: 'PENDENTE_ACEITE',
+          propostaParaId: funcionariaId,
+        },
+      });
+      idsGrupo = grupo.map(a => a.id);
+
+      // Confirma TODOS
+      await tx.atendimento.updateMany({
+        where: { id: { in: idsGrupo } },
+        data: { funcionariaId, status: 'EM_ATENDIMENTO', iniciadoEm: new Date(), propostaParaId: null },
+      });
+
+      atendimentoAtualizado = await tx.atendimento.findUnique({
         where: { id: atendimentoId },
-        data: {
-          funcionariaId,
-          status: 'EM_ATENDIMENTO',
-          iniciadoEm: new Date(),
-          propostaParaId: null,
-        },
-        include: {
-          cliente: true,
-          funcionaria: { include: { usuario: true } },
-        },
+        include: { cliente: true, funcionaria: { include: { usuario: true } } },
       });
     });
 
     if (atendimentoAtualizado) {
-      // Limpa rejeições — atendimento foi aceito
-      rejeicoesPorAtendimento.delete(atendimentoId);
+      idsGrupo.forEach(id => rejeicoesPorAtendimento.delete(id));
 
       setImmediate(() => {
         if (!io) return;
@@ -148,52 +173,48 @@ async function aceitarProposta(atendimentoId, funcionariaId, salaoId, io) {
 }
 
 /**
- * Funcionária RECUSA a proposta (ou timeout).
+ * Funcionária RECUSA a proposta — recusa TODOS os atendimentos do grupo.
  */
 async function recusarProposta(atendimentoId, funcionariaId, salaoId, io, automatico = false) {
-  // Cancela o timeout se chamado manualmente
   const timer = timeoutsPendentes.get(atendimentoId);
   if (timer) { clearTimeout(timer); timeoutsPendentes.delete(atendimentoId); }
 
   try {
-    let especialidade = null;
-
     await prisma.$transaction(async (tx) => {
       const atend = await tx.atendimento.findUnique({ where: { id: atendimentoId } });
       if (!atend || atend.status !== 'PENDENTE_ACEITE') return;
       if (atend.propostaParaId !== funcionariaId) return;
 
-      especialidade = atend.tipoServico;
-
-      // Registra a rejeição para evitar loop
+      // Registra rejeição no primary para evitar loop
       const rejeitados = rejeicoesPorAtendimento.get(atendimentoId) || new Set();
       rejeitados.add(funcionariaId);
       rejeicoesPorAtendimento.set(atendimentoId, rejeitados);
 
-      // Volta o atendimento para a fila
-      await tx.atendimento.update({
-        where: { id: atendimentoId },
+      // Volta TODO o grupo para AGUARDANDO
+      await tx.atendimento.updateMany({
+        where: {
+          salaoId,
+          clienteId: atend.clienteId,
+          numeroComanda: atend.numeroComanda,
+          tipoServico: atend.tipoServico,
+          status: 'PENDENTE_ACEITE',
+          propostaParaId: funcionariaId,
+        },
         data: { status: 'AGUARDANDO', propostaParaId: null },
       });
 
-      // Move funcionária para o final de todas as suas filas
+      // Move funcionária para o final da fila
       const entradas = await tx.filaEntrada.findMany({ where: { funcionariaId } });
       await tx.filaEntrada.deleteMany({ where: { funcionariaId } });
-      // Re-insere com timestamp atual (vai para o final do FIFO)
       if (entradas.length > 0) {
         await tx.filaEntrada.createMany({
-          data: entradas.map(e => ({
-            funcionariaId: e.funcionariaId,
-            salaoId: e.salaoId,
-            especialidade: e.especialidade,
-          })),
+          data: entradas.map(e => ({ funcionariaId: e.funcionariaId, salaoId: e.salaoId, especialidade: e.especialidade })),
         });
       }
     });
 
-    console.log(`[distribuicao] Proposta ${automatico ? 'expirada' : 'recusada'} — atendimento ${atendimentoId}`);
+    console.log(`[distribuicao] Proposta ${automatico ? 'expirada' : 'recusada'} — grupo do atendimento ${atendimentoId}`);
 
-    // Redistribui para a próxima funcionária
     await rodarDistribuicao(salaoId, io);
     await emitirEstadoCompleto(salaoId, io);
 
@@ -260,33 +281,52 @@ function resetarRejeicoesPorEspecialidade(salaoId, especialidade) {
  */
 async function proporParaFuncionaria(atendimentoId, funcionariaId, salaoId, io) {
   try {
-    // Cancela proposta anterior se houver
     const timerAnterior = timeoutsPendentes.get(atendimentoId);
     if (timerAnterior) { clearTimeout(timerAnterior); timeoutsPendentes.delete(atendimentoId); }
 
-    let atendimentoComDados = null;
+    let propostaAgrupada = null;
 
     await prisma.$transaction(async (tx) => {
       const atual = await tx.atendimento.findUnique({ where: { id: atendimentoId } });
       if (!atual || !['AGUARDANDO', 'PENDENTE_ACEITE'].includes(atual.status)) return;
 
-      atendimentoComDados = await tx.atendimento.update({
-        where: { id: atendimentoId },
-        data: { status: 'PENDENTE_ACEITE', propostaParaId: funcionariaId },
+      // Busca todo o grupo
+      const grupo = await tx.atendimento.findMany({
+        where: {
+          salaoId,
+          clienteId: atual.clienteId,
+          numeroComanda: atual.numeroComanda,
+          tipoServico: atual.tipoServico,
+          status: { in: ['AGUARDANDO', 'PENDENTE_ACEITE'] },
+        },
         include: { cliente: true },
+        orderBy: { createdAt: 'asc' },
       });
+
+      // Cancela timeouts anteriores de outros membros do grupo
+      grupo.forEach(a => {
+        const t = timeoutsPendentes.get(a.id);
+        if (t) { clearTimeout(t); timeoutsPendentes.delete(a.id); }
+      });
+
+      await tx.atendimento.updateMany({
+        where: { id: { in: grupo.map(a => a.id) } },
+        data: { status: 'PENDENTE_ACEITE', propostaParaId: funcionariaId },
+      });
+
+      propostaAgrupada = { ...grupo[0], servicosAgrupados: grupo };
     });
 
-    if (!atendimentoComDados) return;
+    if (!propostaAgrupada) return;
 
     if (io) {
-      io.to(`funcionaria:${funcionariaId}`).emit('proposta_atendimento', atendimentoComDados);
+      io.to(`funcionaria:${funcionariaId}`).emit('proposta_atendimento', propostaAgrupada);
     }
 
     const timer = setTimeout(() => {
-      recusarProposta(atendimentoComDados.id, funcionariaId, salaoId, io, true);
+      recusarProposta(propostaAgrupada.id, funcionariaId, salaoId, io, true);
     }, TIMEOUT_PROPOSTA_MS);
-    timeoutsPendentes.set(atendimentoComDados.id, timer);
+    timeoutsPendentes.set(propostaAgrupada.id, timer);
 
     await emitirEstadoCompleto(salaoId, io);
   } catch (err) {
