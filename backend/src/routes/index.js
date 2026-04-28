@@ -8,6 +8,7 @@ const saloesCtrl = require('../controllers/saloesController');
 const funcionariasCtrl = require('../controllers/funcionariasController');
 const clientesCtrl = require('../controllers/clientesController');
 const atendimentosCtrl = require('../controllers/atendimentosController');
+const servicosCtrl     = require('../controllers/servicosController');
 
 // Auth
 router.post('/auth/login', authCtrl.login);
@@ -42,6 +43,11 @@ router.get('/clientes/buscar', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'FU
 router.post('/clientes', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, clientesCtrl.criar);
 router.put('/clientes/:id', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, clientesCtrl.atualizar);
 router.get('/clientes/:id/historico', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, clientesCtrl.historico);
+
+// Serviços (catálogo)
+router.get('/servicos',      autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, servicosCtrl.listar);
+router.post('/servicos',     autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, servicosCtrl.criar);
+router.patch('/servicos/:id',autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, servicosCtrl.atualizar);
 
 // Atendimentos
 router.post('/atendimentos/comanda', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, atendimentosCtrl.criarComanda);

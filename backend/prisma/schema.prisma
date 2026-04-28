@@ -20,6 +20,7 @@ model Salao {
   funcionarias  Funcionaria[]
   atendimentos  Atendimento[]
   filaEntradas  FilaEntrada[]
+  servicoItens  ServicoItem[]
 
   @@map("saloes")
 }
@@ -148,6 +149,21 @@ model FilaEntrada {
 
   @@unique([funcionariaId, especialidade])
   @@map("fila_entradas")
+}
+
+model ServicoItem {
+  id         String        @id @default(uuid())
+  nome       String
+  grupo      String
+  categoria  Especialidade
+  preco      Float
+  ativo      Boolean       @default(true)
+  salaoId    String        @map("salao_id")
+  createdAt  DateTime      @default(now()) @map("created_at")
+
+  salao Salao @relation(fields: [salaoId], references: [id])
+
+  @@map("servico_itens")
 }
 
 model ContadorComanda {
