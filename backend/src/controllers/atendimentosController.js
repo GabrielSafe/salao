@@ -111,16 +111,27 @@ async function finalizar(req, res) {
 
   if (!atendimento) return res.status(404).json({ erro: 'Atendimento não encontrado ou não pertence a você' });
 
-  await prisma.$transaction([
+  // Verifica se há outros serviços ativos para essa funcionária (grupo)
+  const outrosAtivos = await prisma.atendimento.count({
+    where: { funcionariaId: funcionaria.id, salaoId, status: 'EM_ATENDIMENTO', id: { not: id } },
+  });
+
+  const ops = [
     prisma.atendimento.update({
       where: { id },
       data: { status: 'FINALIZADO', finalizadoEm: new Date() },
     }),
-    prisma.funcionaria.update({
+  ];
+
+  // Só volta para ONLINE quando não há mais serviços ativos
+  if (outrosAtivos === 0) {
+    ops.push(prisma.funcionaria.update({
       where: { id: funcionaria.id },
       data: { status: 'ONLINE' },
-    }),
-  ]);
+    }));
+  }
+
+  await prisma.$transaction(ops);
 
   const io = req.app.get('io');
   await rodarDistribuicao(salaoId, io);
@@ -139,6 +150,14 @@ async function finalizarAdmin(req, res) {
 
   if (!atendimento) return res.status(404).json({ erro: 'Atendimento não encontrado' });
 
+  // Verifica se há outros serviços ativos para essa funcionária antes de voltar para ONLINE
+  let outrosAtivos = 0;
+  if (atendimento.funcionariaId) {
+    outrosAtivos = await prisma.atendimento.count({
+      where: { funcionariaId: atendimento.funcionariaId, salaoId, status: 'EM_ATENDIMENTO', id: { not: id } },
+    });
+  }
+
   const ops = [
     prisma.atendimento.update({
       where: { id },
@@ -146,8 +165,8 @@ async function finalizarAdmin(req, res) {
     }),
   ];
 
-  // Se havia funcionária atribuída, volta ela para ONLINE
-  if (atendimento.funcionariaId) {
+  // Só volta para ONLINE quando não há mais serviços ativos
+  if (atendimento.funcionariaId && outrosAtivos === 0) {
     ops.push(
       prisma.funcionaria.update({
         where: { id: atendimento.funcionariaId },
