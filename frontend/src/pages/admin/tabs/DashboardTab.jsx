@@ -50,6 +50,89 @@ function agruparComandas(atendimentos) {
   return Object.values(grupos).sort((a, b) => a.numero - b.numero);
 }
 
+// ── Sparkline SVG ─────────────────────────────────────────────────────────
+function Sparkline({ data, color = '#f59e0b', width = 300, height = 80 }) {
+  if (!data || data.length < 2) {
+    return <div style={{ height }} />;
+  }
+  const max = Math.max(...data, 1);
+  const min = Math.min(...data);
+  const range = max - min || max || 1;
+  const pad = 6;
+  const pts = data.map((v, i) => {
+    const x = pad + (i / (data.length - 1)) * (width - pad * 2);
+    const y = pad + ((max - v) / range) * (height - pad * 2.5);
+    return [x, y];
+  });
+  const line = pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'} ${x} ${y}`).join(' ');
+  const area = `${line} L ${pts[pts.length - 1][0]} ${height} L ${pts[0][0]} ${height} Z`;
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" style={{ width: '100%', height }}>
+      <defs>
+        <linearGradient id="spkGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={area} fill="url(#spkGrad)" />
+      <path d={line} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      {pts.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r="3.5" fill={color} />
+      ))}
+    </svg>
+  );
+}
+
+// ── Faturamento Card (estilo referência) ───────────────────────────────────
+function FaturamentoCard({ atendimentos }) {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  const finalizadosHoje = atendimentos.filter(a =>
+    a.status === 'FINALIZADO' && a.servicoPreco != null && new Date(a.createdAt) >= hoje
+  );
+
+  const total = finalizadosHoje.reduce((s, a) => s + (a.servicoPreco || 0), 0);
+  const totalFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
+
+  // Sparkline: 8 pontos por hora (horas 8h a 21h em blocos de 2h)
+  const slots = [8, 10, 12, 14, 16, 18, 20, 22];
+  const sparkData = slots.map(h => {
+    return finalizadosHoje
+      .filter(a => {
+        const hr = new Date(a.createdAt).getHours();
+        return hr >= h && hr < h + 2;
+      })
+      .reduce((s, a) => s + (a.servicoPreco || 0), 0);
+  });
+
+  const qtd = finalizadosHoje.length;
+
+  return (
+    <div style={{
+      background: '#ffffff',
+      border: '1px solid #e5e7eb',
+      borderRadius: '0.375rem',
+      boxShadow: '0px 4px 8px -1px rgba(0,0,0,.1)',
+      overflow: 'hidden',
+      fontFamily: 'Inter, sans-serif',
+    }}>
+      <div style={{ padding: '24px 24px 16px' }}>
+        <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 6, fontWeight: 400 }}>
+          Faturamento do Dia
+        </div>
+        <div style={{ fontSize: 36, fontWeight: 700, color: '#262626', lineHeight: 1, letterSpacing: '-0.02em', marginBottom: 6 }}>
+          {totalFmt}
+        </div>
+        <div style={{ fontSize: 13, color: '#6b7280' }}>
+          {qtd} serviço{qtd !== 1 ? 's' : ''} finalizado{qtd !== 1 ? 's' : ''} hoje
+        </div>
+      </div>
+      <Sparkline data={sparkData} />
+    </div>
+  );
+}
+
 // ── KPI Card ──────────────────────────────────────────────────────────────
 function KpiCard({ label, valor, sub, Icon, color, bg }) {
   return (
@@ -448,6 +531,11 @@ export default function DashboardTab({ estado: estadoProps }) {
           </h1>
           <p style={{ fontSize: 13, color: dark.colorSub, marginTop: 4 }}>Acompanhe o salão em tempo real</p>
         </div>
+      </div>
+
+      {/* Faturamento do Dia */}
+      <div style={{ marginBottom: 20, maxWidth: 420 }}>
+        <FaturamentoCard atendimentos={estado.atendimentos} />
       </div>
 
       {/* KPIs */}
