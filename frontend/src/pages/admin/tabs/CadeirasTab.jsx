@@ -1,7 +1,164 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Armchair, Users, DollarSign, Timer, TrendingUp, Edit2, Check, X, Loader2, BarChart3, Calendar } from 'lucide-react';
+import { Armchair, Users, DollarSign, Timer, TrendingUp, Edit2, Check, X, Loader2, BarChart3, Calendar, Scissors, Sparkles, Hand, Leaf, Eye, ShieldCheck, Clock, ChevronRight } from 'lucide-react';
 import api from '../../../services/api';
 import { useThemeCtx } from '../../../contexts/ThemeContext.jsx';
+
+const SERVICE_INFO = {
+  CABELO:      { label: 'Cabelo',      Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.12)' },
+  MAQUIAGEM:   { label: 'Maquiagem',   Icon: Sparkles, color: '#F472B6', bg: 'rgba(236,72,153,.12)' },
+  MAO:         { label: 'Mão',         Icon: Hand,     color: '#FB923C', bg: 'rgba(251,146,60,.12)'  },
+  PE:          { label: 'Pé',          Icon: Leaf,     color: '#4ADE80', bg: 'rgba(34,197,94,.12)'   },
+  SOBRANCELHA: { label: 'Sobrancelha', Icon: Eye,      color: '#38BDF8', bg: 'rgba(56,189,248,.12)'  },
+};
+
+const elapsed = (d) => { const m = Math.floor((Date.now() - new Date(d)) / 60000); return m < 1 ? '< 1 min' : m < 60 ? `${m} min` : `${Math.floor(m/60)}h ${m%60}min`; };
+
+// ── Modal de comanda da cadeira ────────────────────────────────────────────
+function ModalComanda({ cadeira, onClose }) {
+  const T = useT();
+  const [atendimentos, setAtendimentos] = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [finalizando, setFinalizando]   = useState(null);
+  const [msg, setMsg]                   = useState('');
+
+  const numero = cadeira.ocupacao?.numeroComanda;
+
+  useEffect(() => {
+    if (!numero) return;
+    api.get(`/atendimentos/comanda/${numero}`)
+      .then(r => setAtendimentos(r.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [numero]);
+
+  async function handleFinalizar(id) {
+    setFinalizando(id);
+    try {
+      await api.patch(`/atendimentos/${id}/finalizar-admin`);
+      setAtendimentos(prev => prev.map(a => a.id === id ? { ...a, status: 'FINALIZADO', finalizadoEm: new Date().toISOString() } : a));
+      setMsg('Serviço finalizado pelo admin.');
+      setTimeout(() => setMsg(''), 3000);
+    } catch (err) { setMsg(err.response?.data?.erro || 'Erro'); }
+    finally { setFinalizando(null); }
+  }
+
+  const statusInfo = {
+    AGUARDANDO:      { text: 'Aguardando',       color: '#d97706', bg: 'rgba(217,119,6,.1)'  },
+    PENDENTE_ACEITE: { text: 'Aguardando aceite', color: '#d97706', bg: 'rgba(217,119,6,.1)'  },
+    EM_ATENDIMENTO:  { text: 'Em atendimento',   color: '#10b981', bg: 'rgba(16,185,129,.1)'  },
+    FINALIZADO:      { text: 'Concluído',         color: '#6b7280', bg: 'rgba(107,114,128,.1)' },
+  };
+
+  const totalValor = atendimentos.reduce((s, a) => s + (a.servicoPreco || 0), 0);
+  const ativos     = atendimentos.filter(a => ['AGUARDANDO','PENDENTE_ACEITE','EM_ATENDIMENTO'].includes(a.status)).length;
+  const cliente    = atendimentos[0]?.cliente;
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, animation: 'fadeIn .15s ease' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{ background: T.card, borderRadius: '0.5rem', width: '100%', maxWidth: 520, maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,.35)', animation: 'slideUp .2s ease', overflow: 'hidden' }}>
+
+        {/* Header */}
+        <div style={{ padding: '18px 20px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 14 }}>
+          {/* Número da cadeira */}
+          <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(245,158,11,.15)', border: '2px solid #f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#f59e0b', flexShrink: 0 }}>
+            {cadeira.numero}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: T.fg }}>
+              {cadeira.nome || `Cadeira ${cadeira.numero}`}
+              <span style={{ fontSize: 12, color: '#f59e0b', marginLeft: 8, fontWeight: 600 }}>Comanda #{numero}</span>
+            </div>
+            {cliente && (
+              <div style={{ fontSize: 13, color: T.muted, marginTop: 2 }}>
+                {cliente.nome} {cadeira.ocupacao?.desde && <span>· há {elapsed(cadeira.ocupacao.desde)}</span>}
+              </div>
+            )}
+          </div>
+          <button onClick={onClose} style={{ background: T.bg2, border: `1px solid ${T.border}`, borderRadius: 8, padding: 7, cursor: 'pointer', color: T.muted, display: 'flex' }}>
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Corpo */}
+        <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin' }}>
+          {loading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px', color: T.muted }}>
+              <Loader2 size={20} style={{ animation: 'spin .7s linear infinite', marginRight: 8 }} /> Carregando...
+            </div>
+          ) : (
+            <>
+              {msg && (
+                <div style={{ margin: '12px 20px 0', padding: '8px 14px', borderRadius: 8, background: msg.includes('Erro') ? 'rgba(239,68,68,.08)' : 'rgba(16,185,129,.08)', color: msg.includes('Erro') ? '#ef4444' : '#10b981', fontSize: 13, border: `1px solid ${msg.includes('Erro') ? 'rgba(239,68,68,.2)' : 'rgba(16,185,129,.2)'}` }}>
+                  {msg}
+                </div>
+              )}
+
+              {atendimentos.map((a, i) => {
+                const info  = SERVICE_INFO[a.tipoServico];
+                const st    = statusInfo[a.status] || statusInfo.AGUARDANDO;
+                const isLast = i === atendimentos.length - 1;
+                return (
+                  <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: isLast ? 'none' : `1px solid ${T.border}`, opacity: a.status === 'FINALIZADO' ? 0.55 : 1 }}>
+                    {info && (
+                      <div style={{ width: 38, height: 38, borderRadius: 10, background: info.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <info.Icon size={17} color={info.color} />
+                      </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: T.fg }}>{a.servicoNome || info?.label}</div>
+                      {a.servicoNome && <div style={{ fontSize: 11, color: T.muted }}>{info?.label}</div>}
+                      {a.funcionaria && (
+                        <div style={{ fontSize: 11, color: a.status === 'EM_ATENDIMENTO' ? '#10b981' : T.muted, marginTop: 2 }}>
+                          {a.status === 'EM_ATENDIMENTO' ? '↳' : 'por'} {a.funcionaria.usuario?.nome}
+                          {a.iniciadoEm && <span style={{ color: T.sub }}> · {elapsed(a.iniciadoEm)}</span>}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5, flexShrink: 0 }}>
+                      {a.servicoPreco != null && (
+                        <span style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b' }}>R$ {Number(a.servicoPreco).toFixed(2).replace('.', ',')}</span>
+                      )}
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: st.bg, color: st.color }}>{st.text}</span>
+                      {['AGUARDANDO','PENDENTE_ACEITE','EM_ATENDIMENTO'].includes(a.status) && (
+                        <button onClick={() => handleFinalizar(a.id)} disabled={finalizando === a.id}
+                          style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 5, background: 'rgba(239,68,68,.07)', color: '#ef4444', border: '1px solid rgba(239,68,68,.18)', cursor: 'pointer' }}>
+                          {finalizando === a.id ? <Loader2 size={9} style={{ animation: 'spin .7s linear infinite' }} /> : <ShieldCheck size={9} />} Finalizar
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+
+        {/* Footer com total */}
+        {!loading && (
+          <div style={{ padding: '14px 20px', borderTop: `1px solid ${T.border}`, background: T.bg2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ fontSize: 12, color: T.muted }}>{atendimentos.length} serviço{atendimentos.length !== 1 ? 's' : ''} · {ativos} ativo{ativos !== 1 ? 's' : ''}</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 11, color: T.muted }}>Total estimado</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: '#f59e0b', fontFamily: 'Poppins, sans-serif', letterSpacing: '-0.3px' }}>
+                {fmt(totalValor)}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(16px) } to { opacity: 1; transform: none } }
+        @keyframes spin    { to { transform: rotate(360deg) } }
+      `}</style>
+    </div>
+  );
+}
 
 const fmt = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 const fmtMin = (m) => m == null ? '—' : m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${m % 60 > 0 ? ` ${m % 60}min` : ''}`;
@@ -20,7 +177,7 @@ function useT() {
 }
 
 // ── Card de cadeira ────────────────────────────────────────────────────────
-function CadeiraCard({ cadeira, onRename }) {
+function CadeiraCard({ cadeira, onRename, onAbrirComanda }) {
   const T = useT();
   const { isDark } = useThemeCtx();
   const [editando, setEditando] = useState(false);
@@ -75,14 +232,21 @@ function CadeiraCard({ cadeira, onRename }) {
         </div>
       )}
 
-      {/* Info ocupação */}
+      {/* Info ocupação — clicável quando ocupada */}
       {cadeira.ocupada && cadeira.ocupacao ? (
-        <div style={{ padding: '8px', background: 'rgba(245,158,11,.08)', borderRadius: 6, border: '1px solid rgba(245,158,11,.2)' }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#d97706', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {cadeira.ocupacao.clienteNome}
+        <div onClick={() => onAbrirComanda(cadeira)}
+          style={{ padding: '8px 10px', background: 'rgba(245,158,11,.08)', borderRadius: 6, border: '1px solid rgba(245,158,11,.2)', cursor: 'pointer', transition: 'all .15s' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(245,158,11,.16)'; e.currentTarget.style.borderColor = 'rgba(245,158,11,.4)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(245,158,11,.08)'; e.currentTarget.style.borderColor = 'rgba(245,158,11,.2)'; }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#d97706', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+              {cadeira.ocupacao.clienteNome}
+            </div>
+            <ChevronRight size={13} color="#d97706" style={{ flexShrink: 0 }} />
           </div>
           <div style={{ fontSize: 11, color: T.muted, marginTop: 2 }}>
-            Comanda #{cadeira.ocupacao.numeroComanda}
+            Comanda #{cadeira.ocupacao.numeroComanda} · {elapsed(cadeira.ocupacao.desde)}
           </div>
         </div>
       ) : (
@@ -100,8 +264,9 @@ function CadeiraCard({ cadeira, onRename }) {
 export default function CadeirasTab() {
   const T = useT();
   const { isDark } = useThemeCtx();
-  const [cadeiras, setCadeiras]   = useState([]);
-  const [relatorio, setRelatorio] = useState([]);
+  const [cadeiras, setCadeiras]       = useState([]);
+  const [relatorio, setRelatorio]     = useState([]);
+  const [modalCadeira, setModalCadeira] = useState(null);
   const [loading, setLoading]     = useState(true);
   const [loadingRel, setLoadingRel] = useState(false);
   const [dataInicio, setDataInicio] = useState(() => new Date().toISOString().split('T')[0]);
@@ -216,7 +381,7 @@ export default function CadeirasTab() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
               {cadeiras.map(c => (
-                <CadeiraCard key={c.id} cadeira={c} onRename={handleRename} />
+                <CadeiraCard key={c.id} cadeira={c} onRename={handleRename} onAbrirComanda={setModalCadeira} />
               ))}
             </div>
           </div>
@@ -327,6 +492,11 @@ export default function CadeirasTab() {
             </>
           )}
         </>
+      )}
+
+      {/* Modal de comanda */}
+      {modalCadeira && (
+        <ModalComanda cadeira={modalCadeira} onClose={() => setModalCadeira(null)} />
       )}
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
