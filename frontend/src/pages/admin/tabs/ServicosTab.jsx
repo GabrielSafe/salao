@@ -177,8 +177,15 @@ export default function ServicosTab() {
   useEffect(() => { carregar(); }, [carregar]);
 
   async function handleSave(id, dados) {
-    const { data } = await api.patch(`/servicos/${id}`, dados);
-    setServicos(prev => prev.map(s => s.id === id ? data : s));
+    setErroToggle('');
+    try {
+      const { data } = await api.patch(`/servicos/${id}`, dados);
+      setServicos(prev => prev.map(s => s.id === id ? data : s));
+    } catch (err) {
+      const msg = err.response?.data?.erro;
+      if (msg) setErroToggle(msg);
+      throw err; // propaga para o ServicoRow mostrar erro inline
+    }
   }
 
   const [erroToggle, setErroToggle] = useState('');
