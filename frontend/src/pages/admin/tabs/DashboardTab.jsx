@@ -206,39 +206,54 @@ function ComandaRow({ grupo, estado }) {
 
   return (
     <div style={{ border: `1px solid ${T.border}`, borderRadius: T.radius, overflow: 'hidden', marginBottom: 6 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: T.card, cursor: 'pointer', transition: 'background .12s' }}
+      <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr 120px 80px 130px', gap: 12, alignItems: 'center', padding: '11px 20px', background: T.card, cursor: 'pointer', transition: 'background .12s', borderBottom: `1px solid ${T.border}` }}
         onClick={() => setAberto(!aberto)}
         onMouseEnter={e => e.currentTarget.style.background = T.bg}
         onMouseLeave={e => e.currentTarget.style.background = T.card}
       >
-        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(245,158,11,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#d97706', flexShrink: 0 }}>
-          {grupo.cliente?.nome?.[0]?.toUpperCase()}
-        </div>
-        <div style={{ minWidth: 100, flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: T.primary }}># {grupo.numero}</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: T.fg }}>{grupo.cliente?.nome}</span>
+        {/* Cliente */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(245,158,11,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#d97706', flexShrink: 0 }}>
+            {grupo.cliente?.nome?.[0]?.toUpperCase()}
           </div>
-          <div style={{ fontSize: 11, color: T.muted }}>{grupo.itens.length} serviço{grupo.itens.length > 1 ? 's' : ''} · {new Date(grupo.criadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: T.primary }}>#{grupo.numero}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: T.fg, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{grupo.cliente?.nome}</span>
+            </div>
+            <div style={{ fontSize: 10, color: T.muted }}>{grupo.itens.length} serviço{grupo.itens.length > 1 ? 's' : ''} · {new Date(grupo.criadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+          </div>
         </div>
-        <div style={{ flex: 1, display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+
+        {/* Serviços */}
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
           {grupo.itens.map(item => {
             const info = SERVICE_INFO[item.tipoServico];
             return info ? (
-              <span key={item.id} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: item.status === 'EM_ATENDIMENTO' ? info.bg : '#f3f4f6', color: item.status === 'EM_ATENDIMENTO' ? info.color : '#6b7280', fontWeight: 500 }}>
+              <span key={item.id} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 20, background: item.status === 'EM_ATENDIMENTO' ? info.bg : '#f3f4f6', color: item.status === 'EM_ATENDIMENTO' ? info.color : '#9ca3af', fontWeight: 500, whiteSpace: 'nowrap' }}>
                 {item.servicoNome || info.label}
               </span>
             ) : null;
           })}
         </div>
-        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: T.primary }}>
-            {fmt(grupo.itens.reduce((s, i) => s + (i.servicoPreco || 0), 0))}
-          </span>
-          <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: ativos > 0 ? 'rgba(16,185,129,.1)' : 'rgba(245,158,11,.1)', color: ativos > 0 ? '#10B981' : '#d97706' }}>
+
+        {/* Tempo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <Clock size={11} color={T.muted} />
+          <span style={{ fontSize: 12, color: T.muted }}>{tempoEspera(grupo.criadoEm)}</span>
+        </div>
+
+        {/* Total */}
+        <span style={{ fontSize: 13, fontWeight: 700, color: T.primary }}>
+          {fmt(grupo.itens.reduce((s, i) => s + (i.servicoPreco || 0), 0))}
+        </span>
+
+        {/* Status + chevron */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 20, background: ativos > 0 ? 'rgba(16,185,129,.1)' : 'rgba(245,158,11,.1)', color: ativos > 0 ? '#10B981' : '#d97706', whiteSpace: 'nowrap' }}>
             {ativos > 0 ? 'Em andamento' : 'Aguardando'}
           </span>
-          {aberto ? <ChevronUp size={14} color={T.muted} /> : <ChevronDown size={14} color={T.muted} />}
+          {aberto ? <ChevronUp size={13} color={T.muted} /> : <ChevronDown size={13} color={T.muted} />}
         </div>
       </div>
 
@@ -322,6 +337,176 @@ function ComandaRow({ grupo, estado }) {
         </div>
       )}
     </div>
+  );
+}
+
+// ── Filas Ativas expandível ────────────────────────────────────────────────
+function FilasAtivasCard({ atendimentos, totalAguardando, totalAtendendo }) {
+  const [expandido, setExpandido] = useState({});
+  const toggle = (s) => setExpandido(p => ({ ...p, [s]: !p[s] }));
+
+  return (
+    <Card style={{ overflow: 'hidden' }}>
+      <div style={{ padding: '16px 20px 10px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: T.fg }}>Filas Ativas</div>
+        <span style={{ fontSize: 11, color: T.primary, background: 'rgba(245,158,11,.1)', padding: '2px 8px', borderRadius: 10, fontWeight: 600 }}>
+          {totalAguardando + totalAtendendo} total
+        </span>
+      </div>
+      <div>
+        {SERVICES.map(s => {
+          const info  = SERVICE_INFO[s];
+          const itens = atendimentos.filter(a => a.tipoServico === s && ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'].includes(a.status));
+          if (!itens.length) return null;
+          const isExp = expandido[s];
+
+          // Agrupa por cliente
+          const porCliente = new Map();
+          itens.forEach(a => {
+            if (!porCliente.has(a.clienteId)) porCliente.set(a.clienteId, { ...a, qtd: 1 });
+            else porCliente.get(a.clienteId).qtd++;
+          });
+          const clientes = [...porCliente.values()];
+          const nEsp = itens.filter(i => ['AGUARDANDO', 'PENDENTE_ACEITE'].includes(i.status)).length;
+          const nAt  = itens.filter(i => i.status === 'EM_ATENDIMENTO').length;
+
+          return (
+            <div key={s}>
+              {/* Linha de serviço clicável */}
+              <div onClick={() => toggle(s)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 20px', cursor: 'pointer', background: isExp ? T.bg : 'transparent', borderBottom: `1px solid ${T.border}`, transition: 'background .12s' }}
+                onMouseEnter={e => e.currentTarget.style.background = T.bg}
+                onMouseLeave={e => { if (!isExp) e.currentTarget.style.background = 'transparent'; }}
+              >
+                <div style={{ width: 28, height: 28, borderRadius: 7, background: info.darkBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <info.Icon size={14} color={info.color} />
+                </div>
+                <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: T.fg }}>{info.label}</span>
+                <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+                  {nEsp > 0 && <span style={{ fontSize: 10, fontWeight: 700, color: '#d97706', background: 'rgba(217,119,6,.1)', padding: '2px 8px', borderRadius: 10 }}>{nEsp} esp.</span>}
+                  {nAt  > 0 && <span style={{ fontSize: 10, fontWeight: 700, color: '#10B981', background: 'rgba(16,185,129,.1)', padding: '2px 8px', borderRadius: 10 }}>{nAt} at.</span>}
+                  {isExp ? <ChevronUp size={13} color={T.muted} /> : <ChevronDown size={13} color={T.muted} />}
+                </div>
+              </div>
+
+              {/* Clientes expandidos */}
+              {isExp && (
+                <div style={{ background: T.bg, borderBottom: `1px solid ${T.border}` }}>
+                  {clientes.map((a, idx) => {
+                    const isAtivo = a.status === 'EM_ATENDIMENTO';
+                    const func    = a.funcionaria;
+                    return (
+                      <div key={a.clienteId} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 20px 8px 32px', borderBottom: idx < clientes.length - 1 ? `1px solid ${T.border}` : 'none' }}>
+                        {/* Posição */}
+                        <div style={{ width: 18, height: 18, borderRadius: '50%', background: isAtivo ? 'rgba(16,185,129,.15)' : 'rgba(217,119,6,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: isAtivo ? '#10B981' : '#d97706', flexShrink: 0 }}>
+                          {idx + 1}
+                        </div>
+                        {/* Avatar */}
+                        <div style={{ width: 26, height: 26, borderRadius: '50%', background: `${info.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: info.color, flexShrink: 0 }}>
+                          {a.cliente?.nome?.[0]?.toUpperCase()}
+                        </div>
+                        {/* Info */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: T.fg, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {a.cliente?.nome}
+                            {a.qtd > 1 && <span style={{ fontSize: 10, color: info.color, marginLeft: 6 }}>{a.qtd} serviços</span>}
+                          </div>
+                          <div style={{ fontSize: 10, color: T.muted, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {a.servicoNome || info.label}
+                            {func && <span style={{ color: '#10B981' }}> · {func.usuario?.nome}</span>}
+                          </div>
+                        </div>
+                        {/* Status + tempo */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, flexShrink: 0 }}>
+                          <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 6px', borderRadius: 8, background: isAtivo ? 'rgba(16,185,129,.1)' : 'rgba(217,119,6,.1)', color: isAtivo ? '#10B981' : '#d97706' }}>
+                            {isAtivo ? 'Atendendo' : 'Aguardando'}
+                          </span>
+                          <span style={{ fontSize: 10, color: T.muted }}>{tempoEspera(isAtivo ? (a.iniciadoEm || a.createdAt) : a.createdAt)}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {totalAguardando + totalAtendendo === 0 && (
+          <div style={{ padding: '24px 20px', textAlign: 'center', color: T.muted, fontSize: 13 }}>Nenhuma fila ativa no momento</div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+// ── Equipe com lista individual ────────────────────────────────────────────
+function EquipeCard({ funcionarias, atendimentos }) {
+  const atendendo   = funcionarias.filter(f => f.status === 'EM_ATENDIMENTO');
+  const disponiveis = funcionarias.filter(f => f.status === 'ONLINE');
+  const ausentes    = funcionarias.filter(f => f.status === 'AUSENTE');
+  const offline     = funcionarias.filter(f => f.status === 'OFFLINE');
+
+  const SC = { ONLINE: '#10B981', EM_ATENDIMENTO: '#f59e0b', AUSENTE: '#d97706', OFFLINE: '#9ca3af' };
+
+  function FuncRow({ f }) {
+    const atend   = atendimentos.find(a => a.funcionariaId === f.id && a.status === 'EM_ATENDIMENTO');
+    const svcInfo = atend ? SERVICE_INFO[atend.tipoServico] : null;
+    const sc      = SC[f.status] || '#9ca3af';
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', transition: 'background .12s' }}
+        onMouseEnter={e => e.currentTarget.style.background = T.bg}
+        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+      >
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: `${sc}18`, border: `2px solid ${sc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: sc }}>
+            {f.usuario?.nome?.[0]?.toUpperCase()}
+          </div>
+          <div style={{ position: 'absolute', bottom: 0, right: 0, width: 8, height: 8, borderRadius: '50%', background: sc, border: '1.5px solid #fff' }} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: f.status === 'OFFLINE' ? T.muted : T.fg, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {f.usuario?.nome}
+          </div>
+          <div style={{ fontSize: 10, color: svcInfo?.color || sc, marginTop: 1 }}>
+            {svcInfo ? svcInfo.label : (f.status === 'ONLINE' ? 'Disponível' : f.status === 'AUSENTE' ? 'Ausente' : f.status === 'EM_ATENDIMENTO' ? 'Em atendimento' : 'Offline')}
+          </div>
+        </div>
+        {atend && (
+          <span style={{ fontSize: 10, fontWeight: 700, color: '#f59e0b', background: 'rgba(245,158,11,.1)', padding: '2px 7px', borderRadius: 10, flexShrink: 0 }}>
+            {tempoAtend(atend.iniciadoEm || atend.createdAt)}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  const secoes = [
+    { label: 'ATENDENDO AGORA', list: atendendo,   color: '#f59e0b' },
+    { label: 'DISPONÍVEIS',     list: disponiveis, color: '#10B981' },
+    { label: 'AUSENTES',        list: ausentes,    color: '#d97706' },
+    { label: 'OFFLINE',         list: offline,     color: '#9ca3af' },
+  ].filter(s => s.list.length > 0);
+
+  return (
+    <Card style={{ overflow: 'hidden' }}>
+      <div style={{ padding: '16px 20px 10px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: T.fg }}>Equipe</div>
+        <span style={{ fontSize: 11, color: T.muted, background: T.bg, border: `1px solid ${T.border}`, padding: '2px 8px', borderRadius: 10 }}>{funcionarias.length} funcionárias</span>
+      </div>
+      <div style={{ overflowY: 'auto', maxHeight: 310, scrollbarWidth: 'thin' }}>
+        {secoes.length === 0 ? (
+          <div style={{ padding: '24px 20px', textAlign: 'center', color: T.muted, fontSize: 13 }}>Nenhuma funcionária cadastrada</div>
+        ) : (
+          secoes.map(({ label, list, color }) => (
+            <div key={label}>
+              <div style={{ padding: '6px 16px 4px', fontSize: 9, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.8px', background: `${color}08`, borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
+                {label} · {list.length}
+              </div>
+              {list.map(f => <FuncRow key={f.id} f={f} />)}
+            </div>
+          ))
+        )}
+      </div>
+    </Card>
   );
 }
 
@@ -410,72 +595,16 @@ export default function DashboardTab({ estado: estadoProps }) {
           <Sparkline data={sparkData} height={70} />
         </Card>
 
-        {/* Movimento: filas por serviço */}
-        <Card style={{ overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px 10px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: T.fg }}>Filas Ativas</div>
-            <span style={{ fontSize: 11, color: T.primary, background: 'rgba(245,158,11,.1)', padding: '2px 8px', borderRadius: 10, fontWeight: 600 }}>
-              {aguardando.length + emAndamento.length} total
-            </span>
-          </div>
-          <div style={{ padding: '8px 0' }}>
-            {SERVICES.map(s => {
-              const info = SERVICE_INFO[s];
-              const ag = estado.atendimentos.filter(a => a.tipoServico === s && a.status === 'AGUARDANDO').length;
-              const em = estado.atendimentos.filter(a => a.tipoServico === s && a.status === 'EM_ATENDIMENTO').length;
-              if (ag + em === 0) return null;
-              return (
-                <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 20px', borderBottom: `1px solid ${T.border}` }}>
-                  <div style={{ width: 26, height: 26, borderRadius: 7, background: info.darkBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <info.Icon size={13} color={info.color} />
-                  </div>
-                  <span style={{ flex: 1, fontSize: 12, fontWeight: 500, color: T.fg }}>{info.label}</span>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    {ag > 0 && <span style={{ fontSize: 10, fontWeight: 700, color: '#d97706', background: 'rgba(217,119,6,.1)', padding: '1px 7px', borderRadius: 10 }}>{ag} esp.</span>}
-                    {em > 0 && <span style={{ fontSize: 10, fontWeight: 700, color: '#10B981', background: 'rgba(16,185,129,.1)', padding: '1px 7px', borderRadius: 10 }}>{em} at.</span>}
-                  </div>
-                </div>
-              );
-            })}
-            {aguardando.length + emAndamento.length === 0 && (
-              <div style={{ padding: '20px', textAlign: 'center', color: T.muted, fontSize: 13 }}>Nenhuma fila ativa</div>
-            )}
-          </div>
-        </Card>
+        <FilasAtivasCard
+          atendimentos={estado.atendimentos}
+          totalAguardando={aguardando.length}
+          totalAtendendo={emAndamento.length}
+        />
 
-        {/* Equipe: status */}
-        <Card>
-          <div style={{ padding: '16px 20px 10px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: T.fg }}>Equipe</div>
-            <span style={{ fontSize: 11, color: T.muted }}>{estado.funcionarias.length} funcionárias</span>
-          </div>
-          <div style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {[
-              { label: 'Disponíveis',   list: disponiveis, color: '#10B981', bg: 'rgba(16,185,129,.1)' },
-              { label: 'Atendendo',     list: ocupadas,    color: '#f59e0b', bg: 'rgba(245,158,11,.1)' },
-              { label: 'Ausentes',      list: ausentes,    color: '#d97706', bg: 'rgba(217,119,6,.1)'  },
-              { label: 'Offline',       list: offline,     color: '#9ca3af', bg: 'rgba(156,163,175,.1)' },
-            ].map(g => (
-              <div key={g.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: g.color, flexShrink: 0 }} />
-                <span style={{ fontSize: 13, color: T.fg, flex: 1 }}>{g.label}</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: g.color, background: g.bg, padding: '2px 10px', borderRadius: 10 }}>{g.list.length}</span>
-              </div>
-            ))}
-          </div>
-          {/* Avatars */}
-          <div style={{ padding: '0 20px 14px', display: 'flex', gap: -4, flexWrap: 'wrap', gap: 4 }}>
-            {estado.funcionarias.slice(0, 6).map(f => {
-              const sc = f.status === 'ONLINE' ? '#10B981' : f.status === 'EM_ATENDIMENTO' ? '#f59e0b' : f.status === 'AUSENTE' ? '#d97706' : '#9ca3af';
-              return (
-                <div key={f.id} title={f.usuario?.nome} style={{ width: 28, height: 28, borderRadius: '50%', background: `${sc}20`, border: `2px solid ${sc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: sc }}>
-                  {f.usuario?.nome?.[0]?.toUpperCase()}
-                </div>
-              );
-            })}
-            {estado.funcionarias.length > 6 && <div style={{ width: 28, height: 28, borderRadius: '50%', background: T.bg, border: `2px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: T.muted }}>+{estado.funcionarias.length - 6}</div>}
-          </div>
-        </Card>
+        <EquipeCard
+          funcionarias={estado.funcionarias}
+          atendimentos={estado.atendimentos}
+        />
       </div>
 
       {/* ── LINHA 2: Bar Chart + Breakdown por serviço ── */}
@@ -543,8 +672,8 @@ export default function DashboardTab({ estado: estadoProps }) {
         </div>
 
         {/* Header da tabela */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.8fr 1fr 100px', gap: 12, padding: '8px 20px', background: T.bg, borderBottom: `1px solid ${T.border}` }}>
-          {['Cliente', 'Serviços', 'Total', 'Status'].map(h => (
+        <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr 120px 80px 130px', gap: 12, padding: '8px 20px', background: T.bg, borderBottom: `1px solid ${T.border}` }}>
+          {['Cliente', 'Serviços', 'Tempo', 'Total', 'Status'].map(h => (
             <div key={h} style={{ fontSize: 11, fontWeight: 700, color: T.muted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</div>
           ))}
         </div>
