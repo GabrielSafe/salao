@@ -139,8 +139,11 @@ function FilasTable({ atendimentos, aguardando, emAndamento }) {
     const info = SERVICE_INFO[s];
     const ag = aguardando.filter(a => a.tipoServico === s);
     const em = emAndamento.filter(a => a.tipoServico === s);
+    // Conta clientes únicos, não atendimentos individuais
+    const agClientes = new Set(ag.map(a => a.clienteId)).size;
+    const emClientes = new Set(em.map(a => a.clienteId)).size;
     const avg = ag.length ? avgWait(ag) : null;
-    return { s, info, ag: ag.length, em: em.length, avg };
+    return { s, info, ag: agClientes, em: emClientes, avg };
   }).filter(r => r.ag + r.em > 0);
 
   return (
@@ -642,7 +645,8 @@ export default function DashboardTab({ estado: estadoProps }) {
   if (longWait > 0) alertas.push({ type: 'error', titulo: `${longWait} cliente${longWait > 1 ? 's' : ''} esperando há mais de 10 minutos`, sub: 'Atenção necessária' });
   SERVICES.forEach(s => {
     const ag = aguardando.filter(a => a.tipoServico === s);
-    if (ag.length >= 3) alertas.push({ type: 'warn', titulo: `Gargalo em ${SERVICE_INFO[s].label}: ${ag.length} na fila`, sub: `Tempo médio: ${avgWait(ag)} min` });
+    const agClientes = new Set(ag.map(a => a.clienteId)).size;
+    if (agClientes >= 3) alertas.push({ type: 'warn', titulo: `Gargalo em ${SERVICE_INFO[s].label}: ${agClientes} na fila`, sub: `Tempo médio: ${avgWait(ag)} min` });
   });
   if (alertas.length === 0) {
     if (disponiveis.length > 0) alertas.push({ type: 'success', titulo: 'Equipe equilibrada', sub: `${disponiveis.length} disponíve${disponiveis.length > 1 ? 'is' : 'l'} para atender` });
