@@ -43,8 +43,20 @@ const fmtMin = (m) => m == null ? '—' : m < 60 ? `${m} min` : `${Math.floor(m/
 const elapsed = (d) => { const m = Math.floor((Date.now() - new Date(d)) / 60000); return m <= 0 ? '<1 min' : fmtMin(m); };
 const avgWait = (arr) => arr.length ? Math.round(arr.reduce((s,a) => s + (Date.now() - new Date(a.createdAt))/60000, 0) / arr.length) : 0;
 
-// ── Sparkline interativa ───────────────────────────────────────────────────
-function Sparkline({ data, color = '#f59e0b', height = 56, labels, formatValue }) {
+// ── Sparkline interativa com curvas suaves ─────────────────────────────────
+function smoothCurve(pts) {
+  if (pts.length < 2) return '';
+  let d = `M ${pts[0][0]} ${pts[0][1]}`;
+  for (let i = 1; i < pts.length; i++) {
+    const p0 = pts[i - 1];
+    const p1 = pts[i];
+    const dx  = (p1[0] - p0[0]) * 0.45;
+    d += ` C ${p0[0] + dx} ${p0[1]}, ${p1[0] - dx} ${p1[1]}, ${p1[0]} ${p1[1]}`;
+  }
+  return d;
+}
+
+function Sparkline({ data, color = '#f59e0b', height = 80, labels, formatValue }) {
   const { isDark } = useThemeCtx();
   const [hover, setHover] = useState(null);
   const W = 300;
@@ -53,14 +65,19 @@ function Sparkline({ data, color = '#f59e0b', height = 56, labels, formatValue }
 
   const temDados = data.some(v => v > 0);
   const max = Math.max(...data, 1);
-  const pad = 8;
+  const padX = 10;
+  // Y: ocupa 15%–85% da altura para evitar achatamento
+  const yTop = height * 0.12;
+  const yBot = height * 0.88;
+
   const pts = data.map((v, i) => [
-    pad + (i / (data.length - 1)) * (W - pad * 2),
-    pad + ((max - v) / max) * (height - pad * 2),
+    padX + (i / (data.length - 1)) * (W - padX * 2),
+    yBot - (v / max) * (yBot - yTop),
   ]);
-  const line = pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'} ${x} ${y}`).join(' ');
-  const area = `${line} L ${pts[pts.length - 1][0]} ${height} L ${pts[0][0]} ${height} Z`;
-  const gId   = `sg${color.replace('#', '')}`;
+
+  const linePath  = smoothCurve(pts);
+  const closePath = `${linePath} L ${pts[pts.length - 1][0]} ${height} L ${pts[0][0]} ${height} Z`;
+  const gId = `sg${color.replace('#', '')}`;
 
   function onMouseMove(e) {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -69,43 +86,50 @@ function Sparkline({ data, color = '#f59e0b', height = 56, labels, formatValue }
     setHover(idx);
   }
 
-  const hPt   = hover !== null ? pts[hover] : null;
-  const svgXpct = hPt ? (hPt[0] / W) * 100 : 0;
-  const tooltipLeft = svgXpct < 15 ? '0%' : svgXpct > 85 ? '100%' : `${svgXpct}%`;
-  const tooltipTranslate = svgXpct < 15 ? '0%' : svgXpct > 85 ? '-100%' : '-50%';
+  const hPt = hover !== null ? pts[hover] : null;
+  const svgPct = hPt ? (hPt[0] / W) * 100 : 0;
+  const ttLeft = svgPct < 15 ? '0%' : svgPct > 85 ? '100%' : `${svgPct}%`;
+  const ttTx   = svgPct < 15 ? '0%' : svgPct > 85 ? '-100%' : '-50%';
 
   return (
     <div style={{ position: 'relative', cursor: 'crosshair' }}
       onMouseMove={onMouseMove}
       onMouseLeave={() => setHover(null)}
     >
-      <svg viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="none" style={{ width: '100%', height, display: 'block' }}>
+      <svg viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="none"
+        style={{ width: '100%', height, display: 'block' }}>
         <defs>
           <linearGradient id={gId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor={color} stopOpacity={temDados ? '0.22' : '0.06'} />
+            <stop offset="0%"   stopColor={color} stopOpacity={temDados ? '0.28' : '0.05'} />
             <stop offset="100%" stopColor={color} stopOpacity="0" />
           </linearGradient>
         </defs>
 
         {temDados ? (
           <>
-            <path d={area} fill={`url(#${gId})`} />
-            <path d={line} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+            <path d={closePath} fill={`url(#${gId})`} />
+            <path d={linePath}  fill="none" stroke={color} strokeWidth="2.2"
+              strokeLinecap="round" strokeLinejoin="round" />
             {pts.map(([x, y], i) => (
-              <circle key={i} cx={x} cy={y} r={hover === i ? 5 : 3}
-                fill={color} style={{ transition: 'r .1s' }} />
+              <circle key={i} cx={x} cy={y}
+                r={hover === i ? 5.5 : 3.5}
+                fill={color}
+                stroke={hover === i ? (isDark ? '#1f1f1f' : '#fff') : 'none'}
+                strokeWidth={hover === i ? 2 : 0}
+                style={{ transition: 'r .12s ease' }}
+              />
             ))}
             {hPt && (
-              <line x1={hPt[0]} y1={0} x2={hPt[0]} y2={height}
-                stroke={color} strokeWidth="1.5" strokeDasharray="3 3" opacity="0.6" />
+              <line x1={hPt[0]} y1={yTop - 4} x2={hPt[0]} y2={height}
+                stroke={color} strokeWidth="1.5" strokeDasharray="4 3" opacity="0.5" />
             )}
           </>
         ) : (
           <>
-            <path d={line} fill="none" stroke={color} strokeWidth="1.5"
-              strokeDasharray="4 4" strokeOpacity="0.25" strokeLinecap="round" />
+            <path d={linePath} fill="none" stroke={color} strokeWidth="1.5"
+              strokeDasharray="5 4" strokeOpacity="0.2" strokeLinecap="round" />
             {pts.map(([x, y], i) => (
-              <circle key={i} cx={x} cy={y} r="2.5" fill={color} fillOpacity="0.25" />
+              <circle key={i} cx={x} cy={y} r="3" fill={color} fillOpacity="0.18" />
             ))}
           </>
         )}
@@ -114,18 +138,20 @@ function Sparkline({ data, color = '#f59e0b', height = 56, labels, formatValue }
       {/* Tooltip */}
       {hover !== null && temDados && (
         <div style={{
-          position: 'absolute', top: 6, pointerEvents: 'none', zIndex: 10,
-          left: tooltipLeft, transform: `translateX(${tooltipTranslate})`,
-          background: isDark ? '#1f1f1f' : '#1f2937',
-          border: `1px solid ${color}40`,
-          padding: '5px 9px', borderRadius: 7,
-          boxShadow: `0 4px 16px rgba(0,0,0,.35)`,
-          minWidth: 80,
+          position: 'absolute', top: 8, pointerEvents: 'none', zIndex: 10,
+          left: ttLeft, transform: `translateX(${ttTx})`,
+          background: isDark ? '#1a1a1a' : '#1f2937',
+          border: `1px solid ${color}50`,
+          padding: '5px 10px', borderRadius: 7,
+          boxShadow: `0 4px 18px rgba(0,0,0,.4)`,
+          minWidth: 90,
         }}>
           {labels?.[hover] && (
-            <div style={{ fontSize: 10, color: '#9ca3af', marginBottom: 2 }}>{labels[hover]}</div>
+            <div style={{ fontSize: 10, color: '#9ca3af', marginBottom: 2, letterSpacing: '0.3px' }}>
+              {labels[hover]}
+            </div>
           )}
-          <div style={{ fontSize: 12, fontWeight: 700, color: color }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color }}>
             {formatValue ? formatValue(data[hover]) : data[hover]}
           </div>
         </div>
@@ -158,19 +184,19 @@ function KpiCard({ label, valor, sub, subColor, Icon, gradient, sparkColor, spar
         cursor: 'default',
       }}
     >
-      <div style={{ padding: '16px 20px 10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-          <div style={{ width: 38, height: 38, borderRadius: 10, background: gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 12px ${sparkColor}40` }}>
-            <Icon size={18} color="#fff" strokeWidth={2.2} />
+      <div style={{ padding: '18px 20px 14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 11, background: gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 14px ${sparkColor}45` }}>
+            <Icon size={19} color="#fff" strokeWidth={2.2} />
           </div>
-          <span style={{ fontSize: 12, color: T.muted, fontWeight: 500 }}>{label}</span>
+          <span style={{ fontSize: 12, color: T.muted, fontWeight: 500, letterSpacing: '0.1px' }}>{label}</span>
         </div>
-        <div style={{ fontSize: 30, fontWeight: 700, color: T.fg, letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 4 }}>{valor}</div>
+        <div style={{ fontSize: 32, fontWeight: 700, color: T.fg, letterSpacing: '-0.025em', lineHeight: 1, marginBottom: 6 }}>{valor}</div>
         <div style={{ fontSize: 12, color: subColor || T.muted }}>{sub}</div>
       </div>
       <div style={{ marginTop: 'auto' }}>
         <Sparkline
-          data={sparkData} color={sparkColor} height={56}
+          data={sparkData} color={sparkColor} height={80}
           labels={SPARK_LABELS}
           formatValue={formatSpark}
         />
