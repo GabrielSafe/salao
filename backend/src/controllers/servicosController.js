@@ -85,6 +85,23 @@ async function atualizar(req, res) {
   const item = await prisma.servicoItem.findFirst({ where: { id, salaoId } });
   if (!item) return res.status(404).json({ erro: 'Serviço não encontrado' });
 
+  // Bloqueia desativação se há atendimentos ativos usando este serviço
+  if (ativo === false) {
+    const ativos = await prisma.atendimento.count({
+      where: {
+        salaoId,
+        servicoNome: item.nome,
+        status: { in: ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'] },
+      },
+    });
+    if (ativos > 0) {
+      return res.status(409).json({
+        erro: `Não é possível desativar: "${item.nome}" está em ${ativos} atendimento${ativos > 1 ? 's' : ''} ativo${ativos > 1 ? 's' : ''}.`,
+        atendimentosAtivos: ativos,
+      });
+    }
+  }
+
   const updated = await prisma.servicoItem.update({
     where: { id },
     data: {

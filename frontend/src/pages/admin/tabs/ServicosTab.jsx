@@ -181,9 +181,17 @@ export default function ServicosTab() {
     setServicos(prev => prev.map(s => s.id === id ? data : s));
   }
 
+  const [erroToggle, setErroToggle] = useState('');
+
   async function handleToggle(id, ativo) {
-    const { data } = await api.patch(`/servicos/${id}`, { ativo });
-    setServicos(prev => prev.map(s => s.id === id ? data : s));
+    setErroToggle('');
+    try {
+      const { data } = await api.patch(`/servicos/${id}`, { ativo });
+      setServicos(prev => prev.map(s => s.id === id ? data : s));
+    } catch (err) {
+      const msg = err.response?.data?.erro;
+      if (msg) setErroToggle(msg);
+    }
   }
 
   async function handleCriarNovo() {
@@ -272,6 +280,19 @@ export default function ServicosTab() {
           <div style={{ width: 120, fontSize: 10, fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.7px', flexShrink: 0 }}>Preço</div>
           <div style={{ width: 160, fontSize: 10, fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.7px', flexShrink: 0 }}>Ações</div>
         </div>
+
+        {/* Alerta de bloqueio */}
+        {erroToggle && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', background: 'rgba(239,68,68,.08)', borderBottom: `1px solid rgba(239,68,68,.2)` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 18 }}>⚠️</span>
+              <span style={{ fontSize: 13, color: '#ef4444', fontWeight: 500 }}>{erroToggle}</span>
+            </div>
+            <button onClick={() => setErroToggle('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: 2, display: 'flex' }}>
+              <X size={15} />
+            </button>
+          </div>
+        )}
 
         {/* Novo serviço inline */}
         {showNovo && (
