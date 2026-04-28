@@ -171,7 +171,18 @@ function KpiCard({ label, valor, sub, Icon, color, bg, title }) {
 function FilaColuna({ servico, atendimentos }) {
   const info = SERVICE_INFO[servico];
   const Icon = info.Icon;
-  const aguardando = atendimentos.filter(a => a.status === 'AGUARDANDO' && a.tipoServico === servico);
+  const todos = atendimentos.filter(a => a.status === 'AGUARDANDO' && a.tipoServico === servico);
+
+  // Agrupa por cliente: 1 cliente = 1 posição na fila (pega o mais antigo como referência)
+  const porCliente = new Map();
+  todos.forEach(a => {
+    if (!porCliente.has(a.clienteId)) {
+      porCliente.set(a.clienteId, { ...a, qtdServicos: 1 });
+    } else {
+      porCliente.get(a.clienteId).qtdServicos++;
+    }
+  });
+  const aguardando = [...porCliente.values()];
 
   return (
     <div style={{
@@ -199,7 +210,7 @@ function FilaColuna({ servico, atendimentos }) {
           </div>
         ) : (
           aguardando.slice(0, 4).map((a, idx) => (
-            <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', transition: 'background .15s' }}
+            <div key={a.clienteId} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', transition: 'background .15s' }}
               onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,.02)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
@@ -210,6 +221,11 @@ function FilaColuna({ servico, atendimentos }) {
                 <div style={{ fontSize: 13, fontWeight: 500, color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {a.cliente?.nome}
                 </div>
+                {a.qtdServicos > 1 && (
+                  <div style={{ fontSize: 10, color: info.color, marginTop: 1 }}>
+                    {a.qtdServicos} serviços
+                  </div>
+                )}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
                 <div style={{ width: 5, height: 5, borderRadius: '50%', background: idx < 2 ? '#10B981' : idx < 3 ? '#F59E0B' : '#EF4444' }} />
