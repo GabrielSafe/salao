@@ -134,27 +134,30 @@ function FaturamentoCard({ atendimentos }) {
 }
 
 // ── KPI Card ──────────────────────────────────────────────────────────────
-function KpiCard({ label, valor, sub, Icon, color, bg }) {
+function KpiCard({ label, valor, sub, Icon, color, bg, title }) {
   return (
     <div style={{
-      background: '#FFFFFF', border: '1px solid rgba(0,0,0,.08)',
-      borderRadius: 12, padding: '18px 20px',
-      transition: 'border-color .2s',
+      background: '#ffffff',
+      border: '1px solid #e5e7eb',
+      borderRadius: '0.375rem',
+      boxShadow: '0px 4px 8px -1px rgba(0,0,0,.1)',
+      padding: '24px 24px 20px',
+      fontFamily: 'Inter, sans-serif',
+      transition: 'box-shadow .2s',
     }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(0,0,0,.15)'}
-      onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(0,0,0,.08)'}
+      onMouseEnter={e => e.currentTarget.style.boxShadow = '0px 6px 16px -1px rgba(0,0,0,.13)'}
+      onMouseLeave={e => e.currentTarget.style.boxShadow = '0px 4px 8px -1px rgba(0,0,0,.1)'}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 9, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Icon size={18} color={color} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <TrendingUp size={12} color="#10B981" />
-          <span style={{ fontSize: 11, color: '#10B981', fontWeight: 600 }}>{sub}</span>
+        <div style={{ fontSize: 14, color: '#6b7280', fontWeight: 400 }}>{title}</div>
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Icon size={16} color={color} />
         </div>
       </div>
-      <div style={{ fontSize: 32, fontWeight: 800, color, lineHeight: 1, marginBottom: 4, fontFamily: "'Poppins', sans-serif" }}>{valor}</div>
-      <div style={{ fontSize: 12, color: '#6B7280' }}>{label}</div>
+      <div style={{ fontSize: 36, fontWeight: 700, color: '#262626', lineHeight: 1, letterSpacing: '-0.02em', marginBottom: 6 }}>
+        {valor}
+      </div>
+      <div style={{ fontSize: 13, color: '#6b7280' }}>{sub}</div>
     </div>
   );
 }
@@ -510,10 +513,10 @@ export default function DashboardTab({ estado: estadoProps }) {
   const comandas    = agruparComandas(estado.atendimentos);
 
   const kpis = [
-    { label: 'na fila',        valor: aguardando.length,  sub: '+3 últimos 30 min', Icon: Clock,     color: '#F59E0B', bg: 'rgba(245,158,11,.12)',  title: 'Aguardando' },
-    { label: 'agora',          valor: emAndamento.length, sub: '+2 últimos 30 min', Icon: Zap,       color: '#10B981', bg: 'rgba(16,185,129,.12)',  title: 'Em atendimento' },
-    { label: 'funcionários',   valor: disponiveis.length, sub: '+1 últimos 30 min', Icon: UserCheck, color: '#60A5FA', bg: 'rgba(96,165,250,.12)',  title: 'Disponíveis' },
-    { label: 'atendimentos',   valor: emAndamento.length + aguardando.length, sub: 'ativos agora', Icon: UserX, color: '#D4178A', bg: 'rgba(212,23,138,.12)', title: 'Concluídos hoje' },
+    { title: 'Aguardando',       valor: aguardando.length,                    sub: 'clientes na fila agora',          Icon: Clock,     color: '#F59E0B', bg: 'rgba(245,158,11,.1)'  },
+    { title: 'Em Atendimento',   valor: emAndamento.length,                   sub: 'sendo atendidas agora',           Icon: Zap,       color: '#10B981', bg: 'rgba(16,185,129,.1)'  },
+    { title: 'Disponíveis',      valor: disponiveis.length,                   sub: 'funcionárias online',             Icon: UserCheck, color: '#60A5FA', bg: 'rgba(96,165,250,.1)'  },
+    { title: 'Ativos agora',     valor: emAndamento.length + aguardando.length, sub: 'comandas em aberto',            Icon: UserX,     color: '#D4178A', bg: 'rgba(212,23,138,.1)'  },
   ];
 
   const dark = { color: '#1B2A4A', colorSub: '#6B7280', border: 'rgba(0,0,0,.08)' };
