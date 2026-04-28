@@ -620,7 +620,12 @@ export default function DashboardTab({ estado: estadoProps }) {
 
   const faturamento = finalizados.reduce((s, a) => s + (a.servicoPreco || 0), 0);
   const tempoMedioEsperaVal = avgWait(aguardando);
-  const clientesAtivos = new Set(estado.atendimentos.filter(a => ['AGUARDANDO','EM_ATENDIMENTO','PENDENTE_ACEITE'].includes(a.status)).map(a => a.clienteId)).size;
+
+  // Contagem por clientes únicos (não por atendimentos)
+  const clientesAguardando = new Set(aguardando.map(a => a.clienteId)).size;
+  const clientesAtendendo  = new Set(emAndamento.map(a => a.clienteId)).size;
+  const clientesAtivos     = new Set(estado.atendimentos.filter(a => ['AGUARDANDO','EM_ATENDIMENTO','PENDENTE_ACEITE'].includes(a.status)).map(a => a.clienteId)).size;
+
   const capacidade = estado.funcionarias.length > 0 ? Math.round((ocupadas.length / estado.funcionarias.length) * 100) : 0;
   const capLabel = capacidade >= 80 ? 'Ótimo nível de utilização' : capacidade >= 50 ? 'Bom nível de utilização' : capacidade > 0 ? 'Equipe disponível' : 'Equipe offline';
 
@@ -662,7 +667,7 @@ export default function DashboardTab({ estado: estadoProps }) {
         <KpiCard
           label="Tempo médio de espera"
           valor={`${tempoMedioEsperaVal} min`}
-          sub={aguardando.length > 0 ? `${aguardando.length} cliente${aguardando.length > 1 ? 's' : ''} aguardando` : 'Sem fila no momento'}
+          sub={clientesAguardando > 0 ? `${clientesAguardando} cliente${clientesAguardando > 1 ? 's' : ''} aguardando` : 'Sem fila no momento'}
           subColor={tempoMedioEsperaVal > 15 ? '#ef4444' : tempoMedioEsperaVal > 8 ? '#f59e0b' : T.muted}
           Icon={Clock}
           gradient="linear-gradient(135deg, #ef4444, #f97316)"
@@ -672,7 +677,7 @@ export default function DashboardTab({ estado: estadoProps }) {
         <KpiCard
           label="Clientes ativos agora"
           valor={String(clientesAtivos)}
-          sub={`${aguardando.length > 0 ? aguardando.length : 0} aguardando · ${emAndamento.length} em atendimento`}
+          sub={`${clientesAguardando} aguardando · ${clientesAtendendo} em atendimento`}
           Icon={Users}
           gradient="linear-gradient(135deg, #8b5cf6, #7c3aed)"
           sparkColor="#8b5cf6"
