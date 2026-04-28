@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import {
   Scissors, Sparkles, Hand, Leaf, Eye, Clock, CheckCircle2,
-  Plus, Check, X, Loader2, User, ShieldCheck, ChevronDown
+  Plus, Check, X, Loader2, User, ShieldCheck, ChevronDown, UserCheck
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSocket } from '../../../hooks/useSocket';
@@ -40,6 +40,65 @@ function agrupar(atendimentos) {
       grupos[k].itens.push(a);
     });
   return Object.values(grupos).sort((a, b) => a.numero - b.numero);
+}
+
+// ── Botão atribuir manualmente ────────────────────────────────────────────
+function AtribuirBtn({ atendimentoId, tipoServico, funcionarias }) {
+  const [aberto, setAberto]   = useState(false);
+  const [loading, setLoading] = useState(null);
+
+  const statusColor = { ONLINE: '#10B981', AUSENTE: '#F59E0B', EM_ATENDIMENTO: '#D4178A', OFFLINE: '#9CA3AF' };
+  const candidatas = funcionarias.filter(f =>
+    (f.especialidades?.includes(tipoServico) || f.multiTarefas) &&
+    ['ONLINE', 'AUSENTE', 'EM_ATENDIMENTO'].includes(f.status)
+  );
+
+  async function atribuir(funcionariaId) {
+    setLoading(funcionariaId);
+    try {
+      await api.patch(`/atendimentos/${atendimentoId}/atribuir`, { funcionariaId });
+      setAberto(false);
+    } catch {}
+    finally { setLoading(null); }
+  }
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button onClick={() => setAberto(!aberto)}
+        style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 6, background: 'rgba(96,165,250,.08)', color: '#60A5FA', border: '1px solid rgba(96,165,250,.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+        <UserCheck size={11} /> Atribuir
+      </button>
+      {aberto && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, background: '#fff', border: '1px solid rgba(0,0,0,.1)', borderRadius: 10, zIndex: 50, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,.12)', minWidth: 180 }}>
+          <div style={{ padding: '8px 12px 4px', fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', borderBottom: '1px solid rgba(0,0,0,.06)' }}>
+            Escolha a funcionária
+          </div>
+          {candidatas.length === 0
+            ? <div style={{ padding: '12px', fontSize: 12, color: '#9CA3AF', textAlign: 'center' }}>Nenhuma disponível</div>
+            : candidatas.map(f => (
+              <button key={f.id} onClick={() => atribuir(f.id)} disabled={!!loading}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(0,0,0,.04)' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(96,165,250,.05)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'none'}
+              >
+                <div style={{ width: 26, height: 26, borderRadius: '50%', background: `${statusColor[f.status]}20`, border: `1.5px solid ${statusColor[f.status]}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: statusColor[f.status], flexShrink: 0 }}>
+                  {f.usuario?.nome?.[0]?.toUpperCase()}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#1B2A4A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.usuario?.nome}</div>
+                  <div style={{ fontSize: 10, color: statusColor[f.status] }}>{f.status === 'ONLINE' ? 'Disponível' : f.status === 'AUSENTE' ? 'Ausente' : 'Em atendimento'}</div>
+                </div>
+                {loading === f.id && <Loader2 size={12} color="#60A5FA" style={{ animation: 'spin .7s linear infinite', flexShrink: 0 }} />}
+              </button>
+            ))
+          }
+          <button onClick={() => setAberto(false)} style={{ width: '100%', padding: '7px', background: 'rgba(0,0,0,.02)', border: 'none', cursor: 'pointer', fontSize: 11, color: '#9CA3AF' }}>
+            Cancelar
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ── Card de comanda expandida ──────────────────────────────────────────────
@@ -181,7 +240,7 @@ function ComandaCard({ grupo, funcionarias, onFechar, fechando }) {
                 )}
               </div>
 
-              {/* Status + ação admin */}
+              {/* Status + ações admin */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                 {item.servicoPreco != null && (
                   <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent)' }}>
@@ -191,6 +250,13 @@ function ComandaCard({ grupo, funcionarias, onFechar, fechando }) {
                 <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: stInfo.bg, color: stInfo.color }}>
                   {stInfo.text}
                 </span>
+                {['AGUARDANDO', 'PENDENTE_ACEITE'].includes(item.status) && (
+                  <AtribuirBtn
+                    atendimentoId={item.id}
+                    tipoServico={item.tipoServico}
+                    funcionarias={funcionarias}
+                  />
+                )}
                 {['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'].includes(item.status) && (
                   <button onClick={() => handleFinalizarAdmin(item.id)} disabled={loading}
                     style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: 'rgba(239,68,68,.07)', border: '1px solid rgba(239,68,68,.18)', color: '#EF4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>

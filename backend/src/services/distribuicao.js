@@ -254,4 +254,44 @@ function resetarRejeicoesPorEspecialidade(salaoId, especialidade) {
   }
 }
 
-module.exports = { rodarDistribuicao, emitirEstadoCompleto, aceitarProposta, recusarProposta, limparRejeicoes };
+/**
+ * Admin atribui manualmente um atendimento a uma funcionária específica.
+ * Comporta-se igual à distribuição automática: emite proposta + inicia timeout de 60s.
+ */
+async function proporParaFuncionaria(atendimentoId, funcionariaId, salaoId, io) {
+  try {
+    // Cancela proposta anterior se houver
+    const timerAnterior = timeoutsPendentes.get(atendimentoId);
+    if (timerAnterior) { clearTimeout(timerAnterior); timeoutsPendentes.delete(atendimentoId); }
+
+    let atendimentoComDados = null;
+
+    await prisma.$transaction(async (tx) => {
+      const atual = await tx.atendimento.findUnique({ where: { id: atendimentoId } });
+      if (!atual || !['AGUARDANDO', 'PENDENTE_ACEITE'].includes(atual.status)) return;
+
+      atendimentoComDados = await tx.atendimento.update({
+        where: { id: atendimentoId },
+        data: { status: 'PENDENTE_ACEITE', propostaParaId: funcionariaId },
+        include: { cliente: true },
+      });
+    });
+
+    if (!atendimentoComDados) return;
+
+    if (io) {
+      io.to(`funcionaria:${funcionariaId}`).emit('proposta_atendimento', atendimentoComDados);
+    }
+
+    const timer = setTimeout(() => {
+      recusarProposta(atendimentoComDados.id, funcionariaId, salaoId, io, true);
+    }, TIMEOUT_PROPOSTA_MS);
+    timeoutsPendentes.set(atendimentoComDados.id, timer);
+
+    await emitirEstadoCompleto(salaoId, io);
+  } catch (err) {
+    console.error('[distribuicao] Erro ao propor manualmente:', err.message);
+  }
+}
+
+module.exports = { rodarDistribuicao, emitirEstadoCompleto, aceitarProposta, recusarProposta, limparRejeicoes, proporParaFuncionaria };

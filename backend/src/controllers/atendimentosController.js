@@ -1,5 +1,5 @@
 const prisma = require('../config/prisma');
-const { rodarDistribuicao, emitirEstadoCompleto, aceitarProposta, recusarProposta } = require('../services/distribuicao');
+const { rodarDistribuicao, emitirEstadoCompleto, aceitarProposta, recusarProposta, proporParaFuncionaria } = require('../services/distribuicao');
 
 async function proximoNumeroComanda(salaoId, tx) {
   const contador = await tx.contadorComanda.update({
@@ -268,6 +268,27 @@ async function recusar(req, res) {
   return res.json({ mensagem: 'Proposta recusada' });
 }
 
+async function atribuirManual(req, res) {
+  const { id } = req.params;
+  const { funcionariaId } = req.body;
+  const salaoId = req.salaoId;
+
+  if (!funcionariaId) return res.status(400).json({ erro: 'Informe a funcionariaId' });
+
+  const atendimento = await prisma.atendimento.findFirst({
+    where: { id, salaoId, status: { in: ['AGUARDANDO', 'PENDENTE_ACEITE'] } },
+  });
+  if (!atendimento) return res.status(404).json({ erro: 'Atendimento não encontrado ou não está aguardando' });
+
+  const funcionaria = await prisma.funcionaria.findFirst({ where: { id: funcionariaId, salaoId } });
+  if (!funcionaria) return res.status(404).json({ erro: 'Funcionária não encontrada' });
+
+  const io = req.app.get('io');
+  await proporParaFuncionaria(id, funcionariaId, salaoId, io);
+
+  return res.json({ mensagem: 'Atendimento atribuído com sucesso' });
+}
+
 async function fecharComanda(req, res) {
   const { numero } = req.params;
   const salaoId = req.salaoId;
@@ -292,4 +313,4 @@ async function fecharComanda(req, res) {
   return res.json({ mensagem: 'Comanda fechada com sucesso' });
 }
 
-module.exports = { criarComanda, adicionarServico, finalizar, finalizarAdmin, cancelar, listarPorComanda, relatorio, aceitar, recusar, fecharComanda };
+module.exports = { criarComanda, adicionarServico, finalizar, finalizarAdmin, cancelar, listarPorComanda, relatorio, aceitar, recusar, fecharComanda, atribuirManual };
