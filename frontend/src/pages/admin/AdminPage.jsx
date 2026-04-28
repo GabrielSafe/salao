@@ -106,37 +106,63 @@ function buildTheme(isDark) {
 }
 
 // ── NavItem ────────────────────────────────────────────────────────────────
-function NavItem({ item, totalAtivos, t }) {
+function NavItem({ item, totalAtivos, t, isDark }) {
   const { path, label, Icon, badge, soon } = item;
+
   if (soon) return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, opacity: 0.35, cursor: 'not-allowed', userSelect: 'none' }}>
-      <Icon size={16} color={t.sidebarText} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', borderRadius: 8, opacity: 0.3, cursor: 'not-allowed', userSelect: 'none' }}>
+      <div style={{ width: 28, height: 28, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon size={15} color={t.sidebarText} />
+      </div>
       <span style={{ fontSize: 13, color: t.sidebarText, flex: 1 }}>{label}</span>
-      <span style={{ fontSize: 9, color: t.sidebarSub, background: 'rgba(128,128,128,.1)', padding: '2px 6px', borderRadius: 4 }}>Em breve</span>
+      <span style={{ fontSize: 9, color: t.sidebarSub, background: 'rgba(128,128,128,.08)', padding: '2px 6px', borderRadius: 4 }}>Em breve</span>
     </div>
   );
+
   return (
     <NavLink
       to={path === '' ? '/admin' : `/admin/${path}`}
       end={path === ''}
       style={({ isActive }) => ({
         display: 'flex', alignItems: 'center', gap: 10,
-        padding: '9px 12px', borderRadius: 8,
+        padding: '7px 10px', borderRadius: 8,
         fontSize: 13, fontWeight: isActive ? 600 : 400,
-        color: isActive ? '#f59e0b' : t.sidebarText,
-        background: isActive ? 'rgba(245,158,11,.1)' : 'transparent',
+        color: isActive ? (isDark ? '#f5f5f5' : '#262626') : t.sidebarText,
+        background: isActive
+          ? (isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.06)')
+          : 'transparent',
         textDecoration: 'none', transition: 'all .15s',
-        borderLeft: `2px solid ${isActive ? '#f59e0b' : 'transparent'}`,
+        border: 'none',
       })}
-      onMouseEnter={e => { if (!e.currentTarget.style.background.includes('rgba(245,158,11,.1)')) e.currentTarget.style.background = t.sidebarHover; }}
-      onMouseLeave={e => { if (!e.currentTarget.style.background.includes('rgba(245,158,11,.1)')) e.currentTarget.style.background = 'transparent'; }}
+      onMouseEnter={e => {
+        const el = e.currentTarget;
+        if (!el.classList.contains('active') && !el.getAttribute('aria-current')) {
+          el.style.background = t.sidebarHover;
+        }
+      }}
+      onMouseLeave={e => {
+        const el = e.currentTarget;
+        if (!el.classList.contains('active') && !el.getAttribute('aria-current')) {
+          el.style.background = 'transparent';
+        }
+      }}
     >
       {({ isActive }) => (
         <>
-          <Icon size={16} color={isActive ? '#f59e0b' : t.sidebarText} />
+          {/* Ícone: quadrado colorido âmbar quando ativo */}
+          <div style={{
+            width: 28, height: 28, borderRadius: 7, flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: isActive ? '#f59e0b' : 'transparent',
+            transition: 'all .15s',
+          }}>
+            <Icon size={15} color={isActive ? '#000' : t.sidebarText} strokeWidth={isActive ? 2.5 : 1.8} />
+          </div>
+
           <span style={{ flex: 1 }}>{label}</span>
+
           {badge === 'ativos' && totalAtivos > 0 && (
-            <span style={{ fontSize: 10, fontWeight: 700, background: '#f59e0b', color: '#000', padding: '1px 7px', borderRadius: 10 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, background: '#f59e0b', color: '#000', padding: '1px 7px', borderRadius: 10, flexShrink: 0 }}>
               {totalAtivos}
             </span>
           )}
@@ -212,7 +238,7 @@ export default function AdminPage() {
             MAIN MENU
           </div>
           {MAIN_MENU.map(item => (
-            <NavItem key={item.path} item={item} totalAtivos={totalAtivos} t={t} />
+            <NavItem key={item.path} item={item} totalAtivos={totalAtivos} t={t} isDark={isDark} />
           ))}
 
           <div style={{ marginTop: 16 }}>
@@ -220,7 +246,7 @@ export default function AdminPage() {
               PREFERENCE
             </div>
             {PREFERENCE_MENU.map(item => (
-              <NavItem key={item.path} item={item} totalAtivos={0} t={t} />
+              <NavItem key={item.path} item={item} totalAtivos={0} t={t} isDark={isDark} />
             ))}
           </div>
         </nav>
