@@ -7,20 +7,33 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSocket } from '../../../hooks/useSocket';
+import { useThemeCtx } from '../../../contexts/ThemeContext.jsx';
 import api from '../../../services/api';
 import { CATALOG, CATEGORIAS_ORDEM } from '../../../utils/servicosCatalog';
 
-const T = {
-  card:    '#ffffff',
-  border:  '#e5e7eb',
-  bg:      '#f9fafb',
-  fg:      '#262626',
-  muted:   '#6b7280',
-  primary: '#f59e0b',
-  shadow:  '0px 4px 8px -1px rgba(0,0,0,.1)',
-  radius:  '0.375rem',
-  font:    "'Inter', sans-serif",
-};
+function buildT(isDark) {
+  return isDark ? {
+    card:    '#1e1e1e',
+    border:  '#2a2a2a',
+    bg:      '#161616',
+    fg:      '#e5e5e5',
+    muted:   '#a3a3a3',
+    primary: '#f59e0b',
+    shadow:  '0px 4px 8px -1px rgba(0,0,0,.4)',
+    radius:  '0.375rem',
+    font:    "'Inter', sans-serif",
+  } : {
+    card:    '#ffffff',
+    border:  '#e5e7eb',
+    bg:      '#f9fafb',
+    fg:      '#262626',
+    muted:   '#6b7280',
+    primary: '#f59e0b',
+    shadow:  '0px 4px 8px -1px rgba(0,0,0,.1)',
+    radius:  '0.375rem',
+    font:    "'Inter', sans-serif",
+  };
+}
 
 const SERVICE_INFO = {
   CABELO:      { label: 'Cabelo',      Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.1)', darkBg: 'rgba(168,85,247,.08)' },
@@ -522,6 +535,8 @@ function agruparComandas(atendimentos) {
 // ── Dashboard principal ────────────────────────────────────────────────────
 export default function DashboardTab({ estado: estadoProps }) {
   const { usuario } = useAuth();
+  const { isDark }  = useThemeCtx();
+  const T           = buildT(isDark);
   const [estadoLocal, setEstadoLocal] = useState({ atendimentos: [], filas: [], funcionarias: [] });
   const onEstadoCompleto = useCallback((dados) => setEstadoLocal(dados), []);
   useSocket(usuario?.salaoId, { onEstadoCompleto });

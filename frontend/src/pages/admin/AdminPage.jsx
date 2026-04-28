@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../hooks/useSocket';
-import { useTheme } from '../../hooks/useTheme';
+import { useThemeCtx as useTheme } from '../../contexts/ThemeContext.jsx';
 import DashboardTab   from './tabs/DashboardTab';
 import NovaComandaTab from './tabs/NovaComandaTab';
 import FuncionariasTab from './tabs/FuncionariasTab';
