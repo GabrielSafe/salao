@@ -35,6 +35,12 @@ function buildT(isDark) {
   };
 }
 
+// Hook usado por todos os sub-componentes para pegar o tema atual
+function useT() {
+  const { isDark } = useThemeCtx();
+  return buildT(isDark);
+}
+
 const SERVICE_INFO = {
   CABELO:      { label: 'Cabelo',      Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.1)', darkBg: 'rgba(168,85,247,.08)' },
   MAQUIAGEM:   { label: 'Maquiagem',   Icon: Sparkles, color: '#F472B6', bg: 'rgba(236,72,153,.1)', darkBg: 'rgba(236,72,153,.08)' },
@@ -51,6 +57,7 @@ function tempoAtend(d)  { const m = Math.floor((Date.now() - new Date(d)) / 6000
 
 // ── Card base ──────────────────────────────────────────────────────────────
 function Card({ children, style = {}, className }) {
+  const T = useT();
   return (
     <div className={className} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: T.radius, boxShadow: T.shadow, fontFamily: T.font, ...style }}>
       {children}
@@ -125,6 +132,7 @@ function BarChart({ data, color = '#f59e0b', height = 140 }) {
 
 // ── Botão finalizar admin ──────────────────────────────────────────────────
 function FinalizarAdminBtn({ atendimentoId, onFinalizado }) {
+  const T = useT();
   const [loading, setLoading] = useState(false);
   const [confirmando, setConfirmando] = useState(false);
   async function handleFinalizar() {
@@ -149,6 +157,7 @@ function FinalizarAdminBtn({ atendimentoId, onFinalizado }) {
 
 // ── Botão atribuir manualmente ─────────────────────────────────────────────
 function AtribuirBtn({ atendimentoId, tipoServico, funcionarias }) {
+  const T = useT();
   const [aberto, setAberto] = useState(false);
   const [loading, setLoading] = useState(null);
   const statusColor = { ONLINE: '#10B981', AUSENTE: '#F59E0B', EM_ATENDIMENTO: '#D4178A' };
@@ -187,6 +196,7 @@ function AtribuirBtn({ atendimentoId, tipoServico, funcionarias }) {
 
 // ── ComandaRow expandida ───────────────────────────────────────────────────
 function ComandaRow({ grupo, estado }) {
+  const T = useT();
   const [aberto, setAberto] = useState(false);
   const [adicionando, setAdicionando] = useState(false);
   const [selecionados, setSelecionados] = useState([]);
@@ -355,6 +365,7 @@ function ComandaRow({ grupo, estado }) {
 
 // ── Filas Ativas expandível ────────────────────────────────────────────────
 function FilasAtivasCard({ atendimentos, totalAguardando, totalAtendendo }) {
+  const T = useT();
   const [expandido, setExpandido] = useState({});
   const toggle = (s) => setExpandido(p => ({ ...p, [s]: !p[s] }));
 
@@ -453,6 +464,7 @@ function FilasAtivasCard({ atendimentos, totalAguardando, totalAtendendo }) {
 
 // ── Equipe com lista individual ────────────────────────────────────────────
 function EquipeCard({ funcionarias, atendimentos }) {
+  const T = useT();
   const atendendo   = funcionarias.filter(f => f.status === 'EM_ATENDIMENTO');
   const disponiveis = funcionarias.filter(f => f.status === 'ONLINE');
   const ausentes    = funcionarias.filter(f => f.status === 'AUSENTE');
@@ -535,8 +547,7 @@ function agruparComandas(atendimentos) {
 // ── Dashboard principal ────────────────────────────────────────────────────
 export default function DashboardTab({ estado: estadoProps }) {
   const { usuario } = useAuth();
-  const { isDark }  = useThemeCtx();
-  const T           = buildT(isDark);
+  const T           = useT();
   const [estadoLocal, setEstadoLocal] = useState({ atendimentos: [], filas: [], funcionarias: [] });
   const onEstadoCompleto = useCallback((dados) => setEstadoLocal(dados), []);
   useSocket(usuario?.salaoId, { onEstadoCompleto });
