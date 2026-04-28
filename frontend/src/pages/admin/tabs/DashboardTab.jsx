@@ -52,33 +52,46 @@ function agruparComandas(atendimentos) {
 
 // ── Sparkline SVG ─────────────────────────────────────────────────────────
 function Sparkline({ data, color = '#f59e0b', width = 300, height = 80 }) {
-  if (!data || data.length < 2) {
-    return <div style={{ height }} />;
+  if (!data || data.length < 2) return <div style={{ height }} />;
+
+  const temDados = data.some(v => v > 0);
+
+  // Sem dados: mostra linha pontilhada suave no centro
+  if (!temDados) {
+    const y = height * 0.65;
+    const pts = data.map((_, i) => [
+      6 + (i / (data.length - 1)) * (width - 12), y
+    ]);
+    const line = pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'} ${x} ${y}`).join(' ');
+    return (
+      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" style={{ width: '100%', height }}>
+        <path d={line} fill="none" stroke={color} strokeWidth="1.5" strokeDasharray="4 4" strokeOpacity="0.35" strokeLinecap="round" />
+        {pts.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="2.5" fill={color} fillOpacity="0.3" />)}
+      </svg>
+    );
   }
-  const max = Math.max(...data, 1);
-  const min = Math.min(...data);
-  const range = max - min || max || 1;
-  const pad = 6;
-  const pts = data.map((v, i) => {
-    const x = pad + (i / (data.length - 1)) * (width - pad * 2);
-    const y = pad + ((max - v) / range) * (height - pad * 2.5);
-    return [x, y];
-  });
+
+  const max = Math.max(...data);
+  const min = 0;
+  const range = max - min || 1;
+  const pad = 8;
+  const pts = data.map((v, i) => [
+    pad + (i / (data.length - 1)) * (width - pad * 2),
+    pad + ((max - v) / range) * (height - pad * 2),
+  ]);
   const line = pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'} ${x} ${y}`).join(' ');
   const area = `${line} L ${pts[pts.length - 1][0]} ${height} L ${pts[0][0]} ${height} Z`;
   return (
     <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" style={{ width: '100%', height }}>
       <defs>
         <linearGradient id="spkGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={area} fill="url(#spkGrad)" />
       <path d={line} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-      {pts.map(([x, y], i) => (
-        <circle key={i} cx={x} cy={y} r="3.5" fill={color} />
-      ))}
+      {pts.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="3.5" fill={color} />)}
     </svg>
   );
 }
@@ -115,25 +128,23 @@ function FaturamentoCard({ atendimentos }) {
       borderRadius: '0.375rem',
       boxShadow: '0px 4px 8px -1px rgba(0,0,0,.1)',
       overflow: 'hidden',
-      fontFamily: 'Inter, sans-serif',
+      fontFamily: "'Inter', 'Poppins', sans-serif",
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
     }}>
-      <div style={{ padding: '24px 24px 16px', flex: 1 }}>
-        <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 10, fontWeight: 400 }}>
+      <div style={{ padding: '24px 24px 12px', flex: 1 }}>
+        <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 10, fontWeight: 400, letterSpacing: '0em' }}>
           Faturamento do Dia
         </div>
         <div style={{ fontSize: 40, fontWeight: 700, color: '#262626', lineHeight: 1, letterSpacing: '-0.02em', marginBottom: 8 }}>
           {totalFmt}
         </div>
         <div style={{ fontSize: 13, color: '#6b7280' }}>
-          {qtd} serviço{qtd !== 1 ? 's' : ''} finalizado{qtd !== 1 ? 's' : ''} hoje
+          {qtd > 0 ? `+${qtd} serviço${qtd !== 1 ? 's' : ''} hoje` : 'Nenhum serviço finalizado ainda'}
         </div>
       </div>
-      <div style={{ marginTop: 'auto' }}>
-        <Sparkline data={sparkData} height={90} />
-      </div>
+      <Sparkline data={sparkData} height={90} />
     </div>
   );
 }
@@ -186,39 +197,46 @@ function FilaColuna({ servico, atendimentos }) {
 
   return (
     <div style={{
-      background: '#FFFFFF', border: '1px solid rgba(0,0,0,.08)',
-      borderRadius: 12, overflow: 'hidden', flex: 1, minWidth: 0,
+      background: '#ffffff',
+      border: '1px solid #e5e7eb',
+      borderRadius: '0.375rem',
+      boxShadow: '0px 4px 8px -1px rgba(0,0,0,.1)',
+      overflow: 'hidden',
+      fontFamily: "'Inter', 'Poppins', sans-serif",
+      flex: 1, minWidth: 0,
     }}>
       {/* Header */}
-      <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(0,0,0,.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 7, background: info.darkBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Icon size={14} color={info.color} />
+      <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid #e5e7eb' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 28, height: 28, borderRadius: '0.375rem', background: info.darkBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon size={14} color={info.color} />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#262626', letterSpacing: '0em' }}>{info.label}</span>
           </div>
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#1B2A4A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{info.label}</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: info.color, background: info.darkBg, padding: '2px 10px', borderRadius: 20 }}>
+            {aguardando.length} aguardando
+          </span>
         </div>
-        <span style={{ fontSize: 12, fontWeight: 700, color: info.color, background: info.darkBg, padding: '2px 8px', borderRadius: 20 }}>
-          {aguardando.length} aguardando
-        </span>
       </div>
 
       {/* Lista */}
-      <div style={{ padding: '8px 0' }}>
+      <div>
         {aguardando.length === 0 ? (
-          <div style={{ padding: '20px 16px', textAlign: 'center', color: '#6B7280', fontSize: 12 }}>
+          <div style={{ padding: '24px 20px', textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>
             Fila vazia
           </div>
         ) : (
           aguardando.slice(0, 4).map((a, idx) => (
-            <div key={a.clienteId} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', transition: 'background .15s' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,.02)'}
+            <div key={a.clienteId} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px', borderBottom: '1px solid #f3f4f6', transition: 'background .12s' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(0,0,0,.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#6B7280', flexShrink: 0 }}>
+              <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#6b7280', flexShrink: 0 }}>
                 {idx + 1}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 500, color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {a.cliente?.nome}
                 </div>
                 {a.qtdServicos > 1 && (
@@ -227,9 +245,9 @@ function FilaColuna({ servico, atendimentos }) {
                   </div>
                 )}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-                <div style={{ width: 5, height: 5, borderRadius: '50%', background: idx < 2 ? '#10B981' : idx < 3 ? '#F59E0B' : '#EF4444' }} />
-                <span style={{ fontSize: 11, fontWeight: 600, color: idx < 2 ? '#10B981' : idx < 3 ? '#F59E0B' : '#EF4444' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: idx === 0 ? '#10B981' : idx < 3 ? '#f59e0b' : '#ef4444' }} />
+                <span style={{ fontSize: 11, fontWeight: 600, color: idx === 0 ? '#10B981' : idx < 3 ? '#d97706' : '#ef4444' }}>
                   {tempoEspera(a.createdAt)}
                 </span>
               </div>
@@ -237,9 +255,9 @@ function FilaColuna({ servico, atendimentos }) {
           ))
         )}
         {aguardando.length > 4 && (
-          <div style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <div style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 4, borderTop: '1px solid #f3f4f6' }}>
             <span style={{ fontSize: 12, color: info.color, fontWeight: 500 }}>
-              Ver fila completa ({aguardando.length})
+              +{aguardando.length - 4} mais na fila
             </span>
             <ArrowRight size={12} color={info.color} />
           </div>
