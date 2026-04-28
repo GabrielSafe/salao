@@ -54,25 +54,25 @@
   --t:         all 0.18s ease;
 }
 
-/* ── Dark mode overrides ──────────────────────────────────────────────── */
+/* ── Dark mode overrides (tema exato do usuário) ─────────────────────── */
 html.dark {
-  --bg:          #111111;
-  --bg-card:     #1e1e1e;
-  --bg-elevated: #1a1a1a;
-  --bg-hover:    #252525;
-  --bg-active:   #2a2a2a;
+  --bg:          #171717;   /* --background */
+  --bg-card:     #262626;   /* --card */
+  --bg-elevated: #1f1f1f;
+  --bg-hover:    #333333;   /* hover dentro dos cards */
+  --bg-active:   #404040;   /* --border */
 
   --accent:        #f59e0b;
   --accent-hover:  #d97706;
   --accent-dim:    rgba(245,158,11,.15);
   --accent-border: rgba(245,158,11,.3);
 
-  --text:   #e5e5e5;
-  --text-2: #a3a3a3;
+  --text:   #e5e5e5;        /* --foreground */
+  --text-2: #a3a3a3;        /* --muted-foreground */
   --text-3: #6b7280;
 
-  --border:   rgba(255,255,255,.07);
-  --border-2: rgba(255,255,255,.12);
+  --border:   #404040;      /* --border */
+  --border-2: #525252;
 
   --success:     #22c55e;
   --success-dim: rgba(34,197,94,.15);
@@ -85,8 +85,8 @@ html.dark {
   --nav-text:        rgba(255,255,255,.45);
   --nav-text-active: #ffffff;
 
-  --shadow:    0 1px 3px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.3);
-  --shadow-lg: 0 8px 40px rgba(0,0,0,.5);
+  --shadow:    0 1px 3px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.4);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,.6);
 
   color-scheme: dark;
 }
