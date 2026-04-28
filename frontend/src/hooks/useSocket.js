@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
 
-export function useSocket(salaoId, { onEstadoCompleto, onAtendimentoAtualizado, onNovoAtendimento, onPropostaAtendimento } = {}) {
+export function useSocket(salaoId, { onEstadoCompleto, onAtendimentoAtualizado, onNovoAtendimento, onPropostaAtendimento, onVirouOffline } = {}) {
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -19,6 +19,7 @@ export function useSocket(salaoId, { onEstadoCompleto, onAtendimentoAtualizado, 
     if (onAtendimentoAtualizado) socket.on('atendimento_atualizado', onAtendimentoAtualizado);
     if (onNovoAtendimento)       socket.on('novo_atendimento',       onNovoAtendimento);
     if (onPropostaAtendimento)   socket.on('proposta_atendimento',   onPropostaAtendimento);
+    if (onVirouOffline)          socket.on('virou_offline',          onVirouOffline);
 
     return () => socket.disconnect();
   }, [salaoId]);

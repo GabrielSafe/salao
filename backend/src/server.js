@@ -6,6 +6,7 @@ const cors = require('cors');
 
 const routes = require('./routes/index');
 const { iniciarSocket } = require('./socket/index');
+const { iniciarMonitorPresenca } = require('./services/presencaMonitor');
 
 const app = express();
 const server = http.createServer(app);
@@ -32,6 +33,7 @@ app.use('/api', routes);
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 iniciarSocket(io);
+iniciarMonitorPresenca(io);
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {

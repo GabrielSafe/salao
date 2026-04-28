@@ -172,8 +172,9 @@ export default function FuncionariaPage() {
   const [naFila, setNaFila]         = useState(false);
   const [loading, setLoading]       = useState(false);
   const [msg, setMsg]               = useState({ text: '', type: '' });
-  const [ausente, setAusente]       = useState(false);
-  const [proposta, setProposta]     = useState(null);
+  const [ausente, setAusente]           = useState(false);
+  const [proposta, setProposta]         = useState(null);
+  const [virouOffline, setVirouOffline] = useState(false);
   const propostaRef = useRef(null);
 
   const salaoId       = usuario?.salaoId;
@@ -203,6 +204,10 @@ export default function FuncionariaPage() {
     setNaFila(minhasEntradas?.length > 0);
   }, [funcionariaId]);
 
+  const onVirouOffline = useCallback(() => {
+    setVirouOffline(true);
+  }, []);
+
   // Recebe proposta de atendimento
   const onPropostaAtendimento = useCallback((atendimento) => {
     propostaRef.current = atendimento;
@@ -231,7 +236,7 @@ export default function FuncionariaPage() {
     }, (TIMEOUT_SEGUNDOS + 1) * 1000);
   }, []);
 
-  useSocket(salaoId, { onEstadoCompleto, onPropostaAtendimento });
+  useSocket(salaoId, { onEstadoCompleto, onPropostaAtendimento, onVirouOffline });
 
   const meuAtendimento = estado.atendimentos.find(
     a => a.funcionariaId === funcionariaId && a.status === 'EM_ATENDIMENTO'
@@ -326,6 +331,22 @@ export default function FuncionariaPage() {
           </button>
         </div>
       </nav>
+
+      {/* Banner offline por inatividade */}
+      {virouOffline && statusFuncionaria === 'OFFLINE' && (
+        <div style={{ background: 'rgba(239,68,68,.07)', borderBottom: '1px solid rgba(239,68,68,.18)', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#EF4444', flexShrink: 0 }} />
+            <span style={{ fontSize: 13, color: '#DC2626', fontWeight: 600 }}>
+              Você ficou offline por mais de 30 minutos sem atividade.
+            </span>
+          </div>
+          <button onClick={() => setVirouOffline(false)}
+            style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer', padding: 2, display: 'flex', flexShrink: 0 }}>
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       {/* Banner ausente */}
       {ausente && (

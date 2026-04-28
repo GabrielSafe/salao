@@ -69,6 +69,7 @@ model Funcionaria {
   especialidades Especialidade[]
   multiTarefas   Boolean           @default(false) @map("multi_tarefas")
   status         StatusFuncionaria @default(OFFLINE)
+  ausenteDesde   DateTime?         @map("ausente_desde")
   createdAt      DateTime          @default(now()) @map("created_at")
   updatedAt      DateTime          @updatedAt @map("updated_at")
 

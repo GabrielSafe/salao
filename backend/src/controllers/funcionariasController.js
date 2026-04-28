@@ -183,7 +183,13 @@ async function atualizarPresenca(req, res) {
   const novoStatus = ausente ? 'AUSENTE' : 'ONLINE';
   await prisma.funcionaria.update({
     where: { id: funcionaria.id },
-    data: { status: novoStatus },
+    data: {
+      status: novoStatus,
+      // Inicia timer de ausência; preserva se já estava ausente; limpa ao voltar
+      ausenteDesde: ausente
+        ? (atual.ausenteDesde ?? new Date())
+        : null,
+    },
   });
 
   const io = req.app.get('io');
