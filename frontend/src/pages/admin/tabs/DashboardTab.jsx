@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   DollarSign, Clock, Users, TrendingUp, AlertTriangle, CheckCircle2,
   AlertCircle, Scissors, Sparkles, Hand, Leaf, Eye,
@@ -531,33 +532,70 @@ function AtribuirBtn({ atendimentoId, tipoServico, funcionarias }) {
   const T = useT();
   const [aberto, setAberto] = useState(false);
   const [loading, setLoading] = useState(null);
+  const [dropPos, setDropPos] = useState({});
+  const btnRef = useRef(null);
   const SC = { ONLINE: '#10b981', AUSENTE: '#d97706', EM_ATENDIMENTO: '#f59e0b' };
   const cands = funcionarias.filter(f => (f.especialidades?.includes(tipoServico) || f.multiTarefas) && ['ONLINE','AUSENTE','EM_ATENDIMENTO'].includes(f.status));
+
+  function handleOpen() {
+    if (aberto) { setAberto(false); return; }
+    const rect = btnRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const estimatedH = Math.min(cands.length * 46 + 70, 280);
+    const top = (window.innerHeight - rect.bottom) < estimatedH + 8
+      ? rect.top - estimatedH - 4
+      : rect.bottom + 4;
+    setDropPos({ top, right: window.innerWidth - rect.right });
+    setAberto(true);
+  }
+
   async function atribuir(fid) {
     setLoading(fid);
     try { await api.patch(`/atendimentos/${atendimentoId}/atribuir`, { funcionariaId: fid }); setAberto(false); }
     catch {} finally { setLoading(null); }
   }
+
   return (
     <div style={{ position: 'relative' }}>
-      <button onClick={() => setAberto(!aberto)} style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: 'rgba(96,165,250,.08)', color: '#60A5FA', border: '1px solid rgba(96,165,250,.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+      <button ref={btnRef} onClick={handleOpen}
+        style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: 'rgba(96,165,250,.08)', color: '#60A5FA', border: '1px solid rgba(96,165,250,.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
         <UserCheck size={10} /> Atribuir
       </button>
-      {aberto && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, zIndex: 50, overflow: 'hidden', boxShadow: T.shadow, minWidth: 160 }}>
-          {cands.length === 0 ? <div style={{ padding: '10px 12px', fontSize: 12, color: T.muted }}>Nenhuma disponível</div>
-            : cands.map(f => (
-              <button key={f.id} onClick={() => atribuir(f.id)} disabled={!!loading} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', background: 'none', border: 'none', cursor: 'pointer', borderBottom: `1px solid ${T.border}` }}
-                onMouseEnter={e => e.currentTarget.style.background = T.hover} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                <div style={{ width: 22, height: 22, borderRadius: '50%', background: `${SC[f.status]||'#9ca3af'}18`, border: `1.5px solid ${SC[f.status]||'#9ca3af'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: SC[f.status]||'#9ca3af', flexShrink: 0 }}>
-                  {f.usuario?.nome?.[0]?.toUpperCase()}
-                </div>
-                <span style={{ flex: 1, fontSize: 12, color: T.fg }}>{f.usuario?.nome}</span>
-                {loading === f.id && <Loader2 size={11} style={{ animation: 'spin .7s linear infinite' }} />}
-              </button>
-            ))}
-          <button onClick={() => setAberto(false)} style={{ width: '100%', padding: '6px', background: T.bg2, border: 'none', cursor: 'pointer', fontSize: 11, color: T.muted }}>Cancelar</button>
-        </div>
+      {aberto && createPortal(
+        <>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setAberto(false)} />
+          <div style={{ position: 'fixed', top: dropPos.top, right: dropPos.right, background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, zIndex: 9999, overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,.2)', minWidth: 180 }}>
+            <div style={{ padding: '7px 12px 4px', fontSize: 10, fontWeight: 700, color: T.muted, textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: `1px solid ${T.border}` }}>
+              Escolha a funcionária
+            </div>
+            {cands.length === 0
+              ? <div style={{ padding: '12px', fontSize: 12, color: T.muted, textAlign: 'center' }}>Nenhuma disponível</div>
+              : cands.map(f => (
+                <button key={f.id} onClick={() => atribuir(f.id)} disabled={!!loading}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', borderBottom: `1px solid ${T.border}` }}
+                  onMouseEnter={e => e.currentTarget.style.background = T.hover}
+                  onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                >
+                  <div style={{ width: 26, height: 26, borderRadius: '50%', background: `${SC[f.status]||'#9ca3af'}18`, border: `1.5px solid ${SC[f.status]||'#9ca3af'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: SC[f.status]||'#9ca3af', flexShrink: 0 }}>
+                    {f.usuario?.nome?.[0]?.toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: T.fg, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.usuario?.nome}</div>
+                    <div style={{ fontSize: 10, color: SC[f.status]||'#9ca3af' }}>
+                      {f.status === 'ONLINE' ? 'Disponível' : f.status === 'AUSENTE' ? 'Ausente' : 'Em atend.'}
+                    </div>
+                  </div>
+                  {loading === f.id && <Loader2 size={11} style={{ animation: 'spin .7s linear infinite', flexShrink: 0 }} />}
+                </button>
+              ))
+            }
+            <button onClick={() => setAberto(false)}
+              style={{ width: '100%', padding: '7px', background: T.bg2, border: 'none', cursor: 'pointer', fontSize: 11, color: T.muted }}>
+              Cancelar
+            </button>
+          </div>
+        </>,
+        document.body
       )}
     </div>
   );
