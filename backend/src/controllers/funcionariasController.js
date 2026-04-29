@@ -85,8 +85,17 @@ async function atualizar(req, res) {
 async function entrarFila(req, res) {
   const funcionaria = req.usuario.funcionaria;
   if (!funcionaria) return res.status(403).json({ erro: 'Apenas funcionárias podem entrar na fila' });
-  if (funcionaria.status !== 'ONLINE') {
-    return res.status(400).json({ erro: 'Você precisa estar online para entrar na fila' });
+
+  // Bloqueia somente OFFLINE e EM_ATENDIMENTO — AUSENTE é aceita e restaurada para ONLINE
+  const statusAtual = await prisma.funcionaria.findUnique({
+    where: { id: funcionaria.id },
+    select: { status: true },
+  });
+  if (statusAtual?.status === 'OFFLINE') {
+    return res.status(400).json({ erro: 'Você está offline. Recarregue o aplicativo.' });
+  }
+  if (statusAtual?.status === 'EM_ATENDIMENTO') {
+    return res.status(400).json({ erro: 'Você já está em atendimento.' });
   }
 
   const salaoId = req.usuario.salaoId;
@@ -96,6 +105,14 @@ async function entrarFila(req, res) {
   });
   if (jaEstaNaFila) {
     return res.status(400).json({ erro: 'Você já está na fila' });
+  }
+
+  // Se estava AUSENTE, restaura para ONLINE ao entrar na fila
+  if (statusAtual?.status === 'AUSENTE') {
+    await prisma.funcionaria.update({
+      where: { id: funcionaria.id },
+      data: { status: 'ONLINE', ausenteDesde: null, ultimoBatimento: new Date() },
+    });
   }
 
   const especialidades = funcionaria.multiTarefas

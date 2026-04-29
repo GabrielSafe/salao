@@ -266,17 +266,25 @@ export default function FuncionariaPage() {
     return () => clearInterval(interval);
   }, [salaoId, emit]);
 
-  // ── Page Visibility API via socket (mais confiável que HTTP no mobile) ─
+  // ── Page Visibility API via socket ───────────────────────────────────
+  // REGRA: se está na fila, sair da tela NÃO muda status (fila = disponível)
+  // Só marca ausente se não estiver na fila e não estiver em atendimento
   useEffect(() => {
     function handleVisibility() {
       const oculta = document.hidden;
       setAusente(oculta);
-      // Usa socket — menor overhead e mais rápido que HTTP antes do browser pausar
+
+      // Se está na fila, não envia evento de ausência — servidor também ignora,
+      // mas não enviamos nem para evitar carga desnecessária
+      if (oculta && naFila) return;
+      if (oculta && statusFuncionaria === 'EM_ATENDIMENTO') return;
+
       emit('visibilidade_alterada', { oculta });
     }
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, [emit]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emit, naFila, statusFuncionaria]);
 
   // ── Handlers ──────────────────────────────────────────────────────────
   const meuAtendimento    = estado.atendimentos.find(a => a.funcionariaId === funcionariaId && a.status === 'EM_ATENDIMENTO');
@@ -387,12 +395,22 @@ export default function FuncionariaPage() {
         </div>
       </nav>
 
-      {/* ── Banner ausente (tela bloqueada / aba minimizada) ── */}
-      {ausente && (
+      {/* ── Banner: background com fila ativa ── */}
+      {ausente && naFila && (
+        <div style={{ background: 'rgba(16,185,129,.06)', borderBottom: '1px solid rgba(16,185,129,.15)', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#10B981', animation: 'pulseDot 2s ease infinite', flexShrink: 0 }} />
+          <span style={{ fontSize: 13, color: '#10B981', fontWeight: 600 }}>
+            Você está na fila e <strong>disponível</strong> — aguardando próxima cliente.
+          </span>
+        </div>
+      )}
+
+      {/* ── Banner: ausente sem fila ── */}
+      {ausente && !naFila && statusFuncionaria !== 'EM_ATENDIMENTO' && (
         <div style={{ background: 'rgba(245,158,11,.06)', borderBottom: '1px solid rgba(245,158,11,.15)', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           <Coffee size={13} color="#d97706" />
           <span style={{ fontSize: 13, color: '#d97706', fontWeight: 600 }}>
-            Você está <strong>ausente</strong> — desbloqueie o celular ou volte para esta aba.
+            Você está <strong>ausente</strong> — volte para esta aba para ficar online.
           </span>
         </div>
       )}

@@ -12,12 +12,14 @@ function iniciarMonitorPresenca(io) {
 
     try {
       // ── 1. ONLINE sem heartbeat por +3 min → AUSENTE ──────────────────
+      // EXCEÇÃO: funcionárias na fila nunca são marcadas ausentes por falta de heartbeat
       const limiteHeartbeat = new Date(agora - HEARTBEAT_TIMEOUT_MS);
 
       const onlineSemBatimento = await prisma.funcionaria.findMany({
         where: {
           status: 'ONLINE',
           ultimoBatimento: { not: null, lt: limiteHeartbeat },
+          filaEntradas: { none: {} }, // Não está na fila = pode ser marcada ausente
         },
         select: { id: true, salaoId: true },
       });
@@ -27,7 +29,7 @@ function iniciarMonitorPresenca(io) {
           where: { id: f.id },
           data: { status: 'AUSENTE', ausenteDesde: new Date() },
         });
-        console.log(`[presença] Funcionária ${f.id} → AUSENTE (sem heartbeat há +3 min)`);
+        console.log(`[presença] Funcionária ${f.id} → AUSENTE (sem heartbeat há +3 min, fora da fila)`);
 
         if (io) {
           io.to(`funcionaria:${f.id}`).emit('aviso_presenca', {

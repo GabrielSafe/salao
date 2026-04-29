@@ -74,6 +74,16 @@ function iniciarSocket(io) {
         const atual = await prisma.funcionaria.findUnique({ where: { id: funcionaria.id } });
         if (!atual || atual.status === 'EM_ATENDIMENTO' || atual.status === 'OFFLINE') return;
 
+        // Se está na fila, NUNCA marca ausente por sair da tela
+        // Estar na fila = disponível, mesmo que o app esteja em background
+        if (oculta) {
+          const naFila = await prisma.filaEntrada.findFirst({ where: { funcionariaId: funcionaria.id } });
+          if (naFila) {
+            console.log(`[socket] Funcionária ${funcionaria.id} foi para background mas está na fila → mantém ONLINE`);
+            return;
+          }
+        }
+
         const novoStatus = oculta ? 'AUSENTE' : 'ONLINE';
         await prisma.funcionaria.update({
           where: { id: funcionaria.id },
