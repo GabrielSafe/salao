@@ -53,7 +53,12 @@ async function tentarProporAtendimento(atendimento, salaoId, io, funcionariasEmP
       if (!atual || atual.status !== 'AGUARDANDO') return;
 
       const jáRejeitaram = [...(rejeicoesPorAtendimento.get(atendimento.id) || [])];
-      const excluir = [...new Set([...jáRejeitaram, ...funcionariasEmProposta])];
+
+      // Exclui também quem já tem proposta pendente aguardando aceite
+      // Evita que o mesmo telefone receba 2 comandas ao mesmo tempo
+      const comPropostaPendente = [...propostaParaFunc.values()];
+
+      const excluir = [...new Set([...jáRejeitaram, ...funcionariasEmProposta, ...comPropostaPendente])];
 
       const entradaFila = await tx.filaEntrada.findFirst({
         where: {
@@ -134,6 +139,7 @@ async function tentarProporAtendimento(atendimento, salaoId, io, funcionariasEmP
 async function aceitarProposta(atendimentoId, funcionariaId, salaoId, io) {
   const timer = timeoutsPendentes.get(atendimentoId);
   if (timer) { clearTimeout(timer); timeoutsPendentes.delete(atendimentoId); }
+  propostaParaFunc.delete(atendimentoId);
 
   try {
     let atendimentoAtualizado = null;
@@ -198,6 +204,7 @@ async function aceitarProposta(atendimentoId, funcionariaId, salaoId, io) {
 async function recusarProposta(atendimentoId, funcionariaId, salaoId, io, automatico = false) {
   const timer = timeoutsPendentes.get(atendimentoId);
   if (timer) { clearTimeout(timer); timeoutsPendentes.delete(atendimentoId); }
+  propostaParaFunc.delete(atendimentoId);
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -364,6 +371,8 @@ async function proporParaFuncionaria(atendimentoId, funcionariaId, salaoId, io) 
     });
 
     if (!propostaAgrupada) return;
+
+    propostaParaFunc.set(propostaAgrupada.id, funcionariaId);
 
     if (io) {
       io.to(`funcionaria:${funcionariaId}`).emit('proposta_atendimento', propostaAgrupada);
