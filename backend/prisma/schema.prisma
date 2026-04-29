@@ -43,10 +43,24 @@ model Usuario {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  salao       Salao?       @relation(fields: [salaoId], references: [id])
-  funcionaria Funcionaria?
+  salao             Salao?             @relation(fields: [salaoId], references: [id])
+  funcionaria       Funcionaria?
+  pushSubscriptions PushSubscription[]
 
   @@map("usuarios")
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  usuarioId String   @map("usuario_id")
+  endpoint  String   @unique
+  p256dhKey String   @map("p256dh_key")
+  authKey   String   @map("auth_key")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("push_subscriptions")
 }
 
 enum Especialidade {

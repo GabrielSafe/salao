@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const { enviarPushParaFuncionaria } = require('./pushService');
 
 const TIMEOUT_PROPOSTA_MS = 60_000; // 60 segundos
 const timeoutsPendentes   = new Map();
@@ -90,10 +91,19 @@ async function tentarProporAtendimento(atendimento, salaoId, io, funcionariasEmP
 
     funcionariasEmProposta.add(funcionariaId);
 
-    setImmediate(() => {
+    setImmediate(async () => {
       if (io) {
         io.to(`funcionaria:${funcionariaId}`).emit('proposta_atendimento', propostaAgrupada);
       }
+
+      // Web Push — chega mesmo com app fechado/minimizado
+      const nomes   = propostaAgrupada.servicosAgrupados?.map(s => s.servicoNome || s.tipoServico).join(', ') || propostaAgrupada.servicoNome || propostaAgrupada.tipoServico;
+      const cliente = propostaAgrupada.cliente?.nome || 'Cliente';
+      await enviarPushParaFuncionaria(funcionariaId, {
+        title: '🔔 Nova solicitação!',
+        body:  `${cliente} • ${nomes}`,
+        url:   '/funcionaria',
+      });
     });
 
     // Timeout rastreado pelo primary ID
@@ -325,6 +335,14 @@ async function proporParaFuncionaria(atendimentoId, funcionariaId, salaoId, io) 
     if (io) {
       io.to(`funcionaria:${funcionariaId}`).emit('proposta_atendimento', propostaAgrupada);
     }
+
+    // Web Push para atribuição manual
+    const nomes   = propostaAgrupada.servicosAgrupados?.map(s => s.servicoNome || s.tipoServico).join(', ') || propostaAgrupada.servicoNome || propostaAgrupada.tipoServico;
+    await enviarPushParaFuncionaria(funcionariaId, {
+      title: '🔔 Atribuição manual!',
+      body:  `${propostaAgrupada.cliente?.nome || 'Cliente'} • ${nomes}`,
+      url:   '/funcionaria',
+    });
 
     const timer = setTimeout(() => {
       recusarProposta(propostaAgrupada.id, funcionariaId, salaoId, io, true);

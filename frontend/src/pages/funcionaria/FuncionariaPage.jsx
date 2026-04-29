@@ -218,12 +218,57 @@ export default function FuncionariaPage() {
     ? Math.round(meusFinalizados.filter(a => a.iniciadoEm && a.finalizadoEm).reduce((s, a) => s + (new Date(a.finalizadoEm) - new Date(a.iniciadoEm)) / 60000, 0) / Math.max(meusFinalizados.filter(a => a.iniciadoEm).length, 1))
     : 0;
 
-  // ── Permissão de notificação ──────────────────────────────────────────
+  // ── Registra Service Worker + Web Push ──────────────────────────────
   useEffect(() => {
-    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-      Notification.requestPermission().catch(() => {});
+    async function setupPush() {
+      try {
+        // Pede permissão de notificação
+        if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+          await Notification.requestPermission().catch(() => {});
+        }
+        if (Notification.permission !== 'granted') return;
+
+        // Suporte necessário
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+        // Registra SW
+        const reg = await navigator.serviceWorker.register('/sw.js');
+        await navigator.serviceWorker.ready;
+
+        // Busca a chave pública VAPID do servidor
+        const res = await api.get('/push/public-key');
+        const vapidPublicKey = res.data?.publicKey;
+        if (!vapidPublicKey) return;
+
+        // Verifica se já tem subscription ativa neste dispositivo
+        let subscription = await reg.pushManager.getSubscription();
+
+        if (!subscription) {
+          // Cria nova subscription
+          subscription = await reg.pushManager.subscribe({
+            userVisibleOnly:      true,
+            applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+          });
+        }
+
+        // Registra/atualiza no servidor
+        await api.post('/push/subscribe', subscription.toJSON());
+      } catch (err) {
+        // Falha silenciosa — sistema continua funcionando via socket
+        console.warn('[push] Setup:', err.message);
+      }
     }
+    setupPush();
   }, []);
+
+  function urlBase64ToUint8Array(base64) {
+    const pad  = '='.repeat((4 - base64.length % 4) % 4);
+    const b64  = (base64 + pad).replace(/-/g, '+').replace(/_/g, '/');
+    const raw  = window.atob(b64);
+    const arr  = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+    return arr;
+  }
 
   // ── Socket callbacks ──────────────────────────────────────────────────
   const onEstadoCompleto = useCallback((dados) => {
@@ -259,6 +304,8 @@ export default function FuncionariaPage() {
       });
     }
 
+    // Nota: notificação push já foi enviada pelo servidor via VAPID (funciona em background)
+    // new Notification() só funciona com app em foco — o SW cuida do resto
     setTimeout(() => setProposta(p => p?.id === atendimento.id ? null : p), (TIMEOUT_SEGUNDOS + 1) * 1000);
   }, []);
 

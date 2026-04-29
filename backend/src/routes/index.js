@@ -4,6 +4,7 @@ const router = express.Router();
 const { autenticar, exigirRole, exigirSalao } = require('../middleware/auth');
 
 const authCtrl = require('../controllers/authController');
+const pushCtrl = require('../controllers/pushController');
 const saloesCtrl = require('../controllers/saloesController');
 const funcionariasCtrl = require('../controllers/funcionariasController');
 const clientesCtrl = require('../controllers/clientesController');
@@ -16,6 +17,11 @@ router.post('/auth/login', authCtrl.login);
 router.post('/auth/logout', autenticar, authCtrl.logout);
 router.get('/auth/perfil', autenticar, authCtrl.perfil);
 router.patch('/auth/perfil', autenticar, authCtrl.atualizarPerfil);
+
+// Push notifications
+router.get('/push/public-key', pushCtrl.getPublicKey);
+router.post('/push/subscribe', autenticar, pushCtrl.subscribe);
+router.post('/push/unsubscribe', autenticar, pushCtrl.unsubscribe);
 
 // Salões (superadmin)
 router.get('/saloes', autenticar, exigirRole('SUPERADMIN'), saloesCtrl.listar);
