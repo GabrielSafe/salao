@@ -48,6 +48,15 @@ function iniciarSocket(io) {
           }
 
           await prisma.funcionaria.update({ where: { id: funcionaria.id }, data: atualizacao });
+
+          // Se está na fila após reconexão, roda distribuição para receber propostas pendentes
+          const naFila = await prisma.filaEntrada.findFirst({ where: { funcionariaId: funcionaria.id } });
+          if (naFila) {
+            const { rodarDistribuicao, limparRejeicoesParaFuncionaria } = require('../services/distribuicao');
+            limparRejeicoesParaFuncionaria(funcionaria.id);
+            await rodarDistribuicao(salaoId, io);
+            console.log(`[socket] Funcionária ${funcionaria.id} reconectou com fila ativa → distribuição re-executada`);
+          }
         }
       }
 
@@ -111,6 +120,14 @@ function iniciarSocket(io) {
         const atual = await prisma.funcionaria.findUnique({ where: { id: funcionaria.id } });
         if (!atual) return;
         if (atual.status === 'EM_ATENDIMENTO' || atual.status === 'OFFLINE') return;
+
+        // Se está na fila, NÃO marca AUSENTE — o heartbeat monitor cuida de inatividade real
+        // Isso preserva a disponibilidade de quem apenas minimizou o browser
+        const naFila = await prisma.filaEntrada.findFirst({ where: { funcionariaId: funcionaria.id } });
+        if (naFila) {
+          console.log(`[socket] Funcionária ${funcionaria.id} desconectou mas está na fila → mantém ${atual.status}`);
+          return;
+        }
 
         await prisma.funcionaria.update({
           where: { id: funcionaria.id },

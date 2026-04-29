@@ -185,10 +185,13 @@ async function recusarProposta(atendimentoId, funcionariaId, salaoId, io, automa
       if (!atend || atend.status !== 'PENDENTE_ACEITE') return;
       if (atend.propostaParaId !== funcionariaId) return;
 
-      // Registra rejeição no primary para evitar loop
-      const rejeitados = rejeicoesPorAtendimento.get(atendimentoId) || new Set();
-      rejeitados.add(funcionariaId);
-      rejeicoesPorAtendimento.set(atendimentoId, rejeitados);
+      // Só blacklista em rejeições MANUAIS (funcionária clicou "Recusar")
+      // Timeouts automáticos (celular em background) NÃO blacklistam — ela pode receber de novo
+      if (!automatico) {
+        const rejeitados = rejeicoesPorAtendimento.get(atendimentoId) || new Set();
+        rejeitados.add(funcionariaId);
+        rejeicoesPorAtendimento.set(atendimentoId, rejeitados);
+      }
 
       // Volta TODO o grupo para AGUARDANDO
       await tx.atendimento.updateMany({
@@ -267,12 +270,11 @@ function limparRejeicoes(atendimentoId) {
   rejeicoesPorAtendimento.delete(atendimentoId);
 }
 
-// Quando nova funcionária entra na fila, reseta rejeições para que ela possa receber
-function resetarRejeicoesPorEspecialidade(salaoId, especialidade) {
-  // Remove da lista de rejeitados as funcionárias que entraram na fila DEPOIS da rejeição
-  // Simplificado: limpa todos os atendimentos dessa especialidade para a nova funcionária ser elegível
-  for (const [atendimentoId] of rejeicoesPorAtendimento) {
-    // Deixa a entrada existir mas não faz nada — a nova funcionária não estará no set
+// Remove uma funcionária específica de TODAS as listas de rejeição
+// Chamado quando ela entra/retorna à fila para que possa receber propostas novamente
+function limparRejeicoesParaFuncionaria(funcionariaId) {
+  for (const rejeitados of rejeicoesPorAtendimento.values()) {
+    rejeitados.delete(funcionariaId);
   }
 }
 
@@ -335,4 +337,4 @@ async function proporParaFuncionaria(atendimentoId, funcionariaId, salaoId, io) 
   }
 }
 
-module.exports = { rodarDistribuicao, emitirEstadoCompleto, aceitarProposta, recusarProposta, limparRejeicoes, proporParaFuncionaria };
+module.exports = { rodarDistribuicao, emitirEstadoCompleto, aceitarProposta, recusarProposta, limparRejeicoes, limparRejeicoesParaFuncionaria, proporParaFuncionaria };
