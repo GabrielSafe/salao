@@ -247,6 +247,11 @@ export default function FuncionariaPage() {
     onAvisoPresenca,
   });
 
+  // ── Valores derivados — antes dos effects que os usam ─────────────────
+  const meuAtendimento       = estado.atendimentos.find(a => a.funcionariaId === funcionariaId && a.status === 'EM_ATENDIMENTO');
+  const minhasEspecialidades = usuario?.funcionaria?.especialidades || [];
+  const statusFuncionaria    = estado.funcionarias.find(f => f.id === funcionariaId)?.status || 'ONLINE';
+
   // ── Detecta conexão/desconexão do socket ──────────────────────────────
   useEffect(() => {
     if (!salaoId) return;
@@ -266,30 +271,20 @@ export default function FuncionariaPage() {
     return () => clearInterval(interval);
   }, [salaoId, emit]);
 
-  // ── Page Visibility API via socket ───────────────────────────────────
-  // REGRA: se está na fila, sair da tela NÃO muda status (fila = disponível)
-  // Só marca ausente se não estiver na fila e não estiver em atendimento
+  // ── Page Visibility API via socket ────────────────────────────────────
   useEffect(() => {
     function handleVisibility() {
       const oculta = document.hidden;
       setAusente(oculta);
-
-      // Se está na fila, não envia evento de ausência — servidor também ignora,
-      // mas não enviamos nem para evitar carga desnecessária
       if (oculta && naFila) return;
       if (oculta && statusFuncionaria === 'EM_ATENDIMENTO') return;
-
       emit('visibilidade_alterada', { oculta });
     }
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [emit, naFila, statusFuncionaria]);
 
   // ── Handlers ──────────────────────────────────────────────────────────
-  const meuAtendimento    = estado.atendimentos.find(a => a.funcionariaId === funcionariaId && a.status === 'EM_ATENDIMENTO');
-  const minhasEspecialidades = usuario?.funcionaria?.especialidades || [];
-  const statusFuncionaria    = estado.funcionarias.find(f => f.id === funcionariaId)?.status || 'ONLINE';
 
   function showMsg(text, type = 'success') {
     setMsg({ text, type });
