@@ -21,12 +21,14 @@ function iniciarSocket(io) {
   });
 
   io.on('connection', (socket) => {
+    // ── Sala do salão (admin/público) ────────────────────────────────────
     socket.on('entrar_sala_salao', async ({ salaoId, clienteId }) => {
       socket.join(`salao:${salaoId}`);
       if (clienteId) socket.join(`cliente:${clienteId}`);
       await emitirEstadoCompleto(salaoId, io);
     });
 
+    // ── Sala da funcionária ──────────────────────────────────────────────
     socket.on('entrar_sala_usuario', async ({ salaoId }) => {
       socket.join(`salao:${salaoId}`);
 
@@ -34,20 +36,63 @@ function iniciarSocket(io) {
       if (funcionaria) {
         socket.join(`funcionaria:${funcionaria.id}`);
 
-        // Se estava AUSENTE (saída temporária), volta para ONLINE ao reconectar
         const atual = await prisma.funcionaria.findUnique({ where: { id: funcionaria.id } });
-        if (atual?.status === 'AUSENTE') {
-          await prisma.funcionaria.update({
-            where: { id: funcionaria.id },
-            data: { status: 'ONLINE', ausenteDesde: null },
-          });
-          console.log(`[socket] Funcionária ${funcionaria.id} reconectou → ONLINE`);
+        if (atual) {
+          const atualizacao = { ultimoBatimento: new Date() };
+
+          // Volta para ONLINE se estava AUSENTE (reconexão)
+          if (atual.status === 'AUSENTE') {
+            atualizacao.status = 'ONLINE';
+            atualizacao.ausenteDesde = null;
+            console.log(`[socket] Funcionária ${funcionaria.id} reconectou → ONLINE`);
+          }
+
+          await prisma.funcionaria.update({ where: { id: funcionaria.id }, data: atualizacao });
         }
       }
 
       await emitirEstadoCompleto(salaoId, io);
     });
 
+    // ── Heartbeat — prova de vida a cada 30 s ────────────────────────────
+    socket.on('heartbeat', async () => {
+      const funcionaria = socket.usuario?.funcionaria;
+      if (!funcionaria) return;
+      try {
+        await prisma.funcionaria.update({
+          where: { id: funcionaria.id },
+          data: { ultimoBatimento: new Date() },
+        });
+      } catch {}
+    });
+
+    // ── Visibilidade da página (tela bloqueada / app em background) ──────
+    socket.on('visibilidade_alterada', async ({ oculta }) => {
+      const funcionaria = socket.usuario?.funcionaria;
+      if (!funcionaria) return;
+      try {
+        const atual = await prisma.funcionaria.findUnique({ where: { id: funcionaria.id } });
+        if (!atual || atual.status === 'EM_ATENDIMENTO' || atual.status === 'OFFLINE') return;
+
+        const novoStatus = oculta ? 'AUSENTE' : 'ONLINE';
+        await prisma.funcionaria.update({
+          where: { id: funcionaria.id },
+          data: {
+            status: novoStatus,
+            ausenteDesde: oculta ? (atual.ausenteDesde ?? new Date()) : null,
+            ultimoBatimento: oculta ? atual.ultimoBatimento : new Date(),
+          },
+        });
+
+        const salaoId = socket.usuario.salaoId;
+        if (salaoId) await emitirEstadoCompleto(salaoId, io);
+        console.log(`[socket] Funcionária ${funcionaria.id} visibilidade → ${oculta ? 'AUSENTE' : 'ONLINE'}`);
+      } catch (err) {
+        console.error('[socket] Erro em visibilidade_alterada:', err.message);
+      }
+    });
+
+    // ── Desconexão ───────────────────────────────────────────────────────
     socket.on('disconnect', async () => {
       const funcionaria = socket.usuario?.funcionaria;
       if (!funcionaria) return;
@@ -55,14 +100,12 @@ function iniciarSocket(io) {
       try {
         const atual = await prisma.funcionaria.findUnique({ where: { id: funcionaria.id } });
         if (!atual) return;
-        // Não interfere em quem está atendendo ou já offline
         if (atual.status === 'EM_ATENDIMENTO' || atual.status === 'OFFLINE') return;
 
         await prisma.funcionaria.update({
           where: { id: funcionaria.id },
           data: {
             status: 'AUSENTE',
-            // Preserva ausenteDesde original para não reiniciar o timer
             ausenteDesde: atual.ausenteDesde ?? new Date(),
           },
         });

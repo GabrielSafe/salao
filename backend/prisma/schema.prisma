@@ -70,9 +70,10 @@ model Funcionaria {
   salaoId        String            @map("salao_id")
   especialidades Especialidade[]
   multiTarefas   Boolean           @default(false) @map("multi_tarefas")
-  status         StatusFuncionaria @default(OFFLINE)
-  ausenteDesde   DateTime?         @map("ausente_desde")
-  createdAt      DateTime          @default(now()) @map("created_at")
+  status          StatusFuncionaria @default(OFFLINE)
+  ausenteDesde    DateTime?         @map("ausente_desde")
+  ultimoBatimento DateTime?         @map("ultimo_batimento")
+  createdAt       DateTime          @default(now()) @map("created_at")
   updatedAt      DateTime          @updatedAt @map("updated_at")
 
   usuario      Usuario       @relation(fields: [usuarioId], references: [id])
