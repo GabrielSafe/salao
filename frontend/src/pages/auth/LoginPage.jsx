@@ -107,9 +107,10 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const usuario = await login(form.email, form.senha);
-      if (usuario.role === 'SUPERADMIN') navigate('/superadmin');
-      else if (usuario.role === 'ADMIN') navigate('/admin');
-      else navigate('/funcionaria');
+      if (usuario.role === 'SUPERADMIN')         navigate('/superadmin');
+      else if (usuario.role === 'ADMIN')          navigate('/admin');
+      else if (usuario.role === 'RECEPCIONISTA')  navigate('/admin');
+      else                                        navigate('/funcionaria');
     } catch (err) {
       setErro(err.response?.data?.erro || 'E-mail ou senha incorretos');
     } finally {
