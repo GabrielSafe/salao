@@ -40,11 +40,11 @@ function iniciarSocket(io) {
         if (atual) {
           const atualizacao = { ultimoBatimento: new Date() };
 
-          // Volta para ONLINE se estava AUSENTE (reconexão)
-          if (atual.status === 'AUSENTE') {
+          // Volta para ONLINE se estava AUSENTE ou OFFLINE (abriu o app novamente)
+          if (atual.status === 'AUSENTE' || atual.status === 'OFFLINE') {
             atualizacao.status = 'ONLINE';
             atualizacao.ausenteDesde = null;
-            console.log(`[socket] Funcionária ${funcionaria.id} reconectou → ONLINE`);
+            console.log(`[socket] Funcionária ${funcionaria.id} reconectou (${atual.status}) → ONLINE`);
           }
 
           await prisma.funcionaria.update({ where: { id: funcionaria.id }, data: atualizacao });
