@@ -224,8 +224,9 @@ export default function FuncionariaPage() {
   const [virouOffline, setVirouOffline] = useState(false);
   const [msgOffline, setMsgOffline]     = useState('');
   const [conectado, setConectado]       = useState(true);
-  const propostaRef  = useRef(null);
-  const audioCtxRef  = useRef(null); // AudioContext pré-desbloqueado via gesto
+  const propostaRef    = useRef(null);
+  const audioCtxRef    = useRef(null);
+  const [mostrarGuiaIOS, setMostrarGuiaIOS] = useState(false);
 
   const salaoId       = usuario?.salaoId;
   const funcionariaId = usuario?.funcionaria?.id;
@@ -241,6 +242,14 @@ export default function FuncionariaPage() {
   const temposMedioMin   = meusFinalizados.length > 0
     ? Math.round(meusFinalizados.filter(a => a.iniciadoEm && a.finalizadoEm).reduce((s, a) => s + (new Date(a.finalizadoEm) - new Date(a.iniciadoEm)) / 60000, 0) / Math.max(meusFinalizados.filter(a => a.iniciadoEm).length, 1))
     : 0;
+
+  // ── Detecta iOS sem PWA instalado ────────────────────────────────────
+  useEffect(() => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isPWA = window.navigator.standalone === true ||
+                  window.matchMedia('(display-mode: standalone)').matches;
+    if (isIOS && !isPWA) setMostrarGuiaIOS(true);
+  }, []);
 
   // ── Registra Service Worker + Web Push ──────────────────────────────
   useEffect(() => {
@@ -464,6 +473,39 @@ export default function FuncionariaPage() {
           </button>
         </div>
       </nav>
+
+      {/* ── Banner iOS: instalar como PWA ── */}
+      {mostrarGuiaIOS && (
+        <div style={{ background: isDark ? '#1a1a1a' : '#fff', borderBottom: `1px solid ${T.border}`, padding: '14px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+                <span style={{ fontSize: 16 }}>📱</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: T.fg }}>Ative notificações no iPhone</span>
+              </div>
+              <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.6, marginBottom: 10 }}>
+                No Safari, adicione à tela inicial para receber alertas mesmo com o app fechado:
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {[
+                  { n: '1', icon: '⬆️', text: 'Toque em Compartilhar (botão no centro da barra inferior)' },
+                  { n: '2', icon: '➕', text: 'Toque em "Adicionar à Tela de Início"' },
+                  { n: '3', icon: '✅', text: 'Toque em "Adicionar" e abra sempre pelo ícone na tela inicial' },
+                ].map(s => (
+                  <div key={s.n} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(245,158,11,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#d97706', flexShrink: 0, marginTop: 1 }}>{s.n}</div>
+                    <span style={{ fontSize: 12, color: T.muted, lineHeight: 1.5 }}>{s.icon} {s.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <button onClick={() => setMostrarGuiaIOS(false)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.sub, padding: 2, flexShrink: 0 }}>
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Banners ── */}
       {ausente && naFila && (
