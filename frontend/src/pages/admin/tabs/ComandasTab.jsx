@@ -6,7 +6,8 @@ import {
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSocket } from '../../../hooks/useSocket';
 import api from '../../../services/api';
-import { CATALOG, CATEGORIAS_ORDEM } from '../../../utils/servicosCatalog';
+import { CATEGORIAS_ORDEM } from '../../../utils/servicosCatalog';
+import { useServicos } from '../../../hooks/useServicos.js';
 
 const SERVICE_INFO = {
   CABELO:      { label: 'Cabelo',      Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.12)', border: 'rgba(168,85,247,.2)' },
@@ -103,6 +104,7 @@ function AtribuirBtn({ atendimentoId, tipoServico, funcionarias }) {
 
 // ── Card de comanda expandida ──────────────────────────────────────────────
 function ComandaCard({ grupo, funcionarias, onFechar, fechando }) {
+  const { catalog: CATALOG } = useServicos();
   const [adicionando, setAdicionando]       = useState(false);
   const [catAtiva, setCatAtiva]             = useState('CABELO');
   const [selecionados, setSelecionados]     = useState([]); // [{ tipoServico, servicoNome, servicoPreco }]
@@ -299,7 +301,7 @@ function ComandaCard({ grupo, funcionarias, onFechar, fechando }) {
 
             {/* Itens da categoria */}
             <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 8, marginBottom: 10 }}>
-              {CATALOG[catAtiva].grupos.map(grupo => (
+              {(CATALOG?.[catAtiva]?.grupos || []).map(grupo => (
                 <div key={grupo.nome}>
                   <div style={{ padding: '5px 10px 2px', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', background: 'var(--bg-elevated)' }}>{grupo.nome}</div>
                   {grupo.itens.map(item => {

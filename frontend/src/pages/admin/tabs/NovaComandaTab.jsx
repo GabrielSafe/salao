@@ -5,8 +5,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useThemeCtx } from '../../../contexts/ThemeContext.jsx';
+import { useServicos } from '../../../hooks/useServicos.js';
 import api from '../../../services/api';
-import { CATALOG, CATEGORIAS_ORDEM } from '../../../utils/servicosCatalog';
+import { CATEGORIAS_ORDEM } from '../../../utils/servicosCatalog';
 
 const SERVICE_INFO = {
   CABELO:      { label: 'Cabelo',      Icon: Scissors, color: '#C084FC', bg: 'rgba(168,85,247,.1)',  border: 'rgba(168,85,247,.25)', darkBg: 'rgba(168,85,247,.15)' },
@@ -109,6 +110,7 @@ export default function NovaComandaTab() {
   const { usuario }                         = useAuth();
   const T                                   = useT();
   const { isDark }                          = useThemeCtx();
+  const { catalog: CATALOG, loading: loadingCatalog } = useServicos();
   const [busca, setBusca]                   = useState('');
   const [sugestoes, setSugestoes]           = useState([]);
   const [cliente, setCliente]               = useState(null);
@@ -173,8 +175,15 @@ export default function NovaComandaTab() {
 
   if (sucesso) return <ConfirmacaoComanda sucesso={sucesso} onNova={() => setSucesso(null)} />;
 
-  const catInfo = SERVICE_INFO[categoriaAtiva];
-  const catData = CATALOG[categoriaAtiva];
+  if (!CATALOG || loadingCatalog) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300, color: T.muted, gap: 10, fontFamily: 'Inter, sans-serif' }}>
+      <Loader2 size={20} style={{ animation: 'spin .7s linear infinite' }} /> Carregando catálogo...
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+
+  const catInfo    = SERVICE_INFO[categoriaAtiva];
+  const catData    = CATALOG[categoriaAtiva] || { grupos: [] };
   const totalItens = catData.grupos.reduce((s, g) => s + g.itens.length, 0);
 
   return (

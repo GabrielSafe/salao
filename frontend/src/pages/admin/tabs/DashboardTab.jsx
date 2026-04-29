@@ -9,7 +9,8 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { useSocket } from '../../../hooks/useSocket';
 import { useThemeCtx } from '../../../contexts/ThemeContext.jsx';
 import api from '../../../services/api';
-import { CATALOG, CATEGORIAS_ORDEM } from '../../../utils/servicosCatalog';
+import { CATEGORIAS_ORDEM } from '../../../utils/servicosCatalog';
+import { useServicos } from '../../../hooks/useServicos.js';
 
 // ── Tema ──────────────────────────────────────────────────────────────────
 function buildT(isDark) {
