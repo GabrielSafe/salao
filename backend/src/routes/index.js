@@ -15,6 +15,7 @@ const cadeirasCtrl     = require('../controllers/cadeirasController');
 router.post('/auth/login', authCtrl.login);
 router.post('/auth/logout', autenticar, authCtrl.logout);
 router.get('/auth/perfil', autenticar, authCtrl.perfil);
+router.patch('/auth/perfil', autenticar, authCtrl.atualizarPerfil);
 
 // Salões (superadmin)
 router.get('/saloes', autenticar, exigirRole('SUPERADMIN'), saloesCtrl.listar);

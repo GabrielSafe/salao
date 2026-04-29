@@ -80,4 +80,45 @@ async function perfil(req, res) {
   });
 }
 
-module.exports = { login, logout, perfil };
+async function atualizarPerfil(req, res) {
+  const { nome, email, senhaAtual, novaSenha } = req.body;
+
+  if (!nome?.trim()) return res.status(400).json({ erro: 'Nome é obrigatório' });
+  if (!email?.trim()) return res.status(400).json({ erro: 'E-mail é obrigatório' });
+
+  const usuario = await prisma.usuario.findUnique({ where: { id: req.usuario.id } });
+
+  if (novaSenha) {
+    if (!senhaAtual) return res.status(400).json({ erro: 'Informe a senha atual para alterar a senha' });
+    const valida = await bcrypt.compare(senhaAtual, usuario.senha);
+    if (!valida) return res.status(400).json({ erro: 'Senha atual incorreta' });
+    if (novaSenha.length < 6) return res.status(400).json({ erro: 'Nova senha deve ter pelo menos 6 caracteres' });
+  }
+
+  const emailNormalizado = email.trim().toLowerCase();
+  if (emailNormalizado !== usuario.email) {
+    const existente = await prisma.usuario.findUnique({ where: { email: emailNormalizado } });
+    if (existente) return res.status(400).json({ erro: 'Este e-mail já está em uso' });
+  }
+
+  const atualizado = await prisma.usuario.update({
+    where: { id: req.usuario.id },
+    data: {
+      nome: nome.trim(),
+      email: emailNormalizado,
+      ...(novaSenha ? { senha: await bcrypt.hash(novaSenha, 10) } : {}),
+    },
+    include: { salao: true },
+  });
+
+  return res.json({
+    id: atualizado.id,
+    nome: atualizado.nome,
+    email: atualizado.email,
+    role: atualizado.role,
+    salaoId: atualizado.salaoId,
+    salao: atualizado.salao,
+  });
+}
+
+module.exports = { login, logout, perfil, atualizarPerfil };

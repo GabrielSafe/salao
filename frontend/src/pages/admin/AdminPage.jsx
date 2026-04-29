@@ -1,13 +1,16 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, ClipboardPlus, Users, BarChart3, LogOut,
   Scissors, Settings, Clock, FileText, UserCircle,
-  HelpCircle, Search, Bell, ChevronDown, Crown, Sun, Moon, Tag, Armchair, Menu
+  HelpCircle, Search, Bell, ChevronDown, Crown, Sun, Moon, Tag, Armchair, Menu,
+  User, Mail, Lock, Eye, EyeOff, Check, X, Loader2, Edit3, Shield
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../hooks/useSocket';
 import { useThemeCtx as useTheme } from '../../contexts/ThemeContext.jsx';
+import api from '../../services/api';
 import DashboardTab   from './tabs/DashboardTab';
 import ServicosTab    from './tabs/ServicosTab';
 import CadeirasTab    from './tabs/CadeirasTab';
@@ -111,6 +114,244 @@ function buildTheme(isDark) {
   };
 }
 
+// ── ProfileModal ──────────────────────────────────────────────────────────
+function ProfileModal({ onClose, t, isDark }) {
+  const { usuario, atualizarUsuario } = useAuth();
+  const [nome, setNome]               = useState(usuario?.nome || '');
+  const [email, setEmail]             = useState(usuario?.email || '');
+  const [senhaAtual, setSenhaAtual]   = useState('');
+  const [novaSenha, setNovaSenha]     = useState('');
+  const [confirmar, setConfirmar]     = useState('');
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [alterarSenha, setAlterarSenha] = useState(false);
+  const [loading, setLoading]         = useState(false);
+  const [erro, setErro]               = useState('');
+  const [sucesso, setSucesso]         = useState('');
+
+  const inputStyle = {
+    width: '100%', padding: '10px 12px',
+    background: isDark ? '#1f1f1f' : '#f9fafb',
+    border: `1.5px solid ${isDark ? '#404040' : '#e5e7eb'}`,
+    borderRadius: 8, fontSize: 14,
+    color: isDark ? '#e5e5e5' : '#262626',
+    outline: 'none', fontFamily: 'Inter, sans-serif',
+    boxSizing: 'border-box', transition: 'border-color .15s',
+  };
+
+  async function handleSalvar(e) {
+    e.preventDefault();
+    setErro(''); setSucesso('');
+    if (alterarSenha && novaSenha !== confirmar) {
+      setErro('As senhas não coincidem'); return;
+    }
+    setLoading(true);
+    try {
+      const { data } = await api.patch('/auth/perfil', {
+        nome, email,
+        ...(alterarSenha && novaSenha ? { senhaAtual, novaSenha } : {}),
+      });
+      atualizarUsuario(data);
+      setSucesso('Perfil atualizado com sucesso!');
+      setSenhaAtual(''); setNovaSenha(''); setConfirmar('');
+      setAlterarSenha(false);
+      setTimeout(onClose, 1200);
+    } catch (err) {
+      setErro(err.response?.data?.erro || 'Erro ao atualizar perfil');
+    } finally { setLoading(false); }
+  }
+
+  return createPortal(
+    <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background: t.sidebarBg, border: `1px solid ${t.sidebarBorder}`, borderRadius: 16, width: '100%', maxWidth: 440, boxShadow: '0 24px 64px rgba(0,0,0,.4)', overflow: 'hidden', fontFamily: 'Inter, sans-serif' }}>
+
+        {/* Header */}
+        <div style={{ padding: '20px 24px 16px', borderBottom: `1px solid ${t.sidebarBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: '#000' }}>
+              {usuario?.nome?.[0]?.toUpperCase()}
+            </div>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: t.sidebarTitle }}>Editar perfil</div>
+              <div style={{ fontSize: 12, color: t.sidebarSub, marginTop: 1 }}>Administrador</div>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.sidebarSub, padding: 4, display: 'flex', borderRadius: 6 }}>
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSalvar} style={{ padding: '20px 24px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+          {/* Nome */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: t.sidebarSub, textTransform: 'uppercase', letterSpacing: '.6px', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <User size={11} /> Nome
+            </label>
+            <input style={inputStyle} value={nome} onChange={e => setNome(e.target.value)}
+              onFocus={e => { e.target.style.borderColor = '#f59e0b'; e.target.style.boxShadow = '0 0 0 3px rgba(245,158,11,.15)'; }}
+              onBlur={e => { e.target.style.borderColor = isDark ? '#404040' : '#e5e7eb'; e.target.style.boxShadow = 'none'; }}
+              placeholder="Seu nome" required />
+          </div>
+
+          {/* Email */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: t.sidebarSub, textTransform: 'uppercase', letterSpacing: '.6px', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <Mail size={11} /> E-mail
+            </label>
+            <input style={inputStyle} type="email" value={email} onChange={e => setEmail(e.target.value)}
+              onFocus={e => { e.target.style.borderColor = '#f59e0b'; e.target.style.boxShadow = '0 0 0 3px rgba(245,158,11,.15)'; }}
+              onBlur={e => { e.target.style.borderColor = isDark ? '#404040' : '#e5e7eb'; e.target.style.boxShadow = 'none'; }}
+              placeholder="seu@email.com" required />
+          </div>
+
+          {/* Toggle alterar senha */}
+          <button type="button" onClick={() => { setAlterarSenha(!alterarSenha); setErro(''); }}
+            style={{ display: 'flex', alignItems: 'center', gap: 7, background: alterarSenha ? 'rgba(245,158,11,.1)' : (isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.04)'), border: `1px solid ${alterarSenha ? 'rgba(245,158,11,.3)' : (isDark ? 'rgba(255,255,255,.08)' : '#e5e7eb')}`, borderRadius: 8, padding: '8px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 500, color: alterarSenha ? '#d97706' : t.sidebarSub, transition: 'all .15s', textAlign: 'left' }}>
+            <Lock size={13} />
+            {alterarSenha ? 'Cancelar alteração de senha' : 'Alterar senha'}
+          </button>
+
+          {alterarSenha && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '14px', background: isDark ? 'rgba(245,158,11,.04)' : 'rgba(245,158,11,.03)', borderRadius: 10, border: '1px solid rgba(245,158,11,.15)' }}>
+              {/* Senha atual */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: t.sidebarSub, textTransform: 'uppercase', letterSpacing: '.6px' }}>Senha atual</label>
+                <div style={{ position: 'relative' }}>
+                  <input style={{ ...inputStyle, paddingRight: 38 }} type={mostrarSenha ? 'text' : 'password'} value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)}
+                    onFocus={e => { e.target.style.borderColor = '#f59e0b'; }}
+                    onBlur={e => { e.target.style.borderColor = isDark ? '#404040' : '#e5e7eb'; }}
+                    placeholder="••••••••" />
+                  <button type="button" onClick={() => setMostrarSenha(!mostrarSenha)}
+                    style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: t.sidebarSub, display: 'flex', padding: 2 }}>
+                    {mostrarSenha ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+              </div>
+              {/* Nova senha */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: t.sidebarSub, textTransform: 'uppercase', letterSpacing: '.6px' }}>Nova senha</label>
+                <input style={inputStyle} type={mostrarSenha ? 'text' : 'password'} value={novaSenha} onChange={e => setNovaSenha(e.target.value)}
+                  onFocus={e => { e.target.style.borderColor = '#f59e0b'; }}
+                  onBlur={e => { e.target.style.borderColor = isDark ? '#404040' : '#e5e7eb'; }}
+                  placeholder="Mínimo 6 caracteres" />
+              </div>
+              {/* Confirmar */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: t.sidebarSub, textTransform: 'uppercase', letterSpacing: '.6px' }}>Confirmar nova senha</label>
+                <input style={{ ...inputStyle, borderColor: confirmar && confirmar !== novaSenha ? '#ef4444' : (isDark ? '#404040' : '#e5e7eb') }}
+                  type={mostrarSenha ? 'text' : 'password'} value={confirmar} onChange={e => setConfirmar(e.target.value)}
+                  onFocus={e => { e.target.style.borderColor = confirmar !== novaSenha ? '#ef4444' : '#f59e0b'; }}
+                  onBlur={e => { e.target.style.borderColor = confirmar && confirmar !== novaSenha ? '#ef4444' : (isDark ? '#404040' : '#e5e7eb'); }}
+                  placeholder="Repita a nova senha" />
+                {confirmar && confirmar !== novaSenha && (
+                  <span style={{ fontSize: 11, color: '#ef4444' }}>As senhas não coincidem</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Feedback */}
+          {erro && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 8, padding: '9px 12px', fontSize: 13, color: '#ef4444' }}>
+              <X size={14} /> {erro}
+            </div>
+          )}
+          {sucesso && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(16,185,129,.1)', border: '1px solid rgba(16,185,129,.2)', borderRadius: 8, padding: '9px 12px', fontSize: 13, color: '#10b981', fontWeight: 600 }}>
+              <Check size={14} /> {sucesso}
+            </div>
+          )}
+
+          {/* Ações */}
+          <div style={{ display: 'flex', gap: 8, paddingTop: 4 }}>
+            <button type="submit" disabled={loading}
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px', background: '#f59e0b', color: '#000', borderRadius: 9, fontSize: 14, fontWeight: 700, border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? .7 : 1 }}>
+              {loading ? <Loader2 size={15} style={{ animation: 'spin .7s linear infinite' }} /> : <Check size={15} />}
+              Salvar alterações
+            </button>
+            <button type="button" onClick={onClose}
+              style={{ padding: '10px 18px', background: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.04)', color: t.sidebarSub, borderRadius: 9, fontSize: 14, border: `1px solid ${t.sidebarBorder}`, cursor: 'pointer' }}>
+              Cancelar
+            </button>
+          </div>
+        </form>
+
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+// ── ProfileDropdown ────────────────────────────────────────────────────────
+function ProfileDropdown({ anchorRef, onClose, onEditarPerfil, t, isDark, toggle, logout }) {
+  const { usuario } = useAuth();
+  const dropRef = useRef(null);
+  const [pos, setPos] = useState({});
+
+  useEffect(() => {
+    const rect = anchorRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const fromRight = window.innerWidth - rect.right;
+    setPos({ top: rect.bottom + 6, right: fromRight });
+  }, [anchorRef]);
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (dropRef.current && !dropRef.current.contains(e.target) &&
+          anchorRef.current && !anchorRef.current.contains(e.target)) {
+        onClose();
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [onClose, anchorRef]);
+
+  const item = (Icon, label, action, color, bg) => (
+    <button onClick={() => { onClose(); action(); }}
+      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', borderRadius: 8, transition: 'background .12s', color: color || t.sidebarText, fontSize: 13, fontWeight: 500, textAlign: 'left' }}
+      onMouseEnter={e => e.currentTarget.style.background = bg || t.sidebarHover}
+      onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+      <div style={{ width: 28, height: 28, borderRadius: 7, background: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon size={14} color={color || t.sidebarText} />
+      </div>
+      {label}
+    </button>
+  );
+
+  return createPortal(
+    <div ref={dropRef} style={{ position: 'fixed', top: pos.top, right: pos.right, zIndex: 1500, background: t.sidebarBg, border: `1px solid ${t.sidebarBorder}`, borderRadius: 12, boxShadow: '0 12px 40px rgba(0,0,0,.25)', minWidth: 220, overflow: 'hidden', fontFamily: 'Inter, sans-serif' }}>
+      {/* Cabeçalho */}
+      <div style={{ padding: '12px 14px', borderBottom: `1px solid ${t.sidebarBorder}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#000', flexShrink: 0 }}>
+            {usuario?.nome?.[0]?.toUpperCase()}
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: t.sidebarTitle, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{usuario?.nome}</div>
+            <div style={{ fontSize: 11, color: t.sidebarSub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{usuario?.email}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Ações */}
+      <div style={{ padding: '6px' }}>
+        {item(Edit3, 'Editar perfil', onEditarPerfil)}
+        {item(isDark ? Sun : Moon, isDark ? 'Modo claro' : 'Modo escuro', toggle)}
+        {item(Shield, 'Plano Profissional', () => {})}
+      </div>
+
+      {/* Divider + Sair */}
+      <div style={{ borderTop: `1px solid ${t.sidebarBorder}`, padding: '6px' }}>
+        {item(LogOut, 'Sair da conta', logout, '#ef4444', 'rgba(239,68,68,.08)')}
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 // ── NavItem ────────────────────────────────────────────────────────────────
 function NavItem({ item, totalAtivos, t, isDark, onNavigate }) {
   const { path, label, Icon, badge, soon } = item;
@@ -181,11 +422,16 @@ function NavItem({ item, totalAtivos, t, isDark, onNavigate }) {
 
 // ── Main ───────────────────────────────────────────────────────────────────
 export default function AdminPage() {
-  const { usuario, logout }       = useAuth();
-  const location                  = useLocation();
-  const { isDark, toggle }        = useTheme();
-  const [estado, setEstado]       = useState({ atendimentos: [], filas: [], funcionarias: [] });
+  const { usuario, logout }           = useAuth();
+  const location                      = useLocation();
+  const { isDark, toggle }            = useTheme();
+  const [estado, setEstado]           = useState({ atendimentos: [], filas: [], funcionarias: [] });
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dropOpen, setDropOpen]       = useState(false);
+  const [modalPerfil, setModalPerfil] = useState(false);
+  const topbarUserRef                 = useRef(null);
+  const sidebarUserRef                = useRef(null);
+  const activeAnchorRef               = useRef(topbarUserRef);
 
   const onEstadoCompleto = useCallback((dados) => setEstado(dados), []);
   useSocket(usuario?.salaoId, { onEstadoCompleto });
@@ -232,7 +478,10 @@ export default function AdminPage() {
 
         {/* User profile */}
         <div style={{ padding: '14px 16px', borderBottom: `1px solid ${t.sidebarBorder}` }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: t.sidebarProfile, cursor: 'pointer' }}>
+          <div ref={sidebarUserRef} onClick={() => { activeAnchorRef.current = sidebarUserRef; setDropOpen(v => !v); }}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: dropOpen ? (isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.06)') : t.sidebarProfile, cursor: 'pointer', transition: 'background .15s' }}
+            onMouseEnter={e => { if (!dropOpen) e.currentTarget.style.background = t.sidebarHover; }}
+            onMouseLeave={e => { if (!dropOpen) e.currentTarget.style.background = t.sidebarProfile; }}>
             <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#000', flexShrink: 0 }}>
               {usuario?.nome?.[0]?.toUpperCase()}
             </div>
@@ -242,7 +491,7 @@ export default function AdminPage() {
               </div>
               <div style={{ fontSize: 11, color: t.sidebarSub, marginTop: 1 }}>Administrador</div>
             </div>
-            <ChevronDown size={13} color={t.sidebarSub} />
+            <ChevronDown size={13} color={t.sidebarSub} style={{ transition: 'transform .2s', transform: dropOpen ? 'rotate(180deg)' : 'none' }} />
           </div>
         </div>
 
@@ -377,9 +626,10 @@ export default function AdminPage() {
           </button>
 
           {/* User */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: '0.375rem', border: `1px solid ${t.topbarBtnBorder}`, cursor: 'pointer', background: t.topbarBg, transition: 'background .15s', flexShrink: 0 }}
-            onMouseEnter={e => e.currentTarget.style.background = t.topbarHover}
-            onMouseLeave={e => e.currentTarget.style.background = t.topbarBg}
+          <div ref={topbarUserRef} onClick={() => { activeAnchorRef.current = topbarUserRef; setDropOpen(v => !v); }}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: '0.375rem', border: `1px solid ${dropOpen ? '#f59e0b' : t.topbarBtnBorder}`, cursor: 'pointer', background: dropOpen ? (isDark ? '#333' : '#f3f4f6') : t.topbarBg, transition: 'all .15s', flexShrink: 0 }}
+            onMouseEnter={e => { if (!dropOpen) e.currentTarget.style.background = t.topbarHover; }}
+            onMouseLeave={e => { if (!dropOpen) e.currentTarget.style.background = t.topbarBg; }}
           >
             <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#000', flexShrink: 0 }}>
               {usuario?.nome?.[0]?.toUpperCase()}
@@ -387,7 +637,7 @@ export default function AdminPage() {
             <span className="topbar-username" style={{ fontSize: 13, fontWeight: 500, color: t.topbarText }}>
               {usuario?.nome?.split(' ')[0]}
             </span>
-            <ChevronDown className="topbar-chevron" size={13} color={t.topbarMuted} />
+            <ChevronDown className="topbar-chevron" size={13} color={t.topbarMuted} style={{ transition: 'transform .2s', transform: dropOpen ? 'rotate(180deg)' : 'none' }} />
           </div>
         </header>
 
@@ -406,6 +656,21 @@ export default function AdminPage() {
           </Routes>
         </main>
       </div>
+
+      {/* Dropdown do perfil */}
+      {dropOpen && (
+        <ProfileDropdown
+          anchorRef={activeAnchorRef.current || topbarUserRef}
+          onClose={() => setDropOpen(false)}
+          onEditarPerfil={() => setModalPerfil(true)}
+          t={t} isDark={isDark} toggle={toggle} logout={logout}
+        />
+      )}
+
+      {/* Modal de edição de perfil */}
+      {modalPerfil && (
+        <ProfileModal onClose={() => setModalPerfil(false)} t={t} isDark={isDark} />
+      )}
 
       <style>{`
         * { box-sizing: border-box; }
