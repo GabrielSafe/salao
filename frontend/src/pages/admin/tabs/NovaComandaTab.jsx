@@ -19,6 +19,22 @@ const SERVICE_INFO = {
 
 const fmt = (v) => `R$ ${Number(v).toFixed(2).replace('.', ',')}`;
 
+function maskPhone(v) {
+  const d = v.replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 2)  return d;
+  if (d.length <= 6)  return `(${d.slice(0,2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+}
+
+function maskCPF(v) {
+  const d = v.replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 3)  return d;
+  if (d.length <= 6)  return `${d.slice(0,3)}.${d.slice(3)}`;
+  if (d.length <= 9)  return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6)}`;
+  return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
+}
+
 function useT() {
   const { isDark } = useThemeCtx();
   return isDark ? {
@@ -115,6 +131,7 @@ export default function NovaComandaTab() {
   const [sugestoes, setSugestoes]           = useState([]);
   const [cliente, setCliente]               = useState(null);
   const [novoNome, setNovoNome]             = useState('');
+  const [novoTelefone, setNovoTelefone]     = useState('');
   const [novoCpf, setNovoCpf]               = useState('');
   const [categoriaAtiva, setCategoriaAtiva] = useState('CABELO');
   const [carrinho, setCarrinho]             = useState([]);
@@ -130,7 +147,8 @@ export default function NovaComandaTab() {
 
   const noCarrinho = (nome) => carrinho.some(s => s.servicoNome === nome);
   const total = carrinho.reduce((s, i) => s + i.servicoPreco, 0);
-  const canCreate = carrinho.length > 0 && (cliente || novoNome.trim());
+  const novoClienteValido = novoNome.trim() && novoTelefone.replace(/\D/g,'').length >= 10;
+  const canCreate = carrinho.length > 0 && (cliente || novoClienteValido);
 
   function toggleServico(tipoServico, servicoNome, servicoPreco) {
     if (noCarrinho(servicoNome)) setCarrinho(c => c.filter(s => s.servicoNome !== servicoNome));
@@ -151,7 +169,7 @@ export default function NovaComandaTab() {
   }
 
   function selecionarCliente(c) { setCliente(c); setBusca(c.nome); setSugestoes([]); setShowNovoCliente(false); }
-  function limparCliente() { setCliente(null); setBusca(''); setSugestoes([]); setNovoNome(''); setNovoCpf(''); setShowNovoCliente(false); }
+  function limparCliente() { setCliente(null); setBusca(''); setSugestoes([]); setNovoNome(''); setNovoTelefone(''); setNovoCpf(''); setShowNovoCliente(false); }
 
   async function handleCriar() {
     setErro('');
@@ -161,13 +179,19 @@ export default function NovaComandaTab() {
       let clienteId = cliente?.id;
       if (!clienteId) {
         if (!novoNome.trim()) { setErro('Informe o nome da cliente'); setLoading(false); return; }
-        const { data } = await api.post('/clientes', { nome: novoNome, cpf: novoCpf || undefined });
+        const telDigits = novoTelefone.replace(/\D/g, '');
+        if (telDigits.length < 10) { setErro('Telefone obrigatório — mínimo 10 dígitos'); setLoading(false); return; }
+        const { data } = await api.post('/clientes', {
+          nome: novoNome.trim(),
+          telefone: novoTelefone,
+          cpf: novoCpf.replace(/\D/g, '').length === 11 ? novoCpf : undefined,
+        });
         clienteId = data.id;
       }
       const { data } = await api.post('/atendimentos/comanda', { clienteId, servicos: carrinho, cadeiraId: cadeiraId || undefined });
       const cadeiraEscolhida = cadeiras.find(c => c.id === cadeiraId);
       setSucesso({ numero: data[0]?.numeroComanda, nome: cliente?.nome || novoNome, atendimentos: data, cadeiraNome: cadeiraEscolhida?.nome });
-      setCliente(null); setBusca(''); setNovoNome(''); setNovoCpf(''); setCarrinho([]); setCadeiraId(null);
+      setCliente(null); setBusca(''); setNovoNome(''); setNovoTelefone(''); setNovoCpf(''); setCarrinho([]); setCadeiraId(null);
     } catch (err) {
       setErro(err.response?.data?.erro || 'Erro ao criar comanda');
     } finally { setLoading(false); }
@@ -380,12 +404,55 @@ export default function NovaComandaTab() {
                     </div>
                   )}
                   {showNovoCliente && (
-                    <div style={{ marginTop: 7, padding: '10px 11px', background: 'rgba(245,158,11,.06)', borderRadius: '0.375rem', border: '1px solid rgba(245,158,11,.2)' }}>
-                      <div style={{ fontSize: 11, color: '#d97706', fontWeight: 600, marginBottom: 7 }}>Cliente não encontrada — cadastrar:</div>
-                      <input placeholder="Nome *" value={novoNome} onChange={e => setNovoNome(e.target.value)}
-                        style={{ width: '100%', padding: '7px 9px', borderRadius: '0.375rem', border: `1.5px solid ${T.inputBorder}`, fontSize: 12, marginBottom: 5, boxSizing: 'border-box', outline: 'none', background: T.inputBg, color: T.fg, fontFamily: 'inherit' }} />
-                      <input placeholder="CPF (opcional)" value={novoCpf} onChange={e => setNovoCpf(e.target.value)}
-                        style={{ width: '100%', padding: '7px 9px', borderRadius: '0.375rem', border: `1.5px solid ${T.inputBorder}`, fontSize: 12, boxSizing: 'border-box', outline: 'none', background: T.inputBg, color: T.fg, fontFamily: 'inherit' }} />
+                    <div style={{ marginTop: 7, padding: '12px', background: 'rgba(245,158,11,.05)', borderRadius: '0.375rem', border: '1px solid rgba(245,158,11,.2)', display: 'flex', flexDirection: 'column', gap: 7 }}>
+                      <div style={{ fontSize: 11, color: '#d97706', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <span>✦</span> Cadastrar nova cliente
+                      </div>
+
+                      {/* Nome */}
+                      <div>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.muted, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 3 }}>
+                          Nome <span style={{ color: '#ef4444' }}>*</span>
+                        </label>
+                        <input placeholder="Nome completo" value={novoNome} onChange={e => setNovoNome(e.target.value)}
+                          style={{ width: '100%', padding: '7px 9px', borderRadius: '0.375rem', border: `1.5px solid ${novoNome.trim() ? '#f59e0b' : T.inputBorder}`, fontSize: 12, boxSizing: 'border-box', outline: 'none', background: T.inputBg, color: T.fg, fontFamily: 'inherit', transition: 'border-color .15s' }}
+                          onFocus={e => e.target.style.borderColor = '#f59e0b'}
+                          onBlur={e => e.target.style.borderColor = novoNome.trim() ? '#f59e0b' : T.inputBorder}
+                        />
+                      </div>
+
+                      {/* Telefone */}
+                      <div>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.muted, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 3 }}>
+                          Telefone <span style={{ color: '#ef4444' }}>*</span>
+                        </label>
+                        <input placeholder="(11) 99999-9999" value={novoTelefone}
+                          onChange={e => setNovoTelefone(maskPhone(e.target.value))}
+                          style={{ width: '100%', padding: '7px 9px', borderRadius: '0.375rem', border: `1.5px solid ${novoTelefone.replace(/\D/g,'').length >= 10 ? '#f59e0b' : T.inputBorder}`, fontSize: 12, boxSizing: 'border-box', outline: 'none', background: T.inputBg, color: T.fg, fontFamily: 'inherit', transition: 'border-color .15s' }}
+                          onFocus={e => e.target.style.borderColor = '#f59e0b'}
+                          onBlur={e => e.target.style.borderColor = novoTelefone.replace(/\D/g,'').length >= 10 ? '#f59e0b' : T.inputBorder}
+                        />
+                      </div>
+
+                      {/* CPF */}
+                      <div>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.muted, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 3 }}>
+                          CPF <span style={{ color: T.sub, fontWeight: 400, textTransform: 'none', fontSize: 10 }}>(opcional)</span>
+                        </label>
+                        <input placeholder="000.000.000-00" value={novoCpf}
+                          onChange={e => setNovoCpf(maskCPF(e.target.value))}
+                          style={{ width: '100%', padding: '7px 9px', borderRadius: '0.375rem', border: `1.5px solid ${T.inputBorder}`, fontSize: 12, boxSizing: 'border-box', outline: 'none', background: T.inputBg, color: T.fg, fontFamily: 'inherit', transition: 'border-color .15s' }}
+                          onFocus={e => e.target.style.borderColor = '#f59e0b'}
+                          onBlur={e => e.target.style.borderColor = T.inputBorder}
+                        />
+                      </div>
+
+                      {/* Status */}
+                      {novoNome.trim() && novoTelefone.replace(/\D/g,'').length >= 10 && (
+                        <div style={{ fontSize: 11, color: '#10b981', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
+                          <span>✓</span> Pronto para cadastrar
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -490,7 +557,11 @@ export default function NovaComandaTab() {
               </button>
               {!canCreate && carrinho.length > 0 && (
                 <div style={{ textAlign: 'center', fontSize: 11, color: T.sub, marginTop: 5 }}>
-                  Busque ou cadastre uma cliente para continuar
+                  {!cliente && !novoNome.trim()
+                    ? 'Busque ou cadastre uma cliente para continuar'
+                    : novoNome.trim() && novoTelefone.replace(/\D/g,'').length < 10
+                    ? 'Informe um telefone válido para continuar'
+                    : 'Selecione pelo menos um serviço'}
                 </div>
               )}
             </div>
