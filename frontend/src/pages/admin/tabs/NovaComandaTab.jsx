@@ -135,15 +135,13 @@ export default function NovaComandaTab() {
   const [novoCpf, setNovoCpf]               = useState('');
   const [categoriaAtiva, setCategoriaAtiva] = useState('CABELO');
   const [carrinho, setCarrinho]             = useState([]);
-  const [cadeiras, setCadeiras]             = useState([]);
-  const [cadeiraId, setCadeiraId]           = useState(null);
+  const [cadeiraAtribuida, setCadeiraAtribuida] = useState(null); // apenas para exibir no sucesso
   const [sucesso, setSucesso]               = useState(null);
   const [erro, setErro]                     = useState('');
   const [loading, setLoading]               = useState(false);
   const [showNovoCliente, setShowNovoCliente] = useState(false);
   const timer = useRef(null);
 
-  useEffect(() => { api.get('/cadeiras').then(r => setCadeiras(r.data)).catch(() => {}); }, []);
 
   const noCarrinho = (nome) => carrinho.some(s => s.servicoNome === nome);
   const total = carrinho.reduce((s, i) => s + i.servicoPreco, 0);
@@ -188,10 +186,10 @@ export default function NovaComandaTab() {
         });
         clienteId = data.id;
       }
-      const { data } = await api.post('/atendimentos/comanda', { clienteId, servicos: carrinho, cadeiraId: cadeiraId || undefined });
-      const cadeiraEscolhida = cadeiras.find(c => c.id === cadeiraId);
-      setSucesso({ numero: data[0]?.numeroComanda, nome: cliente?.nome || novoNome, atendimentos: data, cadeiraNome: cadeiraEscolhida?.nome });
-      setCliente(null); setBusca(''); setNovoNome(''); setNovoTelefone(''); setNovoCpf(''); setCarrinho([]); setCadeiraId(null);
+      const { data } = await api.post('/atendimentos/comanda', { clienteId, servicos: carrinho });
+      const cadeiraDoServico = data[0]?.cadeira;
+      setSucesso({ numero: data[0]?.numeroComanda, nome: cliente?.nome || novoNome, atendimentos: data, cadeiraNome: cadeiraDoServico?.nome || (cadeiraDoServico ? `Cadeira ${cadeiraDoServico.numero}` : null) });
+      setCliente(null); setBusca(''); setNovoNome(''); setNovoTelefone(''); setNovoCpf(''); setCarrinho([]);
     } catch (err) {
       setErro(err.response?.data?.erro || 'Erro ao criar comanda');
     } finally { setLoading(false); }
@@ -459,34 +457,13 @@ export default function NovaComandaTab() {
               )}
             </div>
 
-            {/* Cadeiras */}
-            {cadeiras.length > 0 && (
-              <div style={{ padding: '11px 16px', borderBottom: `1px solid ${T.border}` }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: T.muted, textTransform: 'uppercase', letterSpacing: '0.7px', marginBottom: 7, display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <Armchair size={10} /> Cadeira
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 5 }}>
-                  {cadeiras.map(c => {
-                    const livre = c.ativo && !c.ocupada;
-                    const sel   = cadeiraId === c.id;
-                    const cor   = sel ? '#f59e0b' : livre ? '#10b981' : T.sub;
-                    return (
-                      <button key={c.id} onClick={() => livre && setCadeiraId(sel ? null : c.id)} disabled={!livre && !sel}
-                        title={c.ocupada ? `Ocupada — ${c.ocupacao?.clienteNome || ''}` : c.nome}
-                        style={{ padding: '6px 4px', borderRadius: '0.375rem', border: `1.5px solid ${sel ? '#f59e0b' : livre ? 'rgba(16,185,129,.3)' : T.border}`, background: sel ? 'rgba(245,158,11,.12)' : livre ? 'rgba(16,185,129,.06)' : 'transparent', cursor: livre ? 'pointer' : 'not-allowed', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, transition: 'all .12s' }}>
-                        <div style={{ width: 7, height: 7, borderRadius: '50%', background: cor }} />
-                        <span style={{ fontSize: 10, fontWeight: 700, color: cor }}>{c.numero}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {cadeiraId && (
-                  <div style={{ marginTop: 6, fontSize: 11, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
-                    <Check size={10} /> {cadeiras.find(c => c.id === cadeiraId)?.nome} selecionada
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Cadeira — atribuição automática */}
+            <div style={{ padding: '10px 16px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 7 }}>
+              <Armchair size={12} color={T.sub} />
+              <span style={{ fontSize: 11, color: T.sub }}>
+                Cadeira atribuída <strong style={{ color: T.fg }}>automaticamente</strong> ao criar
+              </span>
+            </div>
 
             {/* Itens do carrinho — cresce para preencher o espaço restante */}
             <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin', minHeight: 64 }}>

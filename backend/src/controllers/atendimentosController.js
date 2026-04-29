@@ -11,7 +11,7 @@ async function proximoNumeroComanda(salaoId, tx) {
 
 async function criarComanda(req, res) {
   // servicos: [{ tipoServico, servicoNome, servicoPreco }]
-  const { clienteId, servicos, cadeiraId } = req.body;
+  const { clienteId, servicos } = req.body; // cadeiraId removido — atribuição automática
   const salaoId = req.salaoId;
 
   if (!clienteId || !servicos?.length) {
@@ -21,16 +21,24 @@ async function criarComanda(req, res) {
   const cliente = await prisma.cliente.findFirst({ where: { id: clienteId, salaoId } });
   if (!cliente) return res.status(404).json({ erro: 'Cliente não encontrada' });
 
-  // Valida cadeira se informada
-  if (cadeiraId) {
-    const cadeira = await prisma.cadeira.findFirst({ where: { id: cadeiraId, salaoId, ativo: true } });
-    if (!cadeira) return res.status(404).json({ erro: 'Cadeira não encontrada' });
+  // Atribuição automática de cadeira (menor número disponível)
+  // Sem escolha manual — impede preferências por cadeira
+  const ocupadasIds = (await prisma.atendimento.findMany({
+    where: { salaoId, status: { in: ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'] }, cadeiraId: { not: null } },
+    select: { cadeiraId: true },
+    distinct: ['cadeiraId'],
+  })).map(a => a.cadeiraId);
 
-    const cadeiraOcupada = await prisma.atendimento.findFirst({
-      where: { cadeiraId, salaoId, status: { in: ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO'] } },
-    });
-    if (cadeiraOcupada) return res.status(409).json({ erro: `Cadeira já está ocupada (comanda #${cadeiraOcupada.numeroComanda})` });
-  }
+  const cadeiraLivre = await prisma.cadeira.findFirst({
+    where: {
+      salaoId,
+      ativo: true,
+      ...(ocupadasIds.length > 0 && { id: { notIn: ocupadasIds } }),
+    },
+    orderBy: { numero: 'asc' },
+  });
+
+  const cadeiraIdAtribuida = cadeiraLivre?.id || null;
 
   // Deduplica por servicoNome (ou tipoServico se sem nome)
   const vistos = new Set();
@@ -57,7 +65,7 @@ async function criarComanda(req, res) {
       if (jaExiste) continue;
 
       const a = await tx.atendimento.create({
-        data: { clienteId, salaoId, tipoServico, servicoNome, servicoPreco, numeroComanda: numero, cadeiraId: cadeiraId || null },
+        data: { clienteId, salaoId, tipoServico, servicoNome, servicoPreco, numeroComanda: numero, cadeiraId: cadeiraIdAtribuida },
         include: { cliente: true, cadeira: true },
       });
       criados.push(a);
