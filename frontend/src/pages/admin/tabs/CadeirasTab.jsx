@@ -317,13 +317,13 @@ export default function CadeirasTab() {
   };
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300, color: T.muted, fontFamily: 'Inter, sans-serif' }}>
+    <div className="admin-tab" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300, color: T.muted, fontFamily: 'Inter, sans-serif' }}>
       <Loader2 size={22} style={{ animation: 'spin .7s linear infinite', marginRight: 10 }} /> Carregando cadeiras...
     </div>
   );
 
   return (
-    <div style={{ fontFamily: 'Inter, sans-serif' }}>
+    <div className="admin-tab" style={{ fontFamily: 'Inter, sans-serif' }}>
       {/* Header */}
       <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div>
@@ -350,7 +350,7 @@ export default function CadeirasTab() {
       {abaAtiva === 'visao' && (
         <>
           {/* KPIs resumo */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+          <div className="cadeiras-kpis" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
             {[
               { label: 'Cadeiras livres',   valor: livres,                 cor: '#10b981', bg: 'rgba(16,185,129,.1)',   Icon: Armchair   },
               { label: 'Ocupadas agora',    valor: ocupadas,               cor: '#f59e0b', bg: 'rgba(245,158,11,.1)',   Icon: Users      },
@@ -379,7 +379,7 @@ export default function CadeirasTab() {
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#6b7280', display: 'inline-block' }} /> Inativa</span>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
+            <div className="cadeiras-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
               {cadeiras.map(c => (
                 <CadeiraCard key={c.id} cadeira={c} onRename={handleRename} onAbrirComanda={setModalCadeira} />
               ))}
@@ -499,7 +499,12 @@ export default function CadeirasTab() {
         <ModalComanda cadeira={modalCadeira} onClose={() => setModalCadeira(null)} />
       )}
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 1100px) { .cadeiras-kpis { grid-template-columns: repeat(2,1fr) !important; } .cadeiras-grid { grid-template-columns: repeat(4,1fr) !important; } }
+        @media (max-width: 768px)  { .cadeiras-kpis { grid-template-columns: repeat(2,1fr) !important; } .cadeiras-grid { grid-template-columns: repeat(3,1fr) !important; } }
+        @media (max-width: 480px)  { .cadeiras-kpis { grid-template-columns: 1fr !important; } .cadeiras-grid { grid-template-columns: repeat(2,1fr) !important; } }
+      `}</style>
     </div>
   );
 }

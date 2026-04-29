@@ -51,7 +51,7 @@ function AtribuirBtn({ atendimentoId, tipoServico, funcionarias }) {
   const [dropPos, setDropPos] = useState({});
   const btnRef = useRef(null);
 
-  const SC = { ONLINE: '#10B981', AUSENTE: '#F59E0B', EM_ATENDIMENTO: '#D4178A', OFFLINE: '#9CA3AF' };
+  const SC = { ONLINE: '#10B981', AUSENTE: '#F59E0B', EM_ATENDIMENTO: '#f59e0b', OFFLINE: '#9CA3AF' };
   const candidatas = funcionarias.filter(f =>
     (f.especialidades?.includes(tipoServico) || f.multiTarefas) &&
     ['ONLINE', 'AUSENTE', 'EM_ATENDIMENTO'].includes(f.status)
@@ -100,7 +100,7 @@ function AtribuirBtn({ atendimentoId, tipoServico, funcionarias }) {
                     {f.usuario?.nome?.[0]?.toUpperCase()}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: '#1B2A4A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.usuario?.nome}</div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.usuario?.nome}</div>
                     <div style={{ fontSize: 10, color: SC[f.status] }}>{f.status === 'ONLINE' ? 'Disponível' : f.status === 'AUSENTE' ? 'Ausente' : 'Em atendimento'}</div>
                   </div>
                   {loading === f.id && <Loader2 size={12} color="#60A5FA" style={{ animation: 'spin .7s linear infinite', flexShrink: 0 }} />}
@@ -421,7 +421,7 @@ export default function ComandasTab({ estado: estadoProps }) {
   const totalConcluido  = grupos.filter(g => g.itens.every(i => i.status === 'FINALIZADO')).length;
 
   return (
-    <div>
+    <div className="admin-tab">
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>

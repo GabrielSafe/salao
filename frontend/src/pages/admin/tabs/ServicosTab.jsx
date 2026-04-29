@@ -223,13 +223,13 @@ export default function ServicosTab() {
   const total   = servicos.length;
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300, color: muted, fontFamily: 'Inter, sans-serif' }}>
+    <div className="admin-tab" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300, color: muted, fontFamily: 'Inter, sans-serif' }}>
       <Loader2 size={22} style={{ animation: 'spin .7s linear infinite', marginRight: 10 }} /> Carregando serviços...
     </div>
   );
 
   return (
-    <div style={{ fontFamily: 'Inter, sans-serif' }}>
+    <div className="admin-tab" style={{ fontFamily: 'Inter, sans-serif' }}>
       {/* Header */}
       <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div>
@@ -352,7 +352,12 @@ export default function ServicosTab() {
         </div>
       </div>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 768px) {
+          .servicos-novo-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 }

@@ -618,7 +618,8 @@ function ComandasTable({ comandas, estado }) {
         </button>
       </div>
 
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <div className="db-table-wrap">
+      <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
         <thead>
           <tr style={{ background: T.bg2 }}>
             <th style={{ ...th, textAlign: 'left' }}>Cliente</th>
@@ -735,6 +736,7 @@ function ComandasTable({ comandas, estado }) {
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
@@ -799,10 +801,10 @@ export default function DashboardTab({ estado: estadoProps }) {
   }
 
   return (
-    <div style={{ padding: 24, fontFamily: T.font, background: T.bg, minHeight: '100%' }}>
+    <div className="db-content" style={{ padding: 24, fontFamily: T.font, background: T.bg, minHeight: '100%' }}>
 
       {/* ── ROW 1: 4 KPIs ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 14 }}>
+      <div className="db-r1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 14 }}>
         <KpiCard
           label="Faturamento do dia"
           valor={fmt(faturamento)}
@@ -854,7 +856,7 @@ export default function DashboardTab({ estado: estadoProps }) {
       </div>
 
       {/* ── ROW 3: Filas | Equipe | Gargalo+Tempo ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr 1fr', gap: 14, marginBottom: 14, alignItems: 'start' }}>
+      <div className="db-r3" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr 1fr', gap: 14, marginBottom: 14, alignItems: 'start' }}>
         <FilasTable atendimentos={estado.atendimentos} aguardando={aguardando} emAndamento={emAndamento} />
         <EquipeTable funcionarias={estado.funcionarias} atendimentos={estado.atendimentos} finalizados={finalizados} />
         <RightCards atendimentos={estado.atendimentos} aguardando={aguardando} finalizados={finalizados} />
@@ -870,6 +872,12 @@ export default function DashboardTab({ estado: estadoProps }) {
           .db-r3 { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 768px) {
+          .db-content { padding: 12px !important; }
+          .db-r1 { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+          .db-r3 { grid-template-columns: 1fr !important; gap: 10px !important; }
+          .db-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        }
+        @media (max-width: 480px) {
           .db-r1 { grid-template-columns: 1fr !important; }
         }
       `}</style>

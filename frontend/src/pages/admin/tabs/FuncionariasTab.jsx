@@ -233,7 +233,7 @@ export default function FuncionariasTab() {
   if (historico) {
     const { funcionaria, estatisticas } = historico;
     return (
-      <div>
+      <div className="admin-tab">
         <button className="btn btn-ghost btn-sm" onClick={() => setHistorico(null)} style={{ marginBottom: 20, gap: 6 }}>
           <ArrowLeft size={14} /> Voltar
         </button>
@@ -269,7 +269,7 @@ export default function FuncionariasTab() {
   }
 
   return (
-    <div>
+    <div className="admin-tab">
       <div className="page-header">
         <div>
           <h1 className="page-title">Equipe</h1>

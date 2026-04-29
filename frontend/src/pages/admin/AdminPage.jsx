@@ -3,7 +3,7 @@ import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, ClipboardPlus, Users, BarChart3, LogOut,
   Scissors, Settings, Clock, FileText, UserCircle,
-  HelpCircle, Search, Bell, ChevronDown, Crown, Sun, Moon, Tag, Armchair
+  HelpCircle, Search, Bell, ChevronDown, Crown, Sun, Moon, Tag, Armchair, Menu
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../hooks/useSocket';
@@ -112,7 +112,7 @@ function buildTheme(isDark) {
 }
 
 // ── NavItem ────────────────────────────────────────────────────────────────
-function NavItem({ item, totalAtivos, t, isDark }) {
+function NavItem({ item, totalAtivos, t, isDark, onNavigate }) {
   const { path, label, Icon, badge, soon } = item;
 
   if (soon) return (
@@ -129,6 +129,7 @@ function NavItem({ item, totalAtivos, t, isDark }) {
     <NavLink
       to={path === '' ? '/admin' : `/admin/${path}`}
       end={path === ''}
+      onClick={onNavigate}
       style={({ isActive }) => ({
         display: 'flex', alignItems: 'center', gap: 10,
         padding: '7px 10px', borderRadius: 8,
@@ -180,10 +181,11 @@ function NavItem({ item, totalAtivos, t, isDark }) {
 
 // ── Main ───────────────────────────────────────────────────────────────────
 export default function AdminPage() {
-  const { usuario, logout }   = useAuth();
-  const location              = useLocation();
-  const { isDark, toggle }    = useTheme();
-  const [estado, setEstado]   = useState({ atendimentos: [], filas: [], funcionarias: [] });
+  const { usuario, logout }       = useAuth();
+  const location                  = useLocation();
+  const { isDark, toggle }        = useTheme();
+  const [estado, setEstado]       = useState({ atendimentos: [], filas: [], funcionarias: [] });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const onEstadoCompleto = useCallback((dados) => setEstado(dados), []);
   useSocket(usuario?.salaoId, { onEstadoCompleto });
@@ -191,18 +193,24 @@ export default function AdminPage() {
   const t = buildTheme(isDark);
   const totalAtivos = estado.atendimentos.filter(a => ['AGUARDANDO', 'EM_ATENDIMENTO'].includes(a.status)).length;
   const page = PAGE_TITLES[location.pathname] || { title: 'Painel', sub: '' };
+  const closeSidebar = () => setSidebarOpen(false);
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: "'Inter', sans-serif", background: t.contentBg }}>
 
+      {/* ── OVERLAY mobile ── */}
+      {sidebarOpen && (
+        <div onClick={closeSidebar} className="rb-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', zIndex: 999 }} />
+      )}
+
       {/* ── SIDEBAR ── */}
-      <aside style={{
+      <aside className={`rb-sidebar${sidebarOpen ? ' open' : ''}`} style={{
         width: 240, flexShrink: 0,
         background: t.sidebarBg,
         borderRight: `1px solid ${t.sidebarBorder}`,
         display: 'flex', flexDirection: 'column',
         height: '100vh', overflow: 'hidden',
-        transition: 'background .2s, border-color .2s',
+        transition: 'background .2s, border-color .2s, transform .25s ease',
       }}>
 
         {/* Logo */}
@@ -244,7 +252,7 @@ export default function AdminPage() {
             MAIN MENU
           </div>
           {MAIN_MENU.map(item => (
-            <NavItem key={item.path} item={item} totalAtivos={totalAtivos} t={t} isDark={isDark} />
+            <NavItem key={item.path} item={item} totalAtivos={totalAtivos} t={t} isDark={isDark} onNavigate={closeSidebar} />
           ))}
 
           <div style={{ marginTop: 16 }}>
@@ -252,7 +260,7 @@ export default function AdminPage() {
               PREFERENCE
             </div>
             {PREFERENCE_MENU.map(item => (
-              <NavItem key={item.path} item={item} totalAtivos={0} t={t} isDark={isDark} />
+              <NavItem key={item.path} item={item} totalAtivos={0} t={t} isDark={isDark} onNavigate={closeSidebar} />
             ))}
           </div>
         </nav>
@@ -293,14 +301,21 @@ export default function AdminPage() {
           padding: '0 24px', gap: 12,
           transition: 'background .2s',
         }}>
+          {/* Hamburger — mobile only */}
+          <button className="mobile-menu-btn" onClick={() => setSidebarOpen(v => !v)}
+            style={{ display: 'none', width: 36, height: 36, borderRadius: '0.375rem', border: `1px solid ${t.topbarBtnBorder}`, background: t.topbarBg, alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+          >
+            <Menu size={18} color={t.topbarText} />
+          </button>
+
           {/* Título */}
-          <div style={{ minWidth: 160 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: t.topbarText, lineHeight: 1 }}>{page.title}</div>
-            {page.sub && <div style={{ fontSize: 11, color: t.topbarMuted, marginTop: 2 }}>{page.sub}</div>}
+          <div style={{ minWidth: 0, flex: '0 1 auto' }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: t.topbarText, lineHeight: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{page.title}</div>
+            {page.sub && <div className="topbar-sub" style={{ fontSize: 11, color: t.topbarMuted, marginTop: 2, whiteSpace: 'nowrap' }}>{page.sub}</div>}
           </div>
 
           {/* Search */}
-          <div style={{ flex: 1, maxWidth: 360 }}>
+          <div className="topbar-search" style={{ flex: 1, maxWidth: 360 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: t.searchBg, border: `1px solid ${t.searchBorder}`, borderRadius: '0.375rem', padding: '7px 14px' }}>
               <Search size={14} color={t.topbarMuted} />
               <input
@@ -314,13 +329,13 @@ export default function AdminPage() {
           <div style={{ flex: 1 }} />
 
           {/* AO VIVO */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(16,185,129,.08)', border: '1px solid rgba(16,185,129,.2)', padding: '5px 12px', borderRadius: 20 }}>
+          <div className="topbar-live" style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(16,185,129,.08)', border: '1px solid rgba(16,185,129,.2)', padding: '5px 12px', borderRadius: 20, flexShrink: 0 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10B981', animation: 'pulse-dot 2s ease infinite' }} />
             <span style={{ fontSize: 11, fontWeight: 700, color: '#10B981', letterSpacing: '0.5px' }}>AO VIVO</span>
           </div>
 
           {/* Sino */}
-          <button style={{ position: 'relative', width: 36, height: 36, borderRadius: '0.375rem', border: `1px solid ${t.topbarBtnBorder}`, background: t.topbarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background .15s' }}
+          <button className="topbar-bell" style={{ position: 'relative', width: 36, height: 36, borderRadius: '0.375rem', border: `1px solid ${t.topbarBtnBorder}`, background: t.topbarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background .15s', flexShrink: 0 }}
             onMouseEnter={e => e.currentTarget.style.background = t.topbarHover}
             onMouseLeave={e => e.currentTarget.style.background = t.topbarBg}
           >
@@ -334,7 +349,7 @@ export default function AdminPage() {
 
           {/* Toggle tema ☀️/🌙 */}
           <button onClick={toggle}
-            style={{ width: 36, height: 36, borderRadius: '0.375rem', border: `1px solid ${t.topbarBtnBorder}`, background: t.topbarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all .15s' }}
+            style={{ width: 36, height: 36, borderRadius: '0.375rem', border: `1px solid ${t.topbarBtnBorder}`, background: t.topbarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all .15s', flexShrink: 0 }}
             title={isDark ? 'Modo claro' : 'Modo escuro'}
             onMouseEnter={e => e.currentTarget.style.background = t.topbarHover}
             onMouseLeave={e => e.currentTarget.style.background = t.topbarBg}
@@ -346,7 +361,7 @@ export default function AdminPage() {
           </button>
 
           {/* Settings */}
-          <button style={{ width: 36, height: 36, borderRadius: '0.375rem', border: `1px solid ${t.topbarBtnBorder}`, background: t.topbarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background .15s' }}
+          <button className="topbar-settings" style={{ width: 36, height: 36, borderRadius: '0.375rem', border: `1px solid ${t.topbarBtnBorder}`, background: t.topbarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background .15s', flexShrink: 0 }}
             onMouseEnter={e => e.currentTarget.style.background = t.topbarHover}
             onMouseLeave={e => e.currentTarget.style.background = t.topbarBg}
           >
@@ -354,7 +369,7 @@ export default function AdminPage() {
           </button>
 
           {/* Help */}
-          <button style={{ width: 36, height: 36, borderRadius: '0.375rem', border: `1px solid ${t.topbarBtnBorder}`, background: t.topbarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background .15s' }}
+          <button className="topbar-help" style={{ width: 36, height: 36, borderRadius: '0.375rem', border: `1px solid ${t.topbarBtnBorder}`, background: t.topbarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background .15s', flexShrink: 0 }}
             onMouseEnter={e => e.currentTarget.style.background = t.topbarHover}
             onMouseLeave={e => e.currentTarget.style.background = t.topbarBg}
           >
@@ -362,17 +377,17 @@ export default function AdminPage() {
           </button>
 
           {/* User */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderRadius: '0.375rem', border: `1px solid ${t.topbarBtnBorder}`, cursor: 'pointer', background: t.topbarBg, transition: 'background .15s' }}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: '0.375rem', border: `1px solid ${t.topbarBtnBorder}`, cursor: 'pointer', background: t.topbarBg, transition: 'background .15s', flexShrink: 0 }}
             onMouseEnter={e => e.currentTarget.style.background = t.topbarHover}
             onMouseLeave={e => e.currentTarget.style.background = t.topbarBg}
           >
-            <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#000' }}>
+            <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#000', flexShrink: 0 }}>
               {usuario?.nome?.[0]?.toUpperCase()}
             </div>
-            <span style={{ fontSize: 13, fontWeight: 500, color: t.topbarText }}>
+            <span className="topbar-username" style={{ fontSize: 13, fontWeight: 500, color: t.topbarText }}>
               {usuario?.nome?.split(' ')[0]}
             </span>
-            <ChevronDown size={13} color={t.topbarMuted} />
+            <ChevronDown className="topbar-chevron" size={13} color={t.topbarMuted} />
           </div>
         </header>
 
@@ -397,7 +412,31 @@ export default function AdminPage() {
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-thumb { background: rgba(128,128,128,.2); border-radius: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        @media (max-width: 768px) { aside { display: none !important; } }
+
+        /* ── Mobile ── */
+        @media (max-width: 768px) {
+          .rb-sidebar {
+            position: fixed !important;
+            left: 0; top: 0; bottom: 0; z-index: 1000;
+            transform: translateX(-100%);
+          }
+          .rb-sidebar.open { transform: translateX(0); }
+          .rb-overlay { display: block !important; }
+          .mobile-menu-btn { display: flex !important; }
+          .topbar-search { display: none !important; }
+          .topbar-live { display: none !important; }
+          .topbar-bell { display: none !important; }
+          .topbar-settings { display: none !important; }
+          .topbar-help { display: none !important; }
+          .topbar-username { display: none !important; }
+          .topbar-chevron { display: none !important; }
+          .topbar-sub { display: none !important; }
+        }
+
+        /* ── Desktop: overlay never shows ── */
+        @media (min-width: 769px) {
+          .rb-overlay { display: none !important; }
+        }
       `}</style>
     </div>
   );

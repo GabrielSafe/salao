@@ -211,7 +211,7 @@ export default function NovaComandaTab() {
   const totalItens = catData.grupos.reduce((s, g) => s + g.itens.length, 0);
 
   return (
-    <div style={{ padding: '28px 28px 28px', fontFamily: "'Inter', sans-serif", background: T.bg, minHeight: '100%' }}>
+    <div className="nc-outer" style={{ padding: '28px', fontFamily: "'Inter', sans-serif", background: T.bg, minHeight: '100%' }}>
 
       {/* ── HEADER ── */}
       <div style={{ marginBottom: 24 }}>
@@ -573,6 +573,9 @@ export default function NovaComandaTab() {
         @media (max-width: 900px) {
           .nc-grid { flex-direction: column !important; }
           .nc-cart { width: 100% !important; position: static !important; }
+        }
+        @media (max-width: 768px) {
+          .nc-outer { padding: 14px !important; }
         }
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>

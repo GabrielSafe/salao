@@ -36,7 +36,7 @@ export default function RelatorioTab() {
   useSocket(usuario?.salaoId, { onEstadoCompleto: () => carregar() });
 
   return (
-    <div>
+    <div className="admin-tab">
       <div className="page-header">
         <div>
           <h1 className="page-title">Relatório</h1>

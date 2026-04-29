@@ -2,27 +2,27 @@
 
 :root {
   /* ── Identidade Rápido Beauty ── */
-  --brand-magenta:  #D4178A;
+  --brand-amber:    #f59e0b;
   --brand-navy:     #1B2A4A;
-  --brand-gradient: linear-gradient(135deg, #E85D04 0%, #D4178A 100%);
+  --brand-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 
   /* Fundos */
-  --bg:          #F5F4F2;
+  --bg:          #f9fafb;
   --bg-card:     #FFFFFF;
-  --bg-elevated: #FAFAF8;
-  --bg-hover:    #F2F0ED;
-  --bg-active:   #EAE8E4;
+  --bg-elevated: #f3f4f6;
+  --bg-hover:    #f3f4f6;
+  --bg-active:   #e5e7eb;
 
-  /* Accent — magenta da marca */
-  --accent:        #D4178A;
-  --accent-hover:  #B5146B;
-  --accent-dim:    rgba(212, 23, 138, 0.10);
-  --accent-border: rgba(212, 23, 138, 0.25);
+  /* Accent — âmbar */
+  --accent:        #f59e0b;
+  --accent-hover:  #d97706;
+  --accent-dim:    rgba(245, 158, 11, 0.10);
+  --accent-border: rgba(245, 158, 11, 0.25);
 
   /* Texto */
-  --text:   #1B2A4A;
+  --text:   #262626;
   --text-2: #6B7280;
-  --text-3: #AAAAAA;
+  --text-3: #9ca3af;
 
   /* Bordas */
   --border:   rgba(0, 0, 0, 0.07);
@@ -56,16 +56,17 @@
 
 /* ── Dark mode overrides (tema exato do usuário) ─────────────────────── */
 html.dark {
-  --bg:          #171717;   /* --background */
-  --bg-card:     #262626;   /* --card */
+  --bg:          #171717;
+  --bg-card:     #262626;
   --bg-elevated: #1f1f1f;
-  --bg-hover:    #333333;   /* hover dentro dos cards */
-  --bg-active:   #404040;   /* --border */
+  --bg-hover:    #333333;
+  --bg-active:   #404040;
 
   --accent:        #f59e0b;
   --accent-hover:  #d97706;
   --accent-dim:    rgba(245,158,11,.15);
   --accent-border: rgba(245,158,11,.3);
+  --brand-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 
   --text:   #e5e5e5;        /* --foreground */
   --text-2: #a3a3a3;        /* --muted-foreground */
@@ -124,11 +125,11 @@ a { text-decoration: none; color: inherit; }
 
 .btn-primary {
   background: var(--brand-gradient);
-  color: #FFFFFF;
-  box-shadow: 0 2px 10px rgba(212,23,138,0.30);
+  color: #000;
+  box-shadow: 0 2px 10px rgba(245,158,11,0.30);
 }
 .btn-primary:hover:not(:disabled) {
-  box-shadow: var(--shadow-brand);
+  box-shadow: 0 4px 20px rgba(245,158,11,0.35);
   transform: translateY(-1px);
   filter: brightness(1.05);
 }
@@ -213,7 +214,7 @@ a { text-decoration: none; color: inherit; }
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
-.badge-aguardando     { background: rgba(212,23,138,.12); color: #A0106A; }
+.badge-aguardando     { background: rgba(245,158,11,.12); color: #92400e; }
 .badge-em_atendimento { background: rgba(22,163,74,.12);  color: #15803D; }
 .badge-finalizado     { background: rgba(37,99,235,.10);  color: #1D4ED8; }
 .badge-cancelado      { background: rgba(220,38,38,.10);  color: #B91C1C; }
@@ -242,7 +243,7 @@ a { text-decoration: none; color: inherit; }
   flex-shrink: 0;
 }
 .status-dot.online        { background: var(--success); box-shadow: 0 0 5px rgba(22,163,74,.5); animation: pulse-dot 2s ease infinite; }
-.status-dot.em_atendimento{ background: var(--accent);  box-shadow: 0 0 5px rgba(212,23,138,.5); animation: pulse-dot 2s ease infinite; }
+.status-dot.em_atendimento{ background: var(--accent);  box-shadow: 0 0 5px rgba(245,158,11,.5); animation: pulse-dot 2s ease infinite; }
 .status-dot.offline       { background: var(--text-3); }
 
 @keyframes pulse-dot {
@@ -289,7 +290,7 @@ a { text-decoration: none; color: inherit; }
 /* ── Alerts ───────────────────────────── */
 .alert-error   { background: var(--error-dim);   color: #B91C1C; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 14px; border: 1px solid rgba(220,38,38,.18); }
 .alert-success { background: var(--success-dim); color: #15803D; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 14px; border: 1px solid rgba(22,163,74,.18); }
-.alert-info    { background: var(--accent-dim);  color: #A0106A; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 14px; border: 1px solid var(--accent-border); }
+.alert-info    { background: var(--accent-dim);  color: #92400e; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 14px; border: 1px solid var(--accent-border); }
 
 /* ── Table ────────────────────────────── */
 .table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -338,7 +339,7 @@ a { text-decoration: none; color: inherit; }
   white-space: nowrap;
 }
 .navbar-dark .nav-link:hover  { color: var(--nav-text-active); background: rgba(255,255,255,.08); }
-.navbar-dark .nav-link.active { color: #fff; background: rgba(212,23,138,.25); border-color: rgba(212,23,138,.4); }
+.navbar-dark .nav-link.active { color: #000; background: rgba(245,158,11,.25); border-color: rgba(245,158,11,.4); }
 
 /* ── Service selector ─────────────────── */
 .service-btn {
@@ -390,6 +391,15 @@ a { text-decoration: none; color: inherit; }
   .kpi-value { font-size: 24px; }
   .kpi-icon  { width: 30px; height: 30px; }
   .btn-lg { padding: 11px 20px; font-size: 14px; }
+}
+
+/* Admin tab padding wrapper */
+.admin-tab { padding: 24px; }
+@media (max-width: 768px) {
+  .admin-tab { padding: 14px; }
+  .page-header { flex-direction: column; align-items: flex-start !important; gap: 12px; }
+  .page-header .btn { width: 100%; justify-content: center; }
+  .grid-2 { grid-template-columns: 1fr !important; }
 }
 
 /* Step indicator público */
