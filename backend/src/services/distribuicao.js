@@ -1,5 +1,12 @@
 const prisma = require('../config/prisma');
-const { enviarPushParaFuncionaria } = require('./pushService');
+
+// Push é opcional — se web-push não estiver instalado, usa função vazia
+let enviarPushParaFuncionaria = async () => {};
+try {
+  enviarPushParaFuncionaria = require('./pushService').enviarPushParaFuncionaria;
+} catch {
+  console.warn('[push] pushService indisponível — continuando sem push');
+}
 
 const TIMEOUT_PROPOSTA_MS = 60_000; // 60 segundos
 const timeoutsPendentes   = new Map(); // atendimentoId → timer

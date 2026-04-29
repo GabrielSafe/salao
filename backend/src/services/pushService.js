@@ -1,10 +1,18 @@
-const webpush = require('web-push');
-const prisma   = require('../config/prisma');
+const prisma = require('../config/prisma');
+
+// Carrega web-push dinamicamente — se não estiver instalado, push fica desabilitado
+let webpush = null;
+try {
+  webpush = require('web-push');
+} catch {
+  console.warn('[push] web-push não encontrado — notificações push desabilitadas. Execute: npm install');
+}
 
 let configured = false;
 
 function configurar() {
   if (configured) return;
+  if (!webpush) return;
   if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) return;
   webpush.setVapidDetails(
     process.env.VAPID_SUBJECT || 'mailto:admin@rapidobeauty.com',

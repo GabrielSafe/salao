@@ -47,14 +47,27 @@ const fmt     = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', curre
 const fmtMin  = (m) => m < 60 ? `${m} min` : `${Math.floor(m / 60)}h ${m % 60 > 0 ? `${m % 60}min` : ''}`;
 const elapsed = (d) => { const m = Math.floor((Date.now() - new Date(d)) / 60000); return m <= 0 ? '< 1 min' : fmtMin(m); };
 
-async function tocarAlerta() {
+// Desbloqueia o AudioContext via gesto do usuário (obrigatório no iOS/mobile)
+function desbloquearAudio(ctxRef) {
+  try {
+    if (!ctxRef.current) {
+      ctxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (ctxRef.current.state === 'suspended') {
+      ctxRef.current.resume().catch(() => {});
+    }
+  } catch {}
+}
+
+async function tocarAlerta(ctxRef) {
   // Vibração — funciona mesmo em background no Android
   navigator.vibrate?.([400, 100, 400, 100, 400]);
 
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Usa o AudioContext já desbloqueado pelo gesto do usuário
+    const ctx = ctxRef?.current;
+    if (!ctx) return;
 
-    // Resume o AudioContext se estiver suspenso (tab em background)
     if (ctx.state === 'suspended') {
       try { await ctx.resume(); } catch {}
     }
@@ -211,7 +224,8 @@ export default function FuncionariaPage() {
   const [virouOffline, setVirouOffline] = useState(false);
   const [msgOffline, setMsgOffline]     = useState('');
   const [conectado, setConectado]       = useState(true);
-  const propostaRef = useRef(null);
+  const propostaRef  = useRef(null);
+  const audioCtxRef  = useRef(null); // AudioContext pré-desbloqueado via gesto
 
   const salaoId       = usuario?.salaoId;
   const funcionariaId = usuario?.funcionaria?.id;
@@ -299,7 +313,7 @@ export default function FuncionariaPage() {
   const onPropostaAtendimento = useCallback((atendimento) => {
     propostaRef.current = atendimento;
     setProposta(atendimento);
-    tocarAlerta();
+    tocarAlerta(audioCtxRef);
 
     let count = 0; const orig = document.title;
     const timer = setInterval(() => {
@@ -374,6 +388,8 @@ export default function FuncionariaPage() {
   }
 
   async function toggleFila() {
+    // Desbloqueia AudioContext no gesto do usuário (obrigatório no iOS/mobile)
+    desbloquearAudio(audioCtxRef);
     setLoading(true);
     try {
       if (naFila) { await api.post('/fila/sair');    showMsg('Você saiu da fila.', 'info'); }
