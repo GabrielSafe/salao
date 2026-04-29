@@ -10,8 +10,15 @@ import SuperAdminPage from './pages/superadmin/SuperAdminPage';
 
 function RotaPrivada({ children, roles }) {
   const { usuario } = useAuth();
-  if (!usuario) return <Navigate to="/login" replace />;
-  if (roles && !roles.includes(usuario.role)) return <Navigate to="/login" replace />;
+
+  // Fallback para localStorage: evita race condition onde setUsuario()
+  // ainda não commitou quando navigate() dispara após login
+  const user = usuario ?? (() => {
+    try { return JSON.parse(localStorage.getItem('usuario')); } catch { return null; }
+  })();
+
+  if (!user) return <Navigate to="/login" replace />;
+  if (roles && !roles.includes(user.role)) return <Navigate to="/login" replace />;
   return children;
 }
 
