@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const { Especialidade } = require('@prisma/client');
 const prisma = require('../config/prisma');
-const { rodarDistribuicao, emitirEstadoCompleto, limparRejeicoesParaFuncionaria } = require('../services/distribuicao');
+const { rodarDistribuicao, emitirEstadoCompleto, limparRejeicoesParaFuncionaria, cancelarPropostasParaFuncionaria } = require('../services/distribuicao');
 
 const TODAS_ESPECIALIDADES = Object.values(Especialidade);
 
@@ -127,8 +127,9 @@ async function entrarFila(req, res) {
     })),
   });
 
-  // Limpa qualquer blacklist de rejeição anterior para esta funcionária
-  // Garante que ela receba propostas mesmo que tenha ignorado/perdido propostas antes
+  // Cancela propostas PENDENTE_ACEITE que estavam aguardando ela (socket estava off)
+  // e devolve os atendimentos para AGUARDANDO para receberem nova proposta
+  await cancelarPropostasParaFuncionaria(funcionaria.id, salaoId);
   limparRejeicoesParaFuncionaria(funcionaria.id);
 
   const io = req.app.get('io');

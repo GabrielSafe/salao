@@ -2,9 +2,10 @@ const prisma = require('../config/prisma');
 const { enviarPushParaFuncionaria } = require('./pushService');
 
 const TIMEOUT_PROPOSTA_MS = 60_000; // 60 segundos
-const timeoutsPendentes   = new Map();
+const timeoutsPendentes   = new Map(); // atendimentoId → timer
+const propostaParaFunc    = new Map(); // atendimentoId → funcionariaId (rastreia a quem foi proposto)
 
-// Rastreia quem já rejeitou cada atendimento para evitar loop infinito
+// Rastreia quem já rejeitou manualmente cada atendimento
 // atendimentoId → Set<funcionariaId>
 const rejeicoesPorAtendimento = new Map();
 
@@ -90,6 +91,7 @@ async function tentarProporAtendimento(atendimento, salaoId, io, funcionariasEmP
     if (!funcionariaId || !propostaAgrupada) return;
 
     funcionariasEmProposta.add(funcionariaId);
+    propostaParaFunc.set(propostaAgrupada.id, funcionariaId);
 
     setImmediate(async () => {
       if (io) {
@@ -108,6 +110,7 @@ async function tentarProporAtendimento(atendimento, salaoId, io, funcionariasEmP
 
     // Timeout rastreado pelo primary ID
     const timer = setTimeout(() => {
+      propostaParaFunc.delete(propostaAgrupada.id);
       recusarProposta(propostaAgrupada.id, funcionariaId, salaoId, io, true);
     }, TIMEOUT_PROPOSTA_MS);
 
@@ -280,12 +283,35 @@ function limparRejeicoes(atendimentoId) {
   rejeicoesPorAtendimento.delete(atendimentoId);
 }
 
-// Remove uma funcionária específica de TODAS as listas de rejeição
-// Chamado quando ela entra/retorna à fila para que possa receber propostas novamente
+// Remove uma funcionária de todas as listas de rejeição
 function limparRejeicoesParaFuncionaria(funcionariaId) {
   for (const rejeitados of rejeicoesPorAtendimento.values()) {
     rejeitados.delete(funcionariaId);
   }
+}
+
+/**
+ * Cancela propostas PENDENTE_ACEITE que estão aguardando esta funcionária
+ * e as devolve para AGUARDANDO com novos timers zerados.
+ *
+ * Situação: socket desconectou → proposta foi enviada → nunca recebida →
+ * funcionária volta/reentra na fila → precisa receber proposta fresca.
+ */
+async function cancelarPropostasParaFuncionaria(funcionariaId, salaoId) {
+  // Cancela timers server-side de propostas destinadas a ela
+  for (const [atendimentoId, fId] of propostaParaFunc) {
+    if (fId === funcionariaId) {
+      const timer = timeoutsPendentes.get(atendimentoId);
+      if (timer) { clearTimeout(timer); timeoutsPendentes.delete(atendimentoId); }
+      propostaParaFunc.delete(atendimentoId);
+    }
+  }
+
+  // Volta atendimentos PENDENTE_ACEITE dela para AGUARDANDO
+  await prisma.atendimento.updateMany({
+    where: { salaoId, status: 'PENDENTE_ACEITE', propostaParaId: funcionariaId },
+    data:  { status: 'AGUARDANDO', propostaParaId: null },
+  });
 }
 
 /**
@@ -355,4 +381,4 @@ async function proporParaFuncionaria(atendimentoId, funcionariaId, salaoId, io) 
   }
 }
 
-module.exports = { rodarDistribuicao, emitirEstadoCompleto, aceitarProposta, recusarProposta, limparRejeicoes, limparRejeicoesParaFuncionaria, proporParaFuncionaria };
+module.exports = { rodarDistribuicao, emitirEstadoCompleto, aceitarProposta, recusarProposta, limparRejeicoes, limparRejeicoesParaFuncionaria, cancelarPropostasParaFuncionaria, proporParaFuncionaria };

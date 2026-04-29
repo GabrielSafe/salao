@@ -49,13 +49,14 @@ function iniciarSocket(io) {
 
           await prisma.funcionaria.update({ where: { id: funcionaria.id }, data: atualizacao });
 
-          // Se está na fila após reconexão, roda distribuição para receber propostas pendentes
+          // Se está na fila após reconexão: cancela propostas mortas + redistribui
           const naFila = await prisma.filaEntrada.findFirst({ where: { funcionariaId: funcionaria.id } });
           if (naFila) {
-            const { rodarDistribuicao, limparRejeicoesParaFuncionaria } = require('../services/distribuicao');
+            const { rodarDistribuicao, limparRejeicoesParaFuncionaria, cancelarPropostasParaFuncionaria } = require('../services/distribuicao');
+            await cancelarPropostasParaFuncionaria(funcionaria.id, salaoId);
             limparRejeicoesParaFuncionaria(funcionaria.id);
             await rodarDistribuicao(salaoId, io);
-            console.log(`[socket] Funcionária ${funcionaria.id} reconectou com fila ativa → distribuição re-executada`);
+            console.log(`[socket] Funcionária ${funcionaria.id} reconectou com fila ativa → propostas mortas canceladas → redistribuição`);
           }
         }
       }
