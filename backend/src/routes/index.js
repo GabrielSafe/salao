@@ -3,9 +3,10 @@ const router = express.Router();
 
 const { autenticar, exigirRole, exigirSalao } = require('../middleware/auth');
 
-const authCtrl = require('../controllers/authController');
-const pushCtrl = require('../controllers/pushController');
-const saloesCtrl = require('../controllers/saloesController');
+const authCtrl          = require('../controllers/authController');
+const pushCtrl          = require('../controllers/pushController');
+const saloesCtrl        = require('../controllers/saloesController');
+const recepcionistasCtrl = require('../controllers/recepcionistasController');
 const funcionariasCtrl = require('../controllers/funcionariasController');
 const clientesCtrl = require('../controllers/clientesController');
 const atendimentosCtrl = require('../controllers/atendimentosController');
@@ -32,11 +33,17 @@ router.get('/saloes/:id/dashboard', autenticar, exigirRole('SUPERADMIN'), saloes
 // Dashboard do salão atual (admin)
 router.get('/dashboard', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, saloesCtrl.dashboard);
 
+// Recepcionistas (gestão — só ADMIN/SUPERADMIN)
+router.get('/recepcionistas',             autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, recepcionistasCtrl.listar);
+router.post('/recepcionistas',            autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, recepcionistasCtrl.criar);
+router.put('/recepcionistas/:id',         autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, recepcionistasCtrl.atualizar);
+router.get('/recepcionistas/relatorio',   autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, recepcionistasCtrl.relatorio);
+
 // Funcionárias
-router.get('/funcionarias', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, funcionariasCtrl.listar);
-router.post('/funcionarias', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, funcionariasCtrl.criar);
-router.put('/funcionarias/:id', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, funcionariasCtrl.atualizar);
-router.get('/funcionarias/:id/historico', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, funcionariasCtrl.historico);
+router.get('/funcionarias', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, funcionariasCtrl.listar);
+router.post('/funcionarias', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, funcionariasCtrl.criar);
+router.put('/funcionarias/:id', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, funcionariasCtrl.atualizar);
+router.get('/funcionarias/:id/historico', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, funcionariasCtrl.historico);
 
 // Fila (funcionária controla a própria fila)
 router.post('/fila/entrar', autenticar, exigirRole('FUNCIONARIA'), funcionariasCtrl.entrarFila);
@@ -46,11 +53,11 @@ router.post('/fila/sair',   autenticar, exigirRole('FUNCIONARIA'), funcionariasC
 router.patch('/status/presenca', autenticar, exigirRole('FUNCIONARIA'), funcionariasCtrl.atualizarPresenca);
 
 // Clientes
-router.get('/clientes', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, clientesCtrl.listar);
-router.get('/clientes/buscar', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'FUNCIONARIA'), exigirSalao, clientesCtrl.buscar);
-router.post('/clientes', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, clientesCtrl.criar);
-router.put('/clientes/:id', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, clientesCtrl.atualizar);
-router.get('/clientes/:id/historico', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, clientesCtrl.historico);
+router.get('/clientes', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, clientesCtrl.listar);
+router.get('/clientes/buscar', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'FUNCIONARIA', 'RECEPCIONISTA'), exigirSalao, clientesCtrl.buscar);
+router.post('/clientes', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, clientesCtrl.criar);
+router.put('/clientes/:id', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, clientesCtrl.atualizar);
+router.get('/clientes/:id/historico', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, clientesCtrl.historico);
 
 // Serviços (catálogo)
 router.get('/servicos',      autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, servicosCtrl.listar);
@@ -58,22 +65,25 @@ router.post('/servicos',     autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exig
 router.patch('/servicos/:id',autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, servicosCtrl.atualizar);
 
 // Cadeiras
-router.get('/cadeiras',              autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, cadeirasCtrl.listar);
+router.get('/cadeiras',              autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, cadeirasCtrl.listar);
 router.patch('/cadeiras/:id',        autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, cadeirasCtrl.atualizar);
 router.get('/cadeiras/relatorio',    autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, cadeirasCtrl.relatorio);
 
 // Atendimentos
-router.post('/atendimentos/comanda', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, atendimentosCtrl.criarComanda);
-router.post('/atendimentos/adicionar', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, atendimentosCtrl.adicionarServico);
-router.patch('/atendimentos/:id/finalizar',       autenticar, exigirRole('FUNCIONARIA'),          atendimentosCtrl.finalizar);
-router.patch('/atendimentos/:id/finalizar-admin', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, atendimentosCtrl.finalizarAdmin);
+router.post('/atendimentos/comanda',  autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, atendimentosCtrl.criarComanda);
+router.post('/atendimentos/adicionar',autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, atendimentosCtrl.adicionarServico);
+router.patch('/atendimentos/:id/finalizar',       autenticar, exigirRole('FUNCIONARIA'), atendimentosCtrl.finalizar);
+router.patch('/atendimentos/:id/finalizar-admin', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, atendimentosCtrl.finalizarAdmin);
 router.post('/atendimentos/:id/aceitar',   autenticar, exigirRole('FUNCIONARIA'), atendimentosCtrl.aceitar);
 router.post('/atendimentos/:id/recusar',   autenticar, exigirRole('FUNCIONARIA'), atendimentosCtrl.recusar);
-router.patch('/atendimentos/:id/cancelar', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, atendimentosCtrl.cancelar);
+router.patch('/atendimentos/:id/cancelar', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, atendimentosCtrl.cancelar);
 router.get('/atendimentos/comanda/:numero', autenticar, exigirSalao, atendimentosCtrl.listarPorComanda);
-router.get('/atendimentos/relatorio', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, atendimentosCtrl.relatorio);
-router.patch('/atendimentos/comanda/:numero/fechar', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, atendimentosCtrl.fecharComanda);
-router.patch('/atendimentos/:id/atribuir', autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, atendimentosCtrl.atribuirManual);
+router.get('/atendimentos/relatorio', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, atendimentosCtrl.relatorio);
+router.patch('/atendimentos/comanda/:numero/fechar', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, atendimentosCtrl.fecharComanda);
+router.patch('/atendimentos/:id/atribuir', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, atendimentosCtrl.atribuirManual);
+
+// Dashboard
+router.get('/dashboard', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, saloesCtrl.dashboard);
 
 // Rota pública para cliente acompanhar comanda (sem auth)
 router.get('/publico/:salaoSlug/comanda/:numero', async (req, res) => {

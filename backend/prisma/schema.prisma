@@ -29,6 +29,7 @@ model Salao {
 enum Role {
   SUPERADMIN
   ADMIN
+  RECEPCIONISTA
   FUNCIONARIA
 }
 
@@ -43,9 +44,10 @@ model Usuario {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  salao             Salao?             @relation(fields: [salaoId], references: [id])
-  funcionaria       Funcionaria?
-  pushSubscriptions PushSubscription[]
+  salao               Salao?             @relation(fields: [salaoId], references: [id])
+  funcionaria         Funcionaria?
+  pushSubscriptions   PushSubscription[]
+  atendimentosCriados Atendimento[]      @relation("AtendimentoCriador")
 
   @@map("usuarios")
 }
@@ -143,14 +145,16 @@ model Atendimento {
   servicoPreco     Float?            @map("servico_preco")
   iniciadoEm       DateTime?         @map("iniciado_em")
   finalizadoEm     DateTime?         @map("finalizado_em")
-  fechadaEm        DateTime?         @map("fechada_em")
+  fechadaEm          DateTime?         @map("fechada_em")
+  recepcionistaId    String?           @map("recepcionista_id")
   createdAt     DateTime          @default(now()) @map("created_at")
   updatedAt     DateTime          @updatedAt @map("updated_at")
 
-  cliente     Cliente      @relation(fields: [clienteId], references: [id])
-  funcionaria Funcionaria? @relation(fields: [funcionariaId], references: [id])
-  salao       Salao        @relation(fields: [salaoId], references: [id])
-  cadeira     Cadeira?     @relation(fields: [cadeiraId], references: [id])
+  cliente       Cliente      @relation(fields: [clienteId], references: [id])
+  funcionaria   Funcionaria? @relation(fields: [funcionariaId], references: [id])
+  salao         Salao        @relation(fields: [salaoId], references: [id])
+  cadeira       Cadeira?     @relation(fields: [cadeiraId], references: [id])
+  recepcionista Usuario?     @relation("AtendimentoCriador", fields: [recepcionistaId], references: [id])
 
   @@map("atendimentos")
 }

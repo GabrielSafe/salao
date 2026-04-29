@@ -38,7 +38,7 @@ function agrupar(atendimentos) {
     .filter(a => ['AGUARDANDO', 'PENDENTE_ACEITE', 'EM_ATENDIMENTO', 'FINALIZADO'].includes(a.status))
     .forEach(a => {
       const k = a.numeroComanda;
-      if (!grupos[k]) grupos[k] = { numero: k, cliente: a.cliente, clienteId: a.clienteId, criadoEm: a.createdAt, itens: [] };
+      if (!grupos[k]) grupos[k] = { numero: k, cliente: a.cliente, clienteId: a.clienteId, criadoEm: a.createdAt, recepcionista: a.recepcionista, itens: [] };
       grupos[k].itens.push(a);
     });
   return Object.values(grupos).sort((a, b) => a.numero - b.numero);
@@ -186,11 +186,17 @@ function ComandaCard({ grupo, funcionarias, onFechar, fechando }) {
               <span style={{ fontSize: 12, color: 'var(--text-3)' }}>· {grupo.cliente.telefone}</span>
             )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 3 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 3, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 12, color: 'var(--text-2)', display: 'flex', alignItems: 'center', gap: 4 }}>
               <Clock size={11} /> {tempoDecorrido(grupo.criadoEm)} atrás
             </span>
             <span style={{ fontSize: 12, color: 'var(--text-2)' }}>· {total} serviço{total > 1 ? 's' : ''}</span>
+            {/* Badge "Criado por" */}
+            {grupo.recepcionista !== undefined && (
+              <span style={{ fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 3, background: grupo.recepcionista ? 'rgba(245,158,11,.1)' : 'rgba(0,0,0,.06)', color: grupo.recepcionista ? '#d97706' : 'var(--text-3)', padding: '1px 7px', borderRadius: 10, fontWeight: 600 }}>
+                {grupo.recepcionista ? `↳ ${grupo.recepcionista.nome}` : '↳ Gerente/Admin'}
+              </span>
+            )}
           </div>
         </div>
 

@@ -11,18 +11,32 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../hooks/useSocket';
 import { useThemeCtx as useTheme } from '../../contexts/ThemeContext.jsx';
 import api from '../../services/api';
-import DashboardTab   from './tabs/DashboardTab';
-import ServicosTab    from './tabs/ServicosTab';
-import CadeirasTab    from './tabs/CadeirasTab';
-import NovaComandaTab from './tabs/NovaComandaTab';
-import FuncionariasTab from './tabs/FuncionariasTab';
-import RelatorioTab   from './tabs/RelatorioTab';
-import FilaTab        from './tabs/FilaTab';
-import ClientesTab    from './tabs/ClientesTab';
-import ComandasTab    from './tabs/ComandasTab';
+import DashboardTab        from './tabs/DashboardTab';
+import ServicosTab         from './tabs/ServicosTab';
+import CadeirasTab         from './tabs/CadeirasTab';
+import NovaComandaTab      from './tabs/NovaComandaTab';
+import FuncionariasTab     from './tabs/FuncionariasTab';
+import RelatorioTab        from './tabs/RelatorioTab';
+import FilaTab             from './tabs/FilaTab';
+import ClientesTab         from './tabs/ClientesTab';
+import ComandasTab         from './tabs/ComandasTab';
+import RecepcionistasTab   from './tabs/RecepcionistasTab';
 
-// ── Nav sections ───────────────────────────────────────────────────────────
-const MAIN_MENU = [
+// ── Nav sections (usamos função para filtrar por role) ─────────────────────
+const MAIN_MENU_ADMIN = [
+  { path: '',                label: 'Dashboard',      Icon: LayoutDashboard, badge: 'ativos' },
+  { path: 'comanda',         label: 'Nova Comanda',   Icon: ClipboardPlus },
+  { path: 'comandas',        label: 'Comandas',       Icon: FileText },
+  { path: 'funcionarias',    label: 'Equipe',         Icon: Users },
+  { path: 'fila',            label: 'Fila de Espera', Icon: Clock },
+  { path: 'clientes',        label: 'Clientes',       Icon: UserCircle },
+  { path: 'relatorio',       label: 'Relatórios',     Icon: BarChart3 },
+  { path: 'servicos',        label: 'Serviços',       Icon: Tag },
+  { path: 'cadeiras',        label: 'Cadeiras',       Icon: Armchair },
+  { path: 'recepcionistas',  label: 'Recepcionistas', Icon: Shield },
+];
+
+const MAIN_MENU_RECEPCIONISTA = [
   { path: '',             label: 'Dashboard',      Icon: LayoutDashboard, badge: 'ativos' },
   { path: 'comanda',      label: 'Nova Comanda',   Icon: ClipboardPlus },
   { path: 'comandas',     label: 'Comandas',       Icon: FileText },
@@ -30,8 +44,7 @@ const MAIN_MENU = [
   { path: 'fila',         label: 'Fila de Espera', Icon: Clock },
   { path: 'clientes',     label: 'Clientes',       Icon: UserCircle },
   { path: 'relatorio',    label: 'Relatórios',     Icon: BarChart3 },
-  { path: 'servicos',     label: 'Serviços',       Icon: Tag },
-  { path: 'cadeiras',    label: 'Cadeiras',       Icon: Armchair },
+  { path: 'cadeiras',     label: 'Cadeiras',       Icon: Armchair },
 ];
 
 const PREFERENCE_MENU = [
@@ -40,15 +53,16 @@ const PREFERENCE_MENU = [
 ];
 
 const PAGE_TITLES = {
-  '/admin':              { title: 'Dashboard',      sub: 'Acompanhe o salão em tempo real' },
-  '/admin/comanda':      { title: 'Nova Comanda',   sub: 'Registre a chegada de uma cliente' },
-  '/admin/comandas':     { title: 'Comandas',       sub: 'Comandas ativas do salão' },
-  '/admin/funcionarias': { title: 'Equipe',         sub: 'Gerencie as funcionárias' },
-  '/admin/fila':         { title: 'Fila de Espera', sub: 'Funcionárias na fila por serviço' },
-  '/admin/clientes':     { title: 'Clientes',       sub: 'Cadastro e histórico de clientes' },
-  '/admin/relatorio':    { title: 'Relatórios',     sub: 'Análise de atendimentos' },
-  '/admin/servicos':     { title: 'Serviços',       sub: 'Gerencie o catálogo de serviços e preços' },
-  '/admin/cadeiras':    { title: 'Cadeiras',       sub: 'Gestão e relatórios das cadeiras do salão' },
+  '/admin':                    { title: 'Dashboard',        sub: 'Acompanhe o salão em tempo real' },
+  '/admin/comanda':            { title: 'Nova Comanda',     sub: 'Registre a chegada de uma cliente' },
+  '/admin/comandas':           { title: 'Comandas',         sub: 'Comandas ativas do salão' },
+  '/admin/funcionarias':       { title: 'Equipe',           sub: 'Gerencie as funcionárias' },
+  '/admin/fila':               { title: 'Fila de Espera',   sub: 'Funcionárias na fila por serviço' },
+  '/admin/clientes':           { title: 'Clientes',         sub: 'Cadastro e histórico de clientes' },
+  '/admin/relatorio':          { title: 'Relatórios',       sub: 'Análise de atendimentos' },
+  '/admin/servicos':           { title: 'Serviços',         sub: 'Gerencie o catálogo de serviços e preços' },
+  '/admin/cadeiras':           { title: 'Cadeiras',         sub: 'Gestão e relatórios das cadeiras do salão' },
+  '/admin/recepcionistas':     { title: 'Recepcionistas',   sub: 'Gerencie as contas das recepcionistas' },
 };
 
 // ── Cores do tema ─────────────────────────────────────────────────────────
@@ -173,7 +187,7 @@ function ProfileModal({ onClose, t, isDark }) {
             </div>
             <div>
               <div style={{ fontSize: 15, fontWeight: 700, color: t.sidebarTitle }}>Editar perfil</div>
-              <div style={{ fontSize: 12, color: t.sidebarSub, marginTop: 1 }}>Administrador</div>
+              <div style={{ fontSize: 12, color: t.sidebarSub, marginTop: 1 }}>{usuario?.role === 'RECEPCIONISTA' ? 'Recepcionista' : 'Administrador'}</div>
             </div>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.sidebarSub, padding: 4, display: 'flex', borderRadius: 6 }}>
@@ -441,6 +455,10 @@ export default function AdminPage() {
   const page = PAGE_TITLES[location.pathname] || { title: 'Painel', sub: '' };
   const closeSidebar = () => setSidebarOpen(false);
 
+  const isRecepcionista = usuario?.role === 'RECEPCIONISTA';
+  const MAIN_MENU = isRecepcionista ? MAIN_MENU_RECEPCIONISTA : MAIN_MENU_ADMIN;
+  const roleLabel = isRecepcionista ? 'Recepcionista' : 'Administrador';
+
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: "'Inter', sans-serif", background: t.contentBg }}>
 
@@ -489,7 +507,7 @@ export default function AdminPage() {
               <div style={{ fontSize: 13, fontWeight: 600, color: t.sidebarTitle, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {usuario?.nome}
               </div>
-              <div style={{ fontSize: 11, color: t.sidebarSub, marginTop: 1 }}>Administrador</div>
+              <div style={{ fontSize: 11, color: t.sidebarSub, marginTop: 1 }}>{roleLabel}</div>
             </div>
             <ChevronDown size={13} color={t.sidebarSub} style={{ transition: 'transform .2s', transform: dropOpen ? 'rotate(180deg)' : 'none' }} />
           </div>
@@ -647,12 +665,13 @@ export default function AdminPage() {
             <Route index                element={<DashboardTab   estado={estado} />} />
             <Route path="comanda"       element={<NovaComandaTab />} />
             <Route path="funcionarias"  element={<FuncionariasTab />} />
-            <Route path="relatorio"     element={<RelatorioTab />} />
-            <Route path="fila"          element={<FilaTab estado={estado} />} />
-            <Route path="clientes"      element={<ClientesTab />} />
-            <Route path="comandas"      element={<ComandasTab estado={estado} />} />
-            <Route path="servicos"      element={<ServicosTab />} />
-            <Route path="cadeiras"     element={<CadeirasTab />} />
+            <Route path="relatorio"      element={<RelatorioTab />} />
+            <Route path="fila"           element={<FilaTab estado={estado} />} />
+            <Route path="clientes"       element={<ClientesTab />} />
+            <Route path="comandas"       element={<ComandasTab estado={estado} />} />
+            <Route path="servicos"       element={<ServicosTab />} />
+            <Route path="cadeiras"       element={<CadeirasTab />} />
+            <Route path="recepcionistas" element={<RecepcionistasTab />} />
           </Routes>
         </main>
       </div>

@@ -272,6 +272,7 @@ async function emitirEstadoCompleto(salaoId, io) {
           cliente: true,
           funcionaria: { include: { usuario: true } },
           cadeira: true,
+          recepcionista: { select: { id: true, nome: true, role: true } },
         },
         orderBy: { createdAt: 'asc' },
       }),

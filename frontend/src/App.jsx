@@ -18,9 +18,10 @@ function RotaPrivada({ children, roles }) {
 function RedirecionarPorRole() {
   const { usuario } = useAuth();
   if (!usuario) return <Navigate to="/login" replace />;
-  if (usuario.role === 'SUPERADMIN') return <Navigate to="/superadmin" replace />;
-  if (usuario.role === 'ADMIN') return <Navigate to="/admin" replace />;
-  if (usuario.role === 'FUNCIONARIA') return <Navigate to="/funcionaria" replace />;
+  if (usuario.role === 'SUPERADMIN')    return <Navigate to="/superadmin" replace />;
+  if (usuario.role === 'ADMIN')         return <Navigate to="/admin" replace />;
+  if (usuario.role === 'RECEPCIONISTA') return <Navigate to="/admin" replace />;
+  if (usuario.role === 'FUNCIONARIA')   return <Navigate to="/funcionaria" replace />;
   return <Navigate to="/login" replace />;
 }
 
@@ -48,11 +49,11 @@ export default function App() {
           }
         />
 
-        {/* Área do admin/gerente */}
+        {/* Área do admin/gerente + recepcionista */}
         <Route
           path="/admin/*"
           element={
-            <RotaPrivada roles={['ADMIN']}>
+            <RotaPrivada roles={['ADMIN', 'RECEPCIONISTA']}>
               <AdminPage />
             </RotaPrivada>
           }

@@ -21,6 +21,9 @@ async function criarComanda(req, res) {
   const cliente = await prisma.cliente.findFirst({ where: { id: clienteId, salaoId } });
   if (!cliente) return res.status(404).json({ erro: 'Cliente não encontrada' });
 
+  // Recepcionista que criou a comanda (null para ADMIN/SUPERADMIN)
+  const recepcionistaId = req.usuario.role === 'RECEPCIONISTA' ? req.usuario.id : null;
+
   // Atribuição automática de cadeira (menor número disponível)
   // Sem escolha manual — impede preferências por cadeira
   const ocupadasIds = (await prisma.atendimento.findMany({
@@ -65,8 +68,8 @@ async function criarComanda(req, res) {
       if (jaExiste) continue;
 
       const a = await tx.atendimento.create({
-        data: { clienteId, salaoId, tipoServico, servicoNome, servicoPreco, numeroComanda: numero, cadeiraId: cadeiraIdAtribuida },
-        include: { cliente: true, cadeira: true },
+        data: { clienteId, salaoId, tipoServico, servicoNome, servicoPreco, numeroComanda: numero, cadeiraId: cadeiraIdAtribuida, recepcionistaId },
+        include: { cliente: true, cadeira: true, recepcionista: { select: { id: true, nome: true, role: true } } },
       });
       criados.push(a);
     }
@@ -263,11 +266,17 @@ async function relatorio(req, res) {
       : { createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } }),
   };
 
+  // Recepcionista vê apenas seus próprios atendimentos no relatório
+  if (req.usuario.role === 'RECEPCIONISTA') {
+    where.recepcionistaId = req.usuario.id;
+  }
+
   const atendimentos = await prisma.atendimento.findMany({
     where,
     include: {
       cliente: true,
       funcionaria: { include: { usuario: true } },
+      recepcionista: { select: { id: true, nome: true } },
     },
     orderBy: { createdAt: 'desc' },
   });
