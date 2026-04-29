@@ -225,7 +225,7 @@ export default function NovaComandaTab() {
       </div>
 
       {/* ── LAYOUT PRINCIPAL ── */}
-      <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }} className="nc-grid">
+      <div style={{ display: 'flex', gap: 20, alignItems: 'stretch' }} className="nc-grid">
 
         {/* ── COLUNA ESQUERDA: catálogo ── */}
         <div style={{ flex: '1 1 0', minWidth: 0 }}>
@@ -343,8 +343,8 @@ export default function NovaComandaTab() {
         </div>
 
         {/* ── COLUNA DIREITA: resumo ── */}
-        <div style={{ width: 300, flexShrink: 0, position: 'sticky', top: 0 }} className="nc-cart">
-          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: '0.5rem', boxShadow: T.shadow, overflow: 'hidden' }}>
+        <div style={{ width: 300, flexShrink: 0, display: 'flex', flexDirection: 'column' }} className="nc-cart">
+          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: '0.5rem', boxShadow: T.shadow, overflow: 'hidden', display: 'flex', flexDirection: 'column', flex: 1 }}>
 
             {/* Header */}
             <div style={{ padding: '14px 18px 12px', borderBottom: `1px solid ${T.border}`, background: 'rgba(245,158,11,.05)' }}>
@@ -488,8 +488,8 @@ export default function NovaComandaTab() {
               </div>
             )}
 
-            {/* Itens do carrinho */}
-            <div style={{ minHeight: 64, maxHeight: 240, overflowY: 'auto', scrollbarWidth: 'thin' }}>
+            {/* Itens do carrinho — cresce para preencher o espaço restante */}
+            <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin', minHeight: 64 }}>
               {carrinho.length === 0 ? (
                 <div style={{ padding: '22px 16px', textAlign: 'center' }}>
                   <div style={{ width: 40, height: 40, borderRadius: '50%', background: T.bg2, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
