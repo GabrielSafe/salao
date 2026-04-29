@@ -47,9 +47,19 @@ const fmt     = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', curre
 const fmtMin  = (m) => m < 60 ? `${m} min` : `${Math.floor(m / 60)}h ${m % 60 > 0 ? `${m % 60}min` : ''}`;
 const elapsed = (d) => { const m = Math.floor((Date.now() - new Date(d)) / 60000); return m <= 0 ? '< 1 min' : fmtMin(m); };
 
-function tocarAlerta() {
+async function tocarAlerta() {
+  // Vibração — funciona mesmo em background no Android
+  navigator.vibrate?.([400, 100, 400, 100, 400]);
+
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Resume o AudioContext se estiver suspenso (tab em background)
+    if (ctx.state === 'suspended') {
+      try { await ctx.resume(); } catch {}
+    }
+    if (ctx.state !== 'running') return;
+
     [0, 200, 400].forEach((delay) => {
       const osc = ctx.createOscillator(); const gain = ctx.createGain();
       osc.connect(gain); gain.connect(ctx.destination);
@@ -297,15 +307,20 @@ export default function FuncionariaPage() {
       if (++count > 14) { clearInterval(timer); document.title = orig; }
     }, 600);
 
+    // Notification API cobre aba em background (browser aberto, outra aba ativa)
+    // Push VAPID cobre browser fechado/minimizado — ambos são necessários
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-      new Notification('Nova cliente!', {
-        body: `${atendimento.cliente?.nome} — ${SERVICE_INFO[atendimento.tipoServico]?.label}`,
+      const servicos = atendimento.servicosAgrupados?.length > 0
+        ? atendimento.servicosAgrupados.map(s => s.servicoNome || SERVICE_INFO[s.tipoServico]?.label).join(', ')
+        : (atendimento.servicoNome || SERVICE_INFO[atendimento.tipoServico]?.label);
+      new Notification('🔔 Nova solicitação!', {
+        body: `${atendimento.cliente?.nome} • ${servicos}`,
         requireInteraction: true,
+        tag: 'nova-proposta',
+        renotify: true,
       });
     }
 
-    // Nota: notificação push já foi enviada pelo servidor via VAPID (funciona em background)
-    // new Notification() só funciona com app em foco — o SW cuida do resto
     setTimeout(() => setProposta(p => p?.id === atendimento.id ? null : p), (TIMEOUT_SEGUNDOS + 1) * 1000);
   }, []);
 
