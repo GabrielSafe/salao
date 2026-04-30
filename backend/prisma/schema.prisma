@@ -85,6 +85,7 @@ model Funcionaria {
   usuarioId      String            @unique @map("usuario_id")
   salaoId        String            @map("salao_id")
   especialidades Especialidade[]
+  cnpj           String?
   multiTarefas   Boolean           @default(false) @map("multi_tarefas")
   status          StatusFuncionaria @default(OFFLINE)
   ausenteDesde    DateTime?         @map("ausente_desde")

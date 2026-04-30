@@ -1,0 +1,1 @@
+ALTER TABLE "funcionarias" ADD COLUMN IF NOT EXISTS "cnpj" TEXT;

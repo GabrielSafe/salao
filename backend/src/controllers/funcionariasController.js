@@ -23,11 +23,19 @@ async function listar(req, res) {
 }
 
 async function criar(req, res) {
-  const { nome, email, senha, especialidades, multiTarefas } = req.body;
+  const { nome, email, senha, especialidades, multiTarefas, cnpj } = req.body;
   const salaoId = req.salaoId;
 
   if (!nome || !email || !senha || (!multiTarefas && !especialidades?.length)) {
     return res.status(400).json({ erro: 'Nome, email, senha e especialidades são obrigatórios' });
+  }
+  if (!cnpj?.trim()) {
+    return res.status(400).json({ erro: 'CNPJ é obrigatório' });
+  }
+
+  const cnpjLimpo = cnpj.replace(/\D/g, '');
+  if (cnpjLimpo.length !== 14) {
+    return res.status(400).json({ erro: 'CNPJ inválido (deve ter 14 dígitos)' });
   }
 
   const existe = await prisma.usuario.findUnique({ where: { email } });
@@ -43,6 +51,7 @@ async function criar(req, res) {
       data: {
         usuarioId: usuario.id,
         salaoId,
+        cnpj: cnpjLimpo,
         especialidades: multiTarefas ? TODAS_ESPECIALIDADES : especialidades,
         multiTarefas: multiTarefas ?? false,
       },
@@ -55,7 +64,7 @@ async function criar(req, res) {
 
 async function atualizar(req, res) {
   const { id } = req.params;
-  const { nome, especialidades, multiTarefas, ativo, senha } = req.body;
+  const { nome, especialidades, multiTarefas, ativo, senha, cnpj } = req.body;
   const salaoId = req.salaoId;
 
   const funcionaria = await prisma.funcionaria.findFirst({ where: { id, salaoId } });
@@ -68,10 +77,16 @@ async function atualizar(req, res) {
   if (ativo    !== undefined) dadosUsuario.ativo = ativo;
   if (senha?.trim()) dadosUsuario.senha = await bcrypt.hash(senha, 10);
 
+  const cnpjLimpo = cnpj ? cnpj.replace(/\D/g, '') : undefined;
+
   const [func] = await prisma.$transaction([
     prisma.funcionaria.update({
       where: { id },
-      data: { especialidades: esp ?? undefined, multiTarefas: multiTarefas ?? undefined },
+      data: {
+        especialidades: esp ?? undefined,
+        multiTarefas: multiTarefas ?? undefined,
+        ...(cnpjLimpo && { cnpj: cnpjLimpo }),
+      },
       include: { usuario: true },
     }),
     ...(Object.keys(dadosUsuario).length > 0

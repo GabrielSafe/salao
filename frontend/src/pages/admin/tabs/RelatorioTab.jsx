@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { BarChart3, CheckCircle2, XCircle, Loader2, Scissors, Sparkles, Hand, Leaf, Eye, ClipboardPlus, Shield, DollarSign, Timer } from 'lucide-react';
+import { BarChart3, CheckCircle2, XCircle, Loader2, Scissors, Sparkles, Hand, Leaf, Eye, ClipboardPlus, Shield, DollarSign } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSocket } from '../../../hooks/useSocket';
 import api from '../../../services/api';
@@ -77,31 +77,34 @@ export default function RelatorioTab() {
 
       {dados && (
         <>
-          {/* ── KPIs ── */}
-          <div className="grid-3" style={{ marginBottom: 20 }}>
-            {[
-              { label: 'Total de atendimentos', valor: dados.total,       Icon: BarChart3,    color: 'var(--blue)',    bg: 'var(--blue-dim)' },
-              { label: 'Finalizados',           valor: dados.finalizados,  Icon: CheckCircle2, color: 'var(--success)', bg: 'var(--success-dim)' },
-              { label: 'Cancelados',            valor: dados.cancelados,   Icon: XCircle,      color: 'var(--error)',   bg: 'var(--error-dim)' },
-            ].map(({ label, valor, Icon, color, bg }) => (
-              <div key={label} className="kpi-card">
-                <div className="kpi-icon" style={{ background: bg }}><Icon size={18} color={color} /></div>
-                <div className="kpi-value" style={{ color }}>{valor}</div>
-                <div className="kpi-label">{label}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* ── Card extra: Comandas criadas (Recepcionista) ── */}
-          {isRecepcionista && (
-            <div className="card" style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16, padding: '18px 20px', border: '1.5px solid rgba(245,158,11,.25)', background: 'rgba(245,158,11,.04)' }}>
-              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(245,158,11,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <ClipboardPlus size={22} color="#f59e0b" />
-              </div>
-              <div>
-                <div style={{ fontSize: 28, fontWeight: 800, color: '#f59e0b', lineHeight: 1 }}>{comandasCriadas}</div>
-                <div style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 3 }}>Comandas criadas por você neste período</div>
-              </div>
+          {/* ── KPIs recepcionista: comandas criadas + faturamento + serviços ── */}
+          {isRecepcionista ? (
+            <div className="grid-3" style={{ marginBottom: 20 }}>
+              {[
+                { label: 'Comandas criadas',     valor: comandasCriadas,                              Icon: ClipboardPlus, color: '#f59e0b', bg: 'rgba(245,158,11,.1)' },
+                { label: 'Faturamento do turno',  valor: fmt(dados.atendimentos.filter(a => a.status === 'FINALIZADO').reduce((s, a) => s + (a.servicoPreco || 0), 0)), Icon: DollarSign, color: 'var(--success)', bg: 'var(--success-dim)' },
+                { label: 'Serviços finalizados',  valor: dados.finalizados,                            Icon: CheckCircle2,  color: 'var(--blue)',    bg: 'var(--blue-dim)' },
+              ].map(({ label, valor, Icon, color, bg }) => (
+                <div key={label} className="kpi-card">
+                  <div className="kpi-icon" style={{ background: bg }}><Icon size={18} color={color} /></div>
+                  <div className="kpi-value" style={{ color }}>{valor}</div>
+                  <div className="kpi-label">{label}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid-3" style={{ marginBottom: 20 }}>
+              {[
+                { label: 'Total de atendimentos', valor: dados.total,       Icon: BarChart3,    color: 'var(--blue)',    bg: 'var(--blue-dim)' },
+                { label: 'Finalizados',           valor: dados.finalizados,  Icon: CheckCircle2, color: 'var(--success)', bg: 'var(--success-dim)' },
+                { label: 'Cancelados',            valor: dados.cancelados,   Icon: XCircle,      color: 'var(--error)',   bg: 'var(--error-dim)' },
+              ].map(({ label, valor, Icon, color, bg }) => (
+                <div key={label} className="kpi-card">
+                  <div className="kpi-icon" style={{ background: bg }}><Icon size={18} color={color} /></div>
+                  <div className="kpi-value" style={{ color }}>{valor}</div>
+                  <div className="kpi-label">{label}</div>
+                </div>
+              ))}
             </div>
           )}
 

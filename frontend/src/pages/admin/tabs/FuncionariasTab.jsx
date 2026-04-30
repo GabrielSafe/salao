@@ -13,6 +13,23 @@ const SERVICE_INFO = {
 };
 const ESPECIALIDADES = ['CABELO', 'MAQUIAGEM', 'MAO', 'PE', 'SOBRANCELHA'];
 
+function maskCNPJ(v) {
+  return v.replace(/\D/g, '')
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1/$2')
+    .replace(/(\d{4})(\d)/, '$1-$2')
+    .substring(0, 18);
+}
+
+function formatCNPJDisplay(v) {
+  if (!v) return '';
+  const d = v.replace(/\D/g, '');
+  return d.length === 14
+    ? d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5')
+    : d;
+}
+
 function StatusPill({ status }) {
   const map = {
     ONLINE:          { label: 'Online',     color: 'var(--success)', bg: 'var(--success-dim)' },
@@ -138,8 +155,8 @@ export default function FuncionariasTab() {
   const [mostrarForm, setMostrarForm] = useState(false);
   const [editando, setEditando] = useState(null); // funcionária sendo editada
   const [historico, setHistorico] = useState(null);
-  const [form, setForm] = useState({ nome: '', email: '', senha: '', especialidades: [], multiTarefas: false });
-  const [formEdit, setFormEdit] = useState({ nome: '', especialidades: [], multiTarefas: false, novaSenha: '', ativo: true });
+  const [form, setForm] = useState({ nome: '', email: '', senha: '', cnpj: '', especialidades: [], multiTarefas: false });
+  const [formEdit, setFormEdit] = useState({ nome: '', especialidades: [], multiTarefas: false, novaSenha: '', cnpj: '', ativo: true });
   const [erro, setErro] = useState('');
   const [erroEdit, setErroEdit] = useState('');
   const [loading, setLoading] = useState(false);
@@ -167,10 +184,11 @@ export default function FuncionariasTab() {
     e.preventDefault();
     setErro('');
     if (!form.multiTarefas && !form.especialidades.length) { setErro('Selecione pelo menos uma especialidade'); return; }
+    if (!form.cnpj || form.cnpj.replace(/\D/g, '').length !== 14) { setErro('Informe um CNPJ válido (14 dígitos)'); return; }
     setLoading(true);
     try {
       await api.post('/funcionarias', form);
-      setForm({ nome: '', email: '', senha: '', especialidades: [], multiTarefas: false });
+      setForm({ nome: '', email: '', senha: '', cnpj: '', especialidades: [], multiTarefas: false });
       setMostrarForm(false);
       await carregar();
     } catch (err) {
@@ -191,6 +209,7 @@ export default function FuncionariasTab() {
       especialidades: f.especialidades || [],
       multiTarefas: f.multiTarefas || false,
       novaSenha: '',
+      cnpj: formatCNPJDisplay(f.cnpj),
       ativo: f.usuario?.ativo ?? true,
     });
     setErroEdit('');
@@ -219,6 +238,7 @@ export default function FuncionariasTab() {
         especialidades: formEdit.especialidades,
         multiTarefas: formEdit.multiTarefas,
         ativo: formEdit.ativo,
+        ...(formEdit.cnpj ? { cnpj: formEdit.cnpj } : {}),
         ...(formEdit.novaSenha ? { senha: formEdit.novaSenha } : {}),
       });
       setEditando(null);
@@ -299,6 +319,14 @@ export default function FuncionariasTab() {
               <input className="input" type="password" value={form.senha} onChange={(e) => setForm({ ...form, senha: e.target.value })} required />
             </div>
             <div className="form-group">
+              <label className="label">CNPJ * <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(funcionária PJ)</span></label>
+              <input className="input" placeholder="00.000.000/0001-00"
+                value={form.cnpj}
+                onChange={(e) => setForm({ ...form, cnpj: maskCNPJ(e.target.value) })}
+                required
+              />
+            </div>
+            <div className="form-group">
               <label className="label">Especialidades</label>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 14, cursor: 'pointer', color: 'var(--text-2)' }}>
                 <input
@@ -341,6 +369,11 @@ export default function FuncionariasTab() {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 600, fontSize: 14 }}>{f.usuario?.nome}</div>
+              {f.cnpj && (
+                <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>
+                  CNPJ: {formatCNPJDisplay(f.cnpj)}
+                </div>
+              )}
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 5 }}>
                 {f.especialidades.map((esp) => {
                   const info = SERVICE_INFO[esp];
@@ -415,6 +448,14 @@ export default function FuncionariasTab() {
                     })}
                   </div>
                 )}
+              </div>
+
+              {/* CNPJ */}
+              <div className="form-group">
+                <label className="label">CNPJ (funcionária PJ)</label>
+                <input className="input" placeholder="00.000.000/0001-00"
+                  value={formEdit.cnpj}
+                  onChange={e => setFormEdit({ ...formEdit, cnpj: maskCNPJ(e.target.value) })} />
               </div>
 
               {/* Nova senha (opcional) */}
