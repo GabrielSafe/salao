@@ -60,7 +60,7 @@ router.put('/clientes/:id', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEP
 router.get('/clientes/:id/historico', autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, clientesCtrl.historico);
 
 // Serviços (catálogo)
-router.get('/servicos',      autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, servicosCtrl.listar);
+router.get('/servicos',      autenticar, exigirRole('ADMIN', 'SUPERADMIN', 'RECEPCIONISTA'), exigirSalao, servicosCtrl.listar);
 router.post('/servicos',     autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, servicosCtrl.criar);
 router.patch('/servicos/:id',autenticar, exigirRole('ADMIN', 'SUPERADMIN'), exigirSalao, servicosCtrl.atualizar);
 
